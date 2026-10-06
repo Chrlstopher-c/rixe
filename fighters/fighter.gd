@@ -37,6 +37,10 @@ var recent_hit := 0.0
 var shield := SPAWN_SHIELD
 var _since_hit := 99.0
 var intent := {}
+var body := BodyParts.new()
+var last_zone := ""
+var death_cause := ""
+var _spurt := {}
 var _air_jumps := AIR_JUMPS
 var _coyote := 0.0
 var _buffer := 0.0
@@ -85,7 +89,8 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	if not was_floor and is_on_floor():
 		_land(vy)
-	gun.tick(delta, intent.fire)
+	gun.tick(delta, intent.fire and body.arms_left() > 0)
+	_bleed_stumps(delta)
 
 
 func _aim() -> void:
@@ -119,7 +124,7 @@ func _move(delta: float) -> void:
 		if int(dash_t * 120.0) % 3 == 0:
 			Effects.dust(global_position + Vector2(0, -2), 1, 0.3)
 		return
-	var goal: float = intent.move * RUN
+	var goal: float = intent.move * RUN * leg_factor()
 	var accel := ACCEL_GROUND if is_on_floor() else ACCEL_AIR
 	velocity.x = move_toward(velocity.x, goal, accel * delta)
 	var g := GRAVITY
@@ -137,7 +142,7 @@ func _jump() -> void:
 	if _buffer <= 0.0:
 		return
 	if _coyote > 0.0:
-		velocity.y = -JUMP
+		velocity.y = -JUMP * sqrt(leg_factor())
 		Effects.dust(global_position, 5)
 		jumped.emit(false)
 	elif _air_jumps > 0:
@@ -164,6 +169,10 @@ func _dash() -> void:
 		Juice.shake(0.12)
 
 
+func leg_factor() -> float:
+	return [0.35, 0.65, 1.0][body.legs_left()]
+
+
 func _land(vy: float) -> void:
 	rig.squash(clampf(vy / 520.0, 0.15, 1.0))
 	if vy > 250.0:
@@ -187,37 +196,103 @@ func take_hit(dmg: float, dir: Vector2, at: Vector2, from: Node2D, knock: float)
 		return
 	if is_player:
 		dmg *= PLAYER_DAMAGE_TAKEN
+	last_zone = body.zone(rig.global_joints(), at, dir)
+	var res := body.damage(last_zone, dmg)
 	_since_hit = 0.0
-	hp -= dmg
+	hp -= res.dmg
 	velocity += dir * knock
 	hit_flash = 0.07
 	recent_hit = 0.6
-	Effects.blood(at, dir, int(3 + dmg * 0.4))
+	Effects.blood(at, dir, int(3 + res.dmg * 0.4))
+	_hit_feedback(from, res.dmg)
+	if res.broke:
+		_sever(last_zone, dir, res.dmg)
+		if last_zone == "head" or last_zone == "torso":
+			death_cause = "decap" if last_zone == "head" else "split"
+			hp = 0.0
+	if hp <= 0.0:
+		_die(dir, from, res.dmg)
+
+
+func _hit_feedback(from: Node2D, dmg: float) -> void:
 	var player_involved: bool = is_player or (is_instance_valid(from) and from.get("is_player"))
 	if player_involved and dmg >= 20.0:
-		Juice.hitstop(0.05)
+		Juice.hitstop(0.04)
 	if is_player:
 		Juice.aberration = minf(Juice.aberration + 0.35, 1.5)
 		Juice.shake(0.18)
-	if hp <= 0.0:
-		_die(dir, from, dmg)
+
+
+## Arrache un membre : morceau physique qui vole, jet de sang au moignon.
+func _sever(part: String, dir: Vector2, dmg: float) -> void:
+	rig.missing = body.missing
+	if part == "torso":
+		return
+	var pts := rig.global_joints()
+	var keys: Array = BodyParts.DETACH[part]
+	var piece := {}
+	for k in keys:
+		piece[k] = pts[k]
+	var gib := Ragdoll.new()
+	gib.is_gib = true
+	Juice.world.add_child(gib)
+	gib.setup(piece, velocity, dir * (160.0 + dmg * 4.0) + Vector2(0, -120), [keys[0]], team_color)
+	_spurt[keys[0]] = 2.5
+	Effects.gore_burst(pts[keys[0]], dir, 1.0 if part == "head" else 0.6)
 
 
 func _die(dir: Vector2, killer: Node2D, dmg: float) -> void:
 	alive = false
-	var body := Ragdoll.new()
-	Juice.world.add_child(body)
-	var sever := 0 if dmg < 30.0 else randi_range(1, 3)
-	body.setup(rig.global_joints(), velocity, dir * (220.0 + dmg * 3.0), sever, team_color)
-	var chest := global_position + Vector2(0, -22)
-	Effects.blood(chest, dir, 26 + sever * 10)
+	if death_cause == "":
+		death_cause = "headshot" if last_zone == "head" else "shot"
+	var corpse := Ragdoll.new()
+	Juice.world.add_child(corpse)
+	var cut := [["shoulder", "hip"]] if death_cause == "split" else []
+	var bleed: Array = _spurt.keys() + (["shoulder", "hip"] if not cut.is_empty() else [])
+	corpse.setup(_corpse_points(), velocity, dir * (220.0 + dmg * 3.0), bleed, team_color, cut)
+	var chest := global_position + Vector2(0, -26)
+	Effects.blood(chest, dir, 24)
+	if death_cause == "split":
+		Effects.gore_burst(chest, dir, 1.4)
 	Juice.fx.emit(5, chest, Vector2.ZERO, 0.3, 22.0, Color(team_color * 1.5, 0.8))
 	Juice.shockwave(chest, 1.0)
-	Juice.zoom_punch = 0.1
-	Juice.aberration += 0.7
-	Juice.shake(0.45, chest)
-	if is_player or (is_instance_valid(killer) and killer.get("is_player")):
-		Juice.hitstop(0.07)
-		Juice.slowmo(0.9, 0.22)
+	Juice.zoom_punch = 0.08
+	Juice.shake(0.4, chest)
+	_kill_time_fx(killer, chest)
 	Juice.fighter_killed.emit(self, killer)
 	queue_free()
+
+
+## Ralenti réservé aux morts par la tête (à l'écran ou impliquant le joueur) ; sinon simple à-coup.
+func _kill_time_fx(killer: Node2D, at: Vector2) -> void:
+	var player_involved: bool = is_player or (is_instance_valid(killer) and killer.get("is_player"))
+	var head_kill := death_cause == "headshot" or death_cause == "decap"
+	if head_kill and (player_involved or Juice.on_screen(at)):
+		Juice.hitstop(0.06)
+		Juice.slowmo(0.9, 0.22)
+		Juice.aberration += 0.7
+	elif player_involved:
+		Juice.hitstop(0.04)
+
+
+func _corpse_points() -> Dictionary:
+	var pts := rig.global_joints()
+	for part in body.missing:
+		if part == "torso":
+			continue
+		var keys: Array = BodyParts.DETACH[part]
+		for i in range(1, keys.size()):
+			pts.erase(keys[i])
+	return pts
+
+
+func _bleed_stumps(delta: float) -> void:
+	for k in _spurt.keys():
+		_spurt[k] -= delta
+		if _spurt[k] <= 0.0:
+			_spurt.erase(k)
+			continue
+		var pulse := maxf(sin(float(_spurt[k]) * 12.0), 0.0)
+		if randf() < delta * 50.0 * pulse:
+			var at := rig.to_global(rig.j[k])
+			Effects.spurt(at, Vector2(randf_range(-90, 90), randf_range(-200, -80)) + velocity * 0.5, 1)

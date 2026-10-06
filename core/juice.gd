@@ -67,6 +67,13 @@ func shake(amount: float, at: Vector2 = Vector2.INF) -> void:
 	trauma = minf(trauma + amount, 1.0)
 
 
+func on_screen(p: Vector2) -> bool:
+	if not camera:
+		return false
+	var half := camera.get_viewport_rect().size * 0.5 / camera.zoom
+	return Rect2(camera.get_screen_center_position() - half, half * 2.0).has_point(p)
+
+
 func shockwave(pos: Vector2, strength: float = 1.0) -> void:
 	shockwaves.append({"pos": pos, "age": 0.0, "life": 0.5, "strength": strength})
 	if shockwaves.size() > 4:

@@ -24,8 +24,10 @@ func tick(delta: float, trigger: bool) -> void:
 func _fire() -> void:
 	var dir: Vector2 = owner.aim_dir
 	var muzzle: Vector2 = owner.rig.muzzle_global()
+	var one_hand: bool = owner.body.arms_left() < 2
+	var spread: float = def.spread * 2.5 + 0.04 if one_hand else def.spread
 	for i in def.pellets:
-		_pellet(muzzle, dir.rotated(randf_range(-def.spread, def.spread)))
+		_pellet(muzzle, dir.rotated(randf_range(-spread, spread)))
 	owner.rig.recoil = def.recoil
 	owner.velocity -= dir * def.kick
 	Effects.muzzle(muzzle, dir, def.tracer, def.flash)

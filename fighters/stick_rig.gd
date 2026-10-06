@@ -15,6 +15,7 @@ var fighter: Fighter
 var j := {}
 var recoil := 0.0
 var muzzle_local := Vector2.ZERO
+var missing: Array[String] = []
 var _phase := 0.0
 var _t := 0.0
 var _feet: Array[Vector2] = [Vector2(-3, 0), Vector2(3, 0)]
@@ -70,7 +71,8 @@ func _pose_body(delta: float) -> void:
 		_phase += absf(v.x) * delta * 0.075
 		bob = -absf(sin(_phase)) * 1.3 * absf(run) + sin(_t * 2.4) * 0.35 * (1.0 - absf(run))
 	var lean := run * 0.24 + clampf(v.y / 900.0, -0.1, 0.1) * fighter.facing
-	j.hip = Vector2(0, -15.0 * (1.0 - _crouch) + bob)
+	var stand := -15.0 if fighter.body.legs_left() > 0 else -5.0
+	j.hip = Vector2(0, stand * (1.0 - _crouch) + bob)
 	j.shoulder = j.hip + Vector2(0, -10.5).rotated(lean)
 	j.neck = j.shoulder + Vector2(0, -1.5).rotated(lean)
 	j.head = j.shoulder + Vector2(0, -5.2).rotated(lean * 0.6) + fighter.aim_dir * 0.8
@@ -122,7 +124,7 @@ func ejection_global() -> Vector2:
 
 func global_joints() -> Dictionary:
 	var out := {}
-	for k in ["head", "shoulder", "hip", "elbow0", "hand0", "elbow1", "hand1", "knee0", "foot0", "knee1", "foot1"]:
+	for k in ["head", "neck", "shoulder", "hip", "elbow0", "hand0", "elbow1", "hand1", "knee0", "foot0", "knee1", "foot1"]:
 		out[k] = to_global(j[k])
 	return out
 
@@ -159,31 +161,58 @@ func _draw() -> void:
 	if not j.has("pivot"):
 		return
 	_draw_ghosts()
-	_draw_scarf()
+	if has("head"):
+		_draw_scarf()
 	var c := BODY if fighter.hit_flash <= 0.0 else Color(2.4, 2.4, 2.4)
 	var back := c.lerp(Color(0.2, 0.13, 0.25), 0.35)
 	var bf := 1 if fighter.facing > 0 else 0
 	_outline()
-	_limb(j.hip, j["knee%d" % bf], j["foot%d" % bf], back, 2.2)
+	_part_limb("leg%d" % bf, back, 2.2)
 	_seg(j.hip, j.shoulder, c, 2.8)
-	_limb(j.shoulder, j.elbow0, j.hand0, back, 2.0)
-	_draw_gun()
-	_limb(j.hip, j["knee%d" % (1 - bf)], j["foot%d" % (1 - bf)], c, 2.2)
-	_limb(j.shoulder, j.elbow1, j.hand1, c, 2.0)
-	draw_circle(j.head, 3.7, c)
+	_part_limb("arm0", back, 2.0)
+	if has("arm0") or has("arm1"):
+		_draw_gun()
+	_part_limb("leg%d" % (1 - bf), c, 2.2)
+	_part_limb("arm1", c, 2.0)
+	if has("head"):
+		draw_circle(j.head, 3.7, c)
+		var visor: Vector2 = j.head + Vector2(fighter.facing * 1.2, -0.5)
+		draw_line(visor, visor + Vector2(fighter.facing * 2.4, 0.3), fighter.team_color * 3.0, 1.2)
+	_draw_stumps()
 	if fighter.shield > 0.0:
 		var a := 0.25 + 0.25 * sin(_t * 20.0)
 		draw_arc(Vector2(0, -15), 19.0, 0.0, TAU, 40, Color(fighter.team_color * 1.8, a), 1.2, Juice.hd)
-	var visor: Vector2 = j.head + Vector2(fighter.facing * 1.2, -0.5)
-	draw_line(visor, visor + Vector2(fighter.facing * 2.4, 0.3), fighter.team_color * 3.0, 1.2)
+
+
+func has(part: String) -> bool:
+	return not (part in missing)
+
+
+func _part_limb(part: String, col: Color, w: float) -> void:
+	if not has(part):
+		return
+	var js: Array = BodyParts.PARTS[part].joints
+	_limb(j[js[0]], j[js[1]], j[js[2]], col, w)
+
+
+func _draw_stumps() -> void:
+	for part in missing:
+		if part == "torso":
+			continue
+		var root: Vector2 = j[BodyParts.DETACH[part][0]]
+		draw_circle(root, 1.6, Effects.BLOOD * 1.3, true, -1.0, Juice.hd)
 
 
 func _outline() -> void:
 	var o := Color(fighter.team_color * 0.7, 1.0)
-	for pair in [["hip", "shoulder"], ["hip", "knee0"], ["knee0", "foot0"], ["hip", "knee1"], ["knee1", "foot1"],
-			["shoulder", "elbow0"], ["elbow0", "hand0"], ["shoulder", "elbow1"], ["elbow1", "hand1"]]:
-		draw_line(j[pair[0]], j[pair[1]], o, 3.3, Juice.hd)
-	draw_circle(j.head, 4.4, o, true, -1.0, Juice.hd)
+	draw_line(j.hip, j.shoulder, o, 3.3, Juice.hd)
+	for part in ["arm0", "arm1", "leg0", "leg1"]:
+		if has(part):
+			var js: Array = BodyParts.PARTS[part].joints
+			draw_line(j[js[0]], j[js[1]], o, 3.3, Juice.hd)
+			draw_line(j[js[1]], j[js[2]], o, 3.3, Juice.hd)
+	if has("head"):
+		draw_circle(j.head, 4.4, o, true, -1.0, Juice.hd)
 
 
 func _limb(a: Vector2, b: Vector2, c: Vector2, col: Color, w: float) -> void:

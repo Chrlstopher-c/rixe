@@ -4,7 +4,7 @@ Chaque story : intention — VERIFY exécutable. Tests de jeu = `godot --headles
 
 ## E1 — Fondations
 - [x] E1.S1 — banc de tests headless (scénarios scriptés, intentions simulées) — VERIFY: `tools/verify.sh` affiche « TESTS OK »
-- [ ] E1.S2 — scripts start/stop/restart (PID propre, logs remis à zéro), docs projet, CI GitHub Actions (import + tests headless) — VERIFY: `./start.sh && sleep 4 && ./stop.sh` sans erreur, `logs/rixe.log` sans `SCRIPT ERROR`
+- [x] E1.S2 — scripts start/stop/restart (PID propre, logs remis à zéro), docs projet, CI GitHub Actions (import + tests headless) — VERIFY: `./start.sh && sleep 4 && ./stop.sh` sans erreur, `logs/rixe.log` sans `SCRIPT ERROR`
 
 ## E2 — Mouvement
 - [x] E2.S1 — saut toujours disponible après atterrissage (bug « collé au sol »), saut spammable, 2 sauts en l'air max — VERIFY: `--tests=movement`

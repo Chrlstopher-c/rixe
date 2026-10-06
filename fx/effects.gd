@@ -59,3 +59,27 @@ static func shell(pos: Vector2, dir: Vector2) -> void:
 
 static func tracer(from: Vector2, to: Vector2, color: Color, width: float, life: float = 0.09) -> void:
 	Juice.fx.tracers.append({"from": from, "to": to, "color": color, "width": width, "life": life, "max": life})
+
+
+## Giclée d'un membre arraché : gerbe de sang, morceaux de chair, brume, anneau rouge.
+static func gore_burst(pos: Vector2, dir: Vector2, intensity: float) -> void:
+	var fx: Node2D = Juice.fx
+	blood(pos, dir, int(18 * intensity))
+	for i in int(10 * intensity):
+		var v := Vector2(randf_range(-160, 160), randf_range(-260, -60)) + dir * 120.0
+		var chunk = fx.emit(4, pos, v, 3.0, 1.0, Color(0.45, 0.02, 0.04))
+		chunk.grav = 800.0
+		chunk.spin = randf_range(-20, 20)
+	for i in 3:
+		var m = fx.emit(2, pos, Vector2(randf_range(-30, 30), randf_range(-30, 0)), 0.6, 3.0, Color(0.5, 0.0, 0.03, 0.45))
+		m.drag = 3.0
+	fx.emit(5, pos, Vector2.ZERO, 0.22, 12.0 * intensity, Color(1.6, 0.1, 0.15, 0.8))
+
+
+## Jet artériel : gouttes rapides dans une direction donnée.
+static func spurt(pos: Vector2, vel: Vector2, amount: int) -> void:
+	var fx: Node2D = Juice.fx
+	for i in amount:
+		var b = fx.emit(1, pos, vel.rotated(randf_range(-0.15, 0.15)) * randf_range(0.8, 1.2), 1.2, 1.4, BLOOD)
+		b.grav = 700.0
+		b.drag = 0.4

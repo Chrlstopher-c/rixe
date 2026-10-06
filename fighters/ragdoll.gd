@@ -13,24 +13,27 @@ var vel := {}
 var links: Array = []
 var bleeders: Array[String] = []
 var color := Color.WHITE
+var is_gib := false
 var _age := 0.0
 
 
-func setup(pts: Dictionary, base_vel: Vector2, impulse: Vector2, sever: int, team: Color) -> void:
+## pts : points présents (membres manquants absents) ; cut : liens tranchés ; bleed : points qui saignent.
+func setup(pts: Dictionary, base_vel: Vector2, impulse: Vector2, bleed: Array, team: Color, cut: Array = []) -> void:
 	z_index = 9
 	color = team
 	for k in pts:
+		if k == "neck":
+			continue
 		pos[k] = pts[k]
 		vel[k] = base_vel + impulse * randf_range(0.5, 1.3) + Vector2(randf_range(-40, 40), randf_range(-60, 0))
-	vel.head = vel.head + impulse * 0.5
+	if vel.has("head"):
+		vel.head = vel.head + impulse * 0.5
 	for l in LINKS:
-		links.append([l[0], l[1], (pts[l[0]] as Vector2).distance_to(pts[l[1]])])
-	for i in sever:
-		var idx := randi_range(0, links.size() - 1)
-		var cut: Array = links[idx]
-		bleeders.append(cut[0])
-		bleeders.append(cut[1])
-		links.remove_at(idx)
+		if pos.has(l[0]) and pos.has(l[1]) and not ([l[0], l[1]] in cut):
+			links.append([l[0], l[1], (pts[l[0]] as Vector2).distance_to(pts[l[1]])])
+	for b in bleed:
+		if pos.has(b):
+			bleeders.append(b)
 
 
 func _physics_process(delta: float) -> void:
@@ -46,7 +49,7 @@ func _physics_process(delta: float) -> void:
 		_solve_links()
 	for k in pos:
 		_collide(k, prev[k], delta)
-	if _age < 1.4:
+	if _age < 2.5:
 		_bleed(delta)
 	queue_redraw()
 
@@ -73,16 +76,18 @@ func _collide(k: String, prev: Vector2, delta: float) -> void:
 
 func _bleed(delta: float) -> void:
 	for k in bleeders:
-		if randf() < delta * 40.0:
-			var v: Vector2 = vel[k] * 0.3 + Vector2(randf_range(-50, 50), randf_range(-120, -20))
-			Effects.blood(pos[k], v.normalized(), 1)
+		var pulse := maxf(sin(_age * 11.0), 0.0) * (1.0 - _age / 2.5)
+		if randf() < delta * 60.0 * pulse:
+			var v: Vector2 = vel[k] * 0.3 + Vector2(randf_range(-60, 60), randf_range(-160, -40))
+			Effects.spurt(pos[k], v, 1)
 
 
 func _draw() -> void:
 	var fade := clampf((LIFE - _age) / 1.5, 0.0, 1.0)
 	var c := Color(StickRig.BODY, fade)
 	for l in links:
-		draw_line(pos[l[0]], pos[l[1]], c, 2.2, Juice.hd)
-	draw_circle(pos.head, 3.7, c)
+		draw_line(pos[l[0]], pos[l[1]], c, 2.6, Juice.hd)
+	if pos.has("head"):
+		draw_circle(pos.head, 3.7 * 1.22, c)
 	for k in bleeders:
 		draw_circle(pos[k], 1.2, Color(Effects.BLOOD, fade))
