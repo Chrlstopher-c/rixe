@@ -34,6 +34,18 @@ func generate(seed_value: int) -> void:
 	queue_redraw()
 
 
+func generate_flat() -> void:
+	for c in get_children():
+		c.free()
+	solids.clear()
+	solid_kinds.clear()
+	platforms.clear()
+	_add_solid(Rect2(-300, 0, W + 600, 400), "ground")
+	_add_solid(Rect2(-300, -700, 300, 700), "wall")
+	_add_solid(Rect2(W, -700, 300, 700), "wall")
+	queue_redraw()
+
+
 func _gen_cover(rng: RandomNumberGenerator) -> void:
 	for i in rng.randi_range(3, 5):
 		var w := 16.0 * rng.randi_range(2, 3)

@@ -1,0 +1,12 @@
+# TODO — Rixe
+
+## En cours
+Voir EPICS.md (V1 arcade).
+
+## Backlog (après V1, idées de Chris du 07/10)
+- **Mode survie** (à côté du mode arcade) : construire des bases (murs, portes), produire de la nourriture, cycle de survie.
+- **Visée souris plus précise** (au-delà de la V1 : stabilité, recul contrôlable, zoom de visée).
+- **Personnalisation d'armes** : viseurs, munitions, chargeurs ; fabrication de munitions.
+- **Butin** : drops d'ennemis, inventaire complet, cartes différentes.
+- **Multijoueur P2P** sans ouverture de ports (traversée NAT / relais), plus tard.
+- **Manette**.

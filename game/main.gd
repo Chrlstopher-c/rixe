@@ -13,6 +13,7 @@ var _hud: CanvasLayer
 var _camera: Camera2D
 var _restart_in := -1.0
 var _rng := RandomNumberGenerator.new()
+var _tests := ""
 
 
 func _ready() -> void:
@@ -20,6 +21,9 @@ func _ready() -> void:
 	_parse_args()
 	_build()
 	Juice.fighter_killed.connect(_on_killed)
+	if _tests != "":
+		add_child(preload("res://tests/test_runner.gd").new(self, _tests))
+		return
 	_set_hd(Juice.hd)
 	_start_round()
 
@@ -32,6 +36,8 @@ func _parse_args() -> void:
 			Juice.hd = false
 		elif a.begins_with("--shot="):
 			_shot(a.get_slice("=", 1))
+		elif a.begins_with("--tests="):
+			_tests = a.get_slice("=", 1)
 		elif a.begins_with("--seed="):
 			seed_base = int(a.get_slice("=", 1))
 
@@ -107,6 +113,20 @@ func _start_round() -> void:
 	_hud.round_no = round_no
 	_hud.bots_left = b
 	_hud.banner("MANCHE %d" % round_no)
+
+
+func reset_for_test() -> void:
+	Juice.reset()
+	for c in _fighters.get_children():
+		c.free()
+	Juice.fx.clear()
+	Juice.arena.generate_flat()
+
+
+func spawn_test_fighter(pos: Vector2, brain: RefCounted, weapon: String = "rifle", is_player: bool = true) -> Fighter:
+	var f := _spawn("Test", pos, PLAYER_COLOR, brain, weapon, is_player)
+	f.shield = 0.0
+	return f
 
 
 func _spawn(nm: String, pos: Vector2, color: Color, brain: RefCounted, weapon: String, is_player: bool) -> Fighter:

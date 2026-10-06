@@ -2,6 +2,8 @@ class_name Fighter
 extends CharacterBody2D
 ## Combattant : déplacement nerveux (coyote, buffer, double saut, dash), visée, dégâts, mort en ragdoll.
 
+signal jumped(in_air: bool)
+
 const RUN := 205.0
 const ACCEL_GROUND := 2000.0
 const ACCEL_AIR := 1300.0
@@ -11,7 +13,8 @@ const AIR_JUMP := 350.0
 const DASH := 560.0
 const DASH_TIME := 0.13
 const COYOTE := 0.09
-const BUFFER := 0.12
+const BUFFER := 0.2
+const AIR_JUMPS := 2
 const MAX_HP := 100.0
 const SPAWN_SHIELD := 2.5
 const PLAYER_DAMAGE_TAKEN := 0.45
@@ -34,7 +37,7 @@ var recent_hit := 0.0
 var shield := SPAWN_SHIELD
 var _since_hit := 99.0
 var intent := {}
-var _air_jumps := 1
+var _air_jumps := AIR_JUMPS
 var _coyote := 0.0
 var _buffer := 0.0
 var _dash_cd := 0.0
@@ -101,11 +104,12 @@ func _timers(delta: float) -> void:
 	recent_hit -= delta
 	_dash_cd -= delta
 	_coyote = COYOTE if is_on_floor() else _coyote - delta
-	_buffer = BUFFER if intent.jump else _buffer - delta
+	var rehop: bool = intent.jump_held and is_on_floor() and velocity.y >= 0.0
+	_buffer = BUFFER if intent.jump or rehop else _buffer - delta
 	_drop_t -= delta
 	set_collision_mask_value(3, _drop_t <= 0.0)
 	if is_on_floor():
-		_air_jumps = 1
+		_air_jumps = AIR_JUMPS
 
 
 func _move(delta: float) -> void:
@@ -135,9 +139,11 @@ func _jump() -> void:
 	if _coyote > 0.0:
 		velocity.y = -JUMP
 		Effects.dust(global_position, 5)
+		jumped.emit(false)
 	elif _air_jumps > 0:
 		_air_jumps -= 1
 		velocity.y = -AIR_JUMP
+		jumped.emit(true)
 		Juice.fx.emit(5, global_position, Vector2.ZERO, 0.25, 9.0, Color(team_color, 0.8))
 	else:
 		return
