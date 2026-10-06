@@ -1,7 +1,7 @@
 extends Camera2D
 ## Caméra : suit la cible avec anticipation de visée, tremblement par bruit, punch de zoom ; expose sa vitesse (flou).
 
-const BASE_ZOOM := 1.5
+const BASE_ZOOM := 1.15
 
 var target: Node2D
 var velocity := Vector2.ZERO

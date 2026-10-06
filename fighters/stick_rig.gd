@@ -33,6 +33,10 @@ static func ik(a: Vector2, b: Vector2, l1: float, l2: float, bend: float) -> Vec
 	return a + dir * x + dir.orthogonal() * h * bend
 
 
+func _ready() -> void:
+	_process(0.0)
+
+
 func squash(amount: float) -> void:
 	_crouch_v += amount * 60.0
 
@@ -167,16 +171,19 @@ func _draw() -> void:
 	_limb(j.hip, j["knee%d" % (1 - bf)], j["foot%d" % (1 - bf)], c, 2.2)
 	_limb(j.shoulder, j.elbow1, j.hand1, c, 2.0)
 	draw_circle(j.head, 3.7, c)
+	if fighter.shield > 0.0:
+		var a := 0.25 + 0.25 * sin(_t * 20.0)
+		draw_arc(Vector2(0, -15), 19.0, 0.0, TAU, 40, Color(fighter.team_color * 1.8, a), 1.2, Juice.hd)
 	var visor: Vector2 = j.head + Vector2(fighter.facing * 1.2, -0.5)
 	draw_line(visor, visor + Vector2(fighter.facing * 2.4, 0.3), fighter.team_color * 3.0, 1.2)
 
 
 func _outline() -> void:
-	var o := Color(fighter.team_color, 0.32)
+	var o := Color(fighter.team_color * 0.7, 1.0)
 	for pair in [["hip", "shoulder"], ["hip", "knee0"], ["knee0", "foot0"], ["hip", "knee1"], ["knee1", "foot1"],
 			["shoulder", "elbow0"], ["elbow0", "hand0"], ["shoulder", "elbow1"], ["elbow1", "hand1"]]:
-		draw_line(j[pair[0]], j[pair[1]], o, 4.0, Juice.hd)
-	draw_circle(j.head, 5.0, o, true, -1.0, Juice.hd)
+		draw_line(j[pair[0]], j[pair[1]], o, 3.3, Juice.hd)
+	draw_circle(j.head, 4.4, o, true, -1.0, Juice.hd)
 
 
 func _limb(a: Vector2, b: Vector2, c: Vector2, col: Color, w: float) -> void:

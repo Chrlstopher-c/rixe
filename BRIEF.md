@@ -1,0 +1,5 @@
+- **Quoi** : Rixe, jeu de combat 2D vu de côté entre stickmen armés (tir + corps à corps façon Mortal Kombat), arènes procédurales, polish d'effets maximal ; + Pigment, MCP local (sans API) qui génère les textures.
+- **Pour qui** : Chris, solo contre des bots en V1 ; multijoueur P2P sans ouverture de ports plus tard.
+- **Stack** : Godot 4.7 (GDScript + shaders) sur la tour ; Pigment en Python (numpy/scipy, MCP stdio).
+- **Réussite** : 60 i/s stables en 1080p sur la tour à 6 combattants · `./start.sh` lance le jeu sans aucune erreur console · une manche complète jouable au clavier/souris (apparition protégée, armes, mêlée, mort, manche suivante) · Pigment rend une texture via MCP en < 2 s.
+- **Hors périmètre V1** : multijoueur, manette, portable.

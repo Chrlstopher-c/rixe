@@ -25,7 +25,7 @@ func think(f: Node2D, delta: float) -> Dictionary:
 	if _retarget <= 0.0 or not is_instance_valid(target) or not target.alive:
 		target = _pick(f)
 		_retarget = randf_range(1.5, 3.5)
-		_react = lerpf(0.6, 0.15, skill)
+		_react = lerpf(1.0, 0.4, skill)
 	if not is_instance_valid(target):
 		return it
 	var to: Vector2 = target.global_position - f.global_position
@@ -77,21 +77,21 @@ func _vertical(f: Node2D, to: Vector2, it: Dictionary) -> void:
 
 
 func _shoot(f: Node2D, delta: float, it: Dictionary) -> void:
-	var chest: Vector2 = target.global_position + Vector2(0, -18)
+	var chest: Vector2 = target.global_position + Vector2(0, -22)
 	if _err == Vector2.ZERO or randf() < delta * 3.0:
-		_err = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * lerpf(26.0, 6.0, skill)
+		_err = Vector2(randf_range(-1, 1), randf_range(-1, 1)) * lerpf(40.0, 14.0, skill)
 	if _aim == Vector2.ZERO:
 		_aim = chest
-	_aim = _aim.lerp(chest + _err, minf(delta * lerpf(4.0, 12.0, skill), 1.0))
+	_aim = _aim.lerp(chest + _err, minf(delta * lerpf(2.5, 7.0, skill), 1.0))
 	it.aim = _aim
 	var seen := _line_of_sight(f, chest)
-	_react = _react - delta if seen else lerpf(0.6, 0.15, skill)
+	_react = _react - delta if seen else lerpf(1.0, 0.4, skill)
 	var in_range: bool = f.global_position.distance_to(chest) < float(f.gun.def.range) * 0.9
 	it.fire = seen and _react <= 0.0 and in_range
 
 
 func _line_of_sight(f: Node2D, to: Vector2) -> bool:
 	var space: PhysicsDirectSpaceState2D = f.get_world_2d().direct_space_state
-	var from: Vector2 = f.global_position + Vector2(0, -22)
+	var from: Vector2 = f.global_position + Vector2(0, -27)
 	var q := PhysicsRayQueryParameters2D.create(from, to, Juice.MASK_WORLD | Juice.MASK_PLATFORMS)
 	return space.intersect_ray(q).is_empty()

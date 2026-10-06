@@ -2,17 +2,21 @@ class_name Fighter
 extends CharacterBody2D
 ## Combattant : déplacement nerveux (coyote, buffer, double saut, dash), visée, dégâts, mort en ragdoll.
 
-const RUN := 150.0
-const ACCEL_GROUND := 1500.0
-const ACCEL_AIR := 950.0
+const RUN := 205.0
+const ACCEL_GROUND := 2000.0
+const ACCEL_AIR := 1300.0
 const GRAVITY := 900.0
-const JUMP := 300.0
-const AIR_JUMP := 265.0
-const DASH := 430.0
+const JUMP := 390.0
+const AIR_JUMP := 350.0
+const DASH := 560.0
 const DASH_TIME := 0.13
 const COYOTE := 0.09
 const BUFFER := 0.12
 const MAX_HP := 100.0
+const SPAWN_SHIELD := 2.5
+const PLAYER_DAMAGE_TAKEN := 0.45
+const REGEN_DELAY := 3.0
+const REGEN_RATE := 12.0
 
 var display_name := "?"
 var team_color := Color.WHITE
@@ -27,6 +31,8 @@ var facing := 1
 var hit_flash := 0.0
 var dash_t := 0.0
 var recent_hit := 0.0
+var shield := SPAWN_SHIELD
+var _since_hit := 99.0
 var intent := {}
 var _air_jumps := 1
 var _coyote := 0.0
@@ -50,13 +56,14 @@ func _ready() -> void:
 	floor_snap_length = 4.0
 	var shape := CollisionShape2D.new()
 	var cap := CapsuleShape2D.new()
-	cap.radius = 5.0
-	cap.height = 28.0
+	cap.radius = 6.0
+	cap.height = 34.0
 	shape.shape = cap
-	shape.position = Vector2(0, -14)
+	shape.position = Vector2(0, -17)
 	add_child(shape)
 	rig = StickRig.new()
 	rig.fighter = self
+	rig.scale = Vector2.ONE * 1.22
 	add_child(rig)
 	z_index = 10
 
@@ -80,13 +87,17 @@ func _physics_process(delta: float) -> void:
 
 func _aim() -> void:
 	var target: Vector2 = intent.aim
-	var from := global_position + Vector2(0, -22)
+	var from := global_position + Vector2(0, -27)
 	aim_dir = (target - from).normalized() if from.distance_to(target) > 2.0 else aim_dir
 	facing = 1 if aim_dir.x >= 0.0 else -1
 
 
 func _timers(delta: float) -> void:
 	hit_flash -= delta
+	shield -= delta
+	_since_hit += delta
+	if is_player and _since_hit > REGEN_DELAY:
+		hp = minf(hp + REGEN_RATE * delta, MAX_HP)
 	recent_hit -= delta
 	_dash_cd -= delta
 	_coyote = COYOTE if is_on_floor() else _coyote - delta
@@ -165,6 +176,12 @@ func _on_platform() -> bool:
 func take_hit(dmg: float, dir: Vector2, at: Vector2, from: Node2D, knock: float) -> void:
 	if not alive:
 		return
+	if shield > 0.0:
+		Effects.impact(at, -dir, team_color * 2.0)
+		return
+	if is_player:
+		dmg *= PLAYER_DAMAGE_TAKEN
+	_since_hit = 0.0
 	hp -= dmg
 	velocity += dir * knock
 	hit_flash = 0.07
@@ -186,7 +203,7 @@ func _die(dir: Vector2, killer: Node2D, dmg: float) -> void:
 	Juice.world.add_child(body)
 	var sever := 0 if dmg < 30.0 else randi_range(1, 3)
 	body.setup(rig.global_joints(), velocity, dir * (220.0 + dmg * 3.0), sever, team_color)
-	var chest := global_position + Vector2(0, -18)
+	var chest := global_position + Vector2(0, -22)
 	Effects.blood(chest, dir, 26 + sever * 10)
 	Juice.fx.emit(5, chest, Vector2.ZERO, 0.3, 22.0, Color(team_color * 1.5, 0.8))
 	Juice.shockwave(chest, 1.0)

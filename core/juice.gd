@@ -12,7 +12,7 @@ var stains: Node2D
 var arena: Node2D
 var world: Node2D
 var camera: Camera2D
-var hd := false
+var hd := true
 var trauma := 0.0
 var aberration := 0.0
 var zoom_punch := 0.0

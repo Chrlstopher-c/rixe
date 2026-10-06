@@ -28,10 +28,20 @@ func _parse_args() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a == "--demo":
 			demo = true
-		elif a == "--hd":
-			Juice.hd = true
+		elif a == "--pixel":
+			Juice.hd = false
+		elif a.begins_with("--shot="):
+			_shot(a.get_slice("=", 1))
 		elif a.begins_with("--seed="):
 			seed_base = int(a.get_slice("=", 1))
+
+
+func _shot(path: String) -> void:
+	await get_tree().create_timer(6.0, true, false, true).timeout
+	var img := get_viewport().get_texture().get_image()
+	img.save_png(path)
+	print("shot %s %dx%d" % [path, img.get_width(), img.get_height()])
+	get_tree().quit()
 
 
 func _build() -> void:
@@ -89,7 +99,7 @@ func _start_round() -> void:
 	for i in spots.size():
 		if i != mine:
 			var w: String = Arsenal.ids()[_rng.randi_range(0, 2)]
-			_spawn("Bot %d" % (b + 1), spots[i], BOT_COLORS[b % 4], BotBrain.new(_rng.randf_range(0.4, 0.75)), w, false)
+			_spawn("Bot %d" % (b + 1), spots[i], BOT_COLORS[b % 4], BotBrain.new(_rng.randf_range(0.2, 0.5)), w, false)
 			b += 1
 	_camera.target = player
 	_camera.snap_to(player.global_position + Vector2(0, -34))

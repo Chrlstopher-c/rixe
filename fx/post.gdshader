@@ -8,7 +8,7 @@ uniform float zoom_blur = 0.0;
 uniform float aberration = 0.0;
 uniform vec4 waves[4];
 uniform float aspect = 1.7777;
-uniform float grain = 0.012;
+uniform float grain = 0.006;
 uniform float vignette = 0.4;
 
 vec2 wave_offset(vec2 uv) {
@@ -36,7 +36,7 @@ float hash(vec2 p) {
 
 void fragment() {
 	vec2 uv = SCREEN_UV + wave_offset(SCREEN_UV);
-	float ca = 0.0004 + min(aberration, 1.0) * 0.007;
+	float ca = min(aberration, 1.0) * 0.007;
 	vec3 col = vec3(0.0);
 	for (int i = 0; i < 8; i++) {
 		float t = float(i) / 7.0 - 0.5;

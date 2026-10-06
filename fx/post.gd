@@ -1,7 +1,7 @@
 extends CanvasLayer
 ## Pilote le shader de post-traitement depuis l'état de Juice et de la caméra.
 
-const SHUTTER := 0.5
+const SHUTTER := 0.2
 var _mat := ShaderMaterial.new()
 
 
@@ -21,7 +21,7 @@ func _process(delta: float) -> void:
 	var cam: Camera2D = Juice.camera
 	var blur := Vector2.ZERO
 	if cam:
-		blur = (cam.velocity * real * SHUTTER / size).limit_length(0.03)
+		blur = (cam.velocity * real * SHUTTER / size).limit_length(0.01)
 	_mat.set_shader_parameter("blur", blur)
 	_mat.set_shader_parameter("zoom_blur", Juice.zoom_punch * 0.5)
 	_mat.set_shader_parameter("aberration", Juice.aberration)
