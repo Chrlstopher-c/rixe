@@ -15,7 +15,7 @@ Chaque story : intention — VERIFY exécutable. Tests de jeu = `godot --headles
 - [x] E3.S3 — ralenti uniquement sur un kill à la tête ; morceaux qui volent (gibs physiques), jets artériels pulsés, taches sur murs/plateformes, dosage « Doom » — VERIFY: `--tests=headshot_slowmo` + capture vidéo relue
 
 ## E4 — Son
-- [ ] E4.S1 — bruitages synthétisés en local (tirs ×3 armes, impacts, chair, décapitation, saut, atterrissage, dash, douilles, mêlée) + lecteur 2D avec variations de hauteur — VERIFY: `tools/gen_sfx.py` produit les .wav, `--tests=audio` charge tous les sons
+- [x] E4.S1 — bruitages synthétisés en local (tirs ×3 armes, impacts, chair, décapitation, saut, atterrissage, dash, douilles, mêlée) + lecteur 2D avec variations de hauteur — VERIFY: `tools/gen_sfx.py` produit les .wav, `--tests=audio` charge tous les sons
 
 ## E5 — Mêlée façon Mortal Kombat
 - [ ] E5.S1 — coup de mêlée (touche E / clic molette) : frappe, gros recul, peut trancher un membre affaibli ; bots l'utilisent au contact — VERIFY: `--tests=melee`

@@ -18,7 +18,7 @@ func _init(level: float = 0.6) -> void:
 
 
 func think(f: Node2D, delta: float) -> Dictionary:
-	var it := {"move": 0.0, "jump": false, "jump_held": _hold > 0.0, "drop": false, "dash": false, "fire": false,
+	var it := {"move": 0.0, "jump": false, "jump_held": _hold > 0.0, "drop": false, "dash": false, "fire": false, "melee": false,
 		"aim": f.global_position + Vector2(f.facing * 60, -20)}
 	_hold -= delta
 	_retarget -= delta
@@ -34,6 +34,8 @@ func think(f: Node2D, delta: float) -> Dictionary:
 	_shoot(f, delta, it)
 	if f.recent_hit > 0.0 and randf() < delta * 2.0 * skill:
 		it.dash = true
+	if to.length() < 28.0 and randf() < delta * (2.0 + 4.0 * skill):
+		it.melee = true
 	return it
 
 

@@ -16,6 +16,7 @@ var j := {}
 var recoil := 0.0
 var muzzle_local := Vector2.ZERO
 var missing: Array[String] = []
+var _kick_trail: Array[Vector2] = []
 var _phase := 0.0
 var _t := 0.0
 var _feet: Array[Vector2] = [Vector2(-3, 0), Vector2(3, 0)]
@@ -51,6 +52,7 @@ func _process(delta: float) -> void:
 	_springs(delta)
 	_pose_body(delta)
 	_pose_legs(delta)
+	_pose_kick()
 	_pose_arms()
 	_update_scarf(delta)
 	_update_ghosts(delta)
@@ -100,6 +102,23 @@ func _pose_legs(delta: float) -> void:
 		_feet[i] = _feet[i].lerp(targets[i], minf(delta * rate, 1.0))
 		j["foot%d" % i] = _feet[i]
 		j["knee%d" % i] = ik(hip, _feet[i], THIGH, SHIN, f)
+
+
+func _pose_kick() -> void:
+	if not fighter.melee.active():
+		_kick_trail.clear()
+		return
+	var ext := sin(fighter.melee.progress() * PI)
+	var front := 0 if fighter.facing > 0 else 1
+	if not has("leg%d" % front):
+		return
+	var hip: Vector2 = j.hip
+	var foot: Vector2 = _feet[front].lerp(hip + fighter.aim_dir * 16.5, ext)
+	j["foot%d" % front] = foot
+	j["knee%d" % front] = ik(hip, foot, THIGH, SHIN, fighter.facing)
+	j.shoulder = j.shoulder - fighter.aim_dir * 2.5 * ext
+	j.head = j.head - fighter.aim_dir * 3.0 * ext
+	_kick_trail.append(to_global(foot))
 
 
 func _pose_arms() -> void:
@@ -179,6 +198,9 @@ func _draw() -> void:
 		var visor: Vector2 = j.head + Vector2(fighter.facing * 1.2, -0.5)
 		draw_line(visor, visor + Vector2(fighter.facing * 2.4, 0.3), fighter.team_color * 3.0, 1.2)
 	_draw_stumps()
+	for i in range(1, _kick_trail.size()):
+		var a := float(i) / _kick_trail.size()
+		draw_line(to_local(_kick_trail[i - 1]), to_local(_kick_trail[i]), Color(2.4, 2.2, 2.1, a * 0.8), 2.5 * a, Juice.hd)
 	if fighter.shield > 0.0:
 		var a := 0.25 + 0.25 * sin(_t * 20.0)
 		draw_arc(Vector2(0, -15), 19.0, 0.0, TAU, 40, Color(fighter.team_color * 1.8, a), 1.2, Juice.hd)

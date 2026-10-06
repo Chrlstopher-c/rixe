@@ -38,6 +38,7 @@ var shield := SPAWN_SHIELD
 var _since_hit := 99.0
 var intent := {}
 var body := BodyParts.new()
+var melee := Melee.new(self)
 var last_zone := ""
 var death_cause := ""
 var _spurt := {}
@@ -89,7 +90,8 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	if not was_floor and is_on_floor():
 		_land(vy)
-	gun.tick(delta, intent.fire and body.arms_left() > 0)
+	melee.tick(delta, intent.get("melee", false))
+	gun.tick(delta, intent.fire and body.arms_left() > 0 and not melee.active())
 	_bleed_stumps(delta)
 
 

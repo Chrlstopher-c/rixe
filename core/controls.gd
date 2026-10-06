@@ -11,6 +11,8 @@ static func register() -> void:
 	_keys("fire", [KEY_J])
 	_mouse("fire", MOUSE_BUTTON_LEFT)
 	_mouse("dash", MOUSE_BUTTON_RIGHT)
+	_keys("melee", [KEY_E, KEY_F])
+	_mouse("melee", MOUSE_BUTTON_MIDDLE)
 
 
 static func _ensure(action: String) -> void:
