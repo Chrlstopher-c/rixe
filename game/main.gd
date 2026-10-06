@@ -113,6 +113,7 @@ func _start_round() -> void:
 	_hud.round_no = round_no
 	_hud.bots_left = b
 	_hud.banner("MANCHE %d" % round_no)
+	Sfx.play_ui("round", -6.0)
 
 
 func reset_for_test() -> void:

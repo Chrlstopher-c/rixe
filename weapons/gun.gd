@@ -31,8 +31,10 @@ func _fire() -> void:
 	owner.rig.recoil = def.recoil
 	owner.velocity -= dir * def.kick
 	Effects.muzzle(muzzle, dir, def.tracer, def.flash)
+	Sfx.play(id, muzzle, 0.0 if owner.is_player else -4.0)
 	if def.shell:
 		Effects.shell(owner.rig.ejection_global(), dir)
+		Sfx.play("shell", muzzle, -14.0, 0.2)
 	Juice.shake(def.shake * (1.0 if owner.is_player else 0.4), muzzle)
 	if id == "railgun":
 		Juice.shockwave(muzzle, 0.6)
@@ -60,5 +62,6 @@ func _pellet(from: Vector2, dir: Vector2) -> void:
 				continue
 		else:
 			Effects.impact(end, hit.normal, def.tracer)
+			Sfx.play("impact", end, -8.0, 0.25)
 		break
 	Effects.tracer(from, end, def.tracer, def.width, 0.16 if def.pierce else 0.08)

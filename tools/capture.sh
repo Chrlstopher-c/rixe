@@ -11,7 +11,7 @@ Xvfb "$DISP" -screen 0 1280x720x24 >/dev/null 2>&1 &
 XPID=$!
 trap 'kill $XPID 2>/dev/null' EXIT
 sleep 1
-env -u WAYLAND_DISPLAY DISPLAY="$DISP" godot --path . --display-driver x11 --position 0,0 --resolution 1280x720 \
+env -u WAYLAND_DISPLAY DISPLAY="$DISP" godot --path . --display-driver x11 --audio-driver Dummy --position 0,0 --resolution 1280x720 \
   -- --demo "$@" > "$OUT/godot.log" 2>&1 &
 GPID=$!
 sleep 2

@@ -10,9 +10,9 @@ Chaque story : intention — VERIFY exécutable. Tests de jeu = `godot --headles
 - [x] E2.S1 — saut toujours disponible après atterrissage (bug « collé au sol »), saut spammable, 2 sauts en l'air max — VERIFY: `--tests=movement`
 
 ## E3 — Dégâts localisés et démembrement
-- [ ] E3.S1 — zones touchées (tête, torse, bras, jambes) par test rayon/segment sur le squelette ; tête = dégâts ×2,5 — VERIFY: `--tests=hitzones`
-- [ ] E3.S2 — membres qui lâchent (vie par membre) : bras perdu → visée dégradée, jambe perdue → lent ; tête détruite → mort immédiate ; joueur et bots — VERIFY: `--tests=dismember`
-- [ ] E3.S3 — ralenti uniquement sur un kill à la tête ; morceaux qui volent (gibs physiques), jets artériels pulsés, taches sur murs/plateformes, dosage « Doom » — VERIFY: `--tests=headshot_slowmo` + capture vidéo relue
+- [x] E3.S1 — zones touchées (tête, torse, bras, jambes) par test rayon/segment sur le squelette ; tête = dégâts ×2,5 — VERIFY: `--tests=hitzones`
+- [x] E3.S2 — membres qui lâchent (vie par membre) : bras perdu → visée dégradée, jambe perdue → lent ; tête détruite → mort immédiate ; joueur et bots — VERIFY: `--tests=dismember`
+- [x] E3.S3 — ralenti uniquement sur un kill à la tête ; morceaux qui volent (gibs physiques), jets artériels pulsés, taches sur murs/plateformes, dosage « Doom » — VERIFY: `--tests=headshot_slowmo` + capture vidéo relue
 
 ## E4 — Son
 - [ ] E4.S1 — bruitages synthétisés en local (tirs ×3 armes, impacts, chair, décapitation, saut, atterrissage, dash, douilles, mêlée) + lecteur 2D avec variations de hauteur — VERIFY: `tools/gen_sfx.py` produit les .wav, `--tests=audio` charge tous les sons

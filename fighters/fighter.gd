@@ -145,10 +145,12 @@ func _jump() -> void:
 		velocity.y = -JUMP * sqrt(leg_factor())
 		Effects.dust(global_position, 5)
 		jumped.emit(false)
+		Sfx.play("jump", global_position, -6.0)
 	elif _air_jumps > 0:
 		_air_jumps -= 1
 		velocity.y = -AIR_JUMP
 		jumped.emit(true)
+		Sfx.play("air_jump", global_position, -5.0)
 		Juice.fx.emit(5, global_position, Vector2.ZERO, 0.25, 9.0, Color(team_color, 0.8))
 	else:
 		return
@@ -165,6 +167,7 @@ func _dash() -> void:
 	dash_t = DASH_TIME
 	_dash_cd = 0.55
 	Effects.dust(global_position, 6, 1.6)
+	Sfx.play("dash", global_position, -4.0)
 	if is_player:
 		Juice.shake(0.12)
 
@@ -175,6 +178,8 @@ func leg_factor() -> float:
 
 func _land(vy: float) -> void:
 	rig.squash(clampf(vy / 520.0, 0.15, 1.0))
+	if vy > 120.0:
+		Sfx.play("land", global_position, -10.0 + vy / 60.0)
 	if vy > 250.0:
 		Effects.dust(global_position, int(vy / 60.0), 1.3)
 		Juice.shake(vy / 4000.0, global_position)
@@ -204,6 +209,7 @@ func take_hit(dmg: float, dir: Vector2, at: Vector2, from: Node2D, knock: float)
 	hit_flash = 0.07
 	recent_hit = 0.6
 	Effects.blood(at, dir, int(3 + res.dmg * 0.4))
+	Sfx.play("flesh", at, -3.0, 0.2)
 	_hit_feedback(from, res.dmg)
 	if res.broke:
 		_sever(last_zone, dir, res.dmg)
@@ -239,6 +245,7 @@ func _sever(part: String, dir: Vector2, dmg: float) -> void:
 	gib.setup(piece, velocity, dir * (160.0 + dmg * 4.0) + Vector2(0, -120), [keys[0]], team_color)
 	_spurt[keys[0]] = 2.5
 	Effects.gore_burst(pts[keys[0]], dir, 1.0 if part == "head" else 0.6)
+	Sfx.play("gore", pts[keys[0]], 2.0)
 
 
 func _die(dir: Vector2, killer: Node2D, dmg: float) -> void:
@@ -270,6 +277,7 @@ func _kill_time_fx(killer: Node2D, at: Vector2) -> void:
 	if head_kill and (player_involved or Juice.on_screen(at)):
 		Juice.hitstop(0.06)
 		Juice.slowmo(0.9, 0.22)
+		Sfx.play_ui("slowmo", -2.0)
 		Juice.aberration += 0.7
 	elif player_involved:
 		Juice.hitstop(0.04)
