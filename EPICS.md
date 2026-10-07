@@ -18,7 +18,7 @@ Chaque story : intention — VERIFY exécutable. Tests de jeu = `godot --headles
 - [x] E4.S1 — bruitages synthétisés en local (tirs ×3 armes, impacts, chair, décapitation, saut, atterrissage, dash, douilles, mêlée) + lecteur 2D avec variations de hauteur — VERIFY: `tools/gen_sfx.py` produit les .wav, `--tests=audio` charge tous les sons
 
 ## E5 — Mêlée façon Mortal Kombat
-- [ ] E5.S1 — coup de mêlée (touche E / clic molette) : frappe, gros recul, peut trancher un membre affaibli ; bots l'utilisent au contact — VERIFY: `--tests=melee`
+- [x] E5.S1 — coup de mêlée (touche E / clic molette) : frappe, gros recul, peut trancher un membre affaibli ; bots l'utilisent au contact — VERIFY: `--tests=melee`
 
 ## E6 — Boucle arcade
 - [ ] E6.S1 — les armes tombent à la mort, ramassage en passant dessus (échange) — VERIFY: `--tests=pickup`

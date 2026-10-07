@@ -268,6 +268,7 @@ func _die(dir: Vector2, killer: Node2D, dmg: float) -> void:
 	Juice.zoom_punch = 0.08
 	Juice.shake(0.4, chest)
 	_kill_time_fx(killer, chest)
+	drop_weapon(Vector2(dir.x * 80.0, -200.0))
 	Juice.fighter_killed.emit(self, killer)
 	queue_free()
 
@@ -283,6 +284,13 @@ func _kill_time_fx(killer: Node2D, at: Vector2) -> void:
 		Juice.aberration += 0.7
 	elif player_involved:
 		Juice.hitstop(0.04)
+
+
+func drop_weapon(v: Vector2) -> void:
+	var p := WeaponPickup.new()
+	Juice.world.add_child(p)
+	p.global_position = rig.to_global(rig.j.pivot)
+	p.setup(gun.id, v, self)
 
 
 func _corpse_points() -> Dictionary:

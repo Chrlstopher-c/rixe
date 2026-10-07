@@ -90,7 +90,7 @@ func _start_round() -> void:
 	for c in _fighters.get_children():
 		c.queue_free()
 	for c in Juice.world.get_children():
-		if c is Ragdoll:
+		if c is Ragdoll or c is WeaponPickup:
 			c.queue_free()
 	Juice.fx.clear()
 	Juice.stains.clear()
@@ -107,6 +107,7 @@ func _start_round() -> void:
 			var w: String = Arsenal.ids()[_rng.randi_range(0, 2)]
 			_spawn("Bot %d" % (b + 1), spots[i], BOT_COLORS[b % 4], BotBrain.new(_rng.randf_range(0.2, 0.5)), w, false)
 			b += 1
+	_spawn_pickups()
 	_camera.target = player
 	_camera.snap_to(player.global_position + Vector2(0, -34))
 	_hud.player = player
@@ -120,6 +121,9 @@ func reset_for_test() -> void:
 	Juice.reset()
 	for c in _fighters.get_children():
 		c.free()
+	for c in Juice.world.get_children():
+		if c is Ragdoll or c is WeaponPickup:
+			c.free()
 	Juice.fx.clear()
 	Juice.arena.generate_flat()
 
@@ -128,6 +132,18 @@ func spawn_test_fighter(pos: Vector2, brain: RefCounted, weapon: String = "rifle
 	var f := _spawn("Test", pos, PLAYER_COLOR, brain, weapon, is_player)
 	f.shield = 0.0
 	return f
+
+
+func _spawn_pickups() -> void:
+	var plats: Array = Juice.arena.platforms
+	for i in 2:
+		if plats.is_empty():
+			return
+		var r: Rect2 = plats[_rng.randi_range(0, plats.size() - 1)]
+		var p := WeaponPickup.new()
+		Juice.world.add_child(p)
+		p.global_position = Vector2(r.get_center().x, r.position.y - 20.0)
+		p.setup(Arsenal.ids()[_rng.randi_range(0, 2)], Vector2.ZERO)
 
 
 func _spawn(nm: String, pos: Vector2, color: Color, brain: RefCounted, weapon: String, is_player: bool) -> Fighter:
@@ -139,6 +155,8 @@ func _spawn(nm: String, pos: Vector2, color: Color, brain: RefCounted, weapon: S
 
 
 func _on_killed(victim: Node2D, killer: Node2D) -> void:
+	if _tests != "":
+		return
 	var kname: String = killer.display_name if is_instance_valid(killer) else "?"
 	_hud.feed("%s  élimine  %s" % [kname, victim.display_name], victim.team_color)
 	if is_instance_valid(killer) and killer == player:
