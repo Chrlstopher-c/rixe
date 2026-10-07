@@ -78,3 +78,9 @@ Les idées de Chris (07/10) sont marquées (Chris).
 - ~~Expérience et déblocages (armes, tenues), défis du jour, succès, statistiques détaillées.~~ (fait)
 - ~~Rediffusion de la dernière manche, mode photo.~~ (fait)
 - ~~Éditeur de cartes (les cellules du décor s'y prêtent bien).~~ (fait)
+
+## Prochaines mécaniques (Chris, 08/10)
+- ★ Corps à corps poussé : enchaînements de coups (combos), saltos, prises (saisir, projeter, clé), contres ; lisible
+  et nerveux, avec ses propres animations et sons.
+- ★ Mode de jeu « mains nues » : tout au corps à corps, aucune arme au sol ni au départ.
+- Arcade : armes à feu ET ce corps à corps complet intégré (passer de l'un à l'autre sans menu).

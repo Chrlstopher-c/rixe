@@ -9,6 +9,7 @@
 - [ ] Confirmer le correctif du tir bloqué après un changement de fenêtre (non reproduit ; diagnostic `RIXE_DEBUG_FIRE=1`)
 
 ## Backlog
+- [ ] Corps à corps poussé (combos, saltos, prises), mode mains nues, intégration en arcade (Chris, 08/10 — voir IDEES.md)
 - [ ] En ligne : survie
 - [ ] Survie à deux en écran partagé
 - [ ] Clavier pour le 2e joueur en écran partagé (aujourd'hui, il faut une manette)
