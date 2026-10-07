@@ -1,60 +1,57 @@
 # STATE — Rixe
+*Dernière mise à jour : 2026-10-07*
 
-- 07/10 : prototype montré à Chris, retours appliqués (HD par défaut, persos plus grands, bots moins forts, sauts). Brief validé.
-- Nuit du 07/10 (branche `nuit/2026-10-07`) : stories de EPICS.md.
+## Résumé de l'état actuel
+Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lien `~/projects/rixe`). Dernière version publiée : **v3.0.1**.
+- Dépôt public : github.com/Chrlstopher-c/rixe. CI verte (40 tests headless).
+- Releases sur GitHub pour Linux (testée), Windows et macOS universel (compilées, jamais lancées sur une vraie machine).
+- Modes : Arcade, Chrono, Objectif, Survie. Écran partagé à deux et manette.
+- Perf 1080p sur la tour : 150 à 210 i/s en moyenne, 1 % bas entre 50 et 100 selon la carte et le nombre de combattants.
+- Textures générées par Pigment (`/mnt/projects/pigment`, dépôt privé, MCP `pigment`).
 
-## Décisions
-- Godot 4.7.2 binaire officiel (~/.local/bin/godot), pas de paquet système (pas de sudo).
-- Rendu HD (canvas_items) par défaut, pixel (viewport 640×360) en option F1 : Chris veut des persos nets.
-- Saut : touche maintenue = rebond automatique à l'atterrissage (Chris veut « spammer »), buffer 0,2 s, 2 sauts en l'air.
-- Captures : x11grab sur Xvfb en temps réel (le movie maker de Godot enregistre la taille logique 640×360 en mode HD).
-- Tests : `--tests=…` dans le jeu lui-même, `--fixed-fps 120` pour tourner plus vite que le temps réel.
+## Ce qui a été fait — session du 07/10
+- **v1.0.0** : arcade. Démembrement, gore, ralenti sur mort par la tête, sons et musique synthétisés, modes Chrono et Objectif, classements. Release validée par Chris.
+- **v1.1.0** : décor destructible en cellules de 8 px, ricochets, IA à 5 personnalités.
+- **v1.2.0** : munitions, visée précise, remontée du canon, 5 armes de plus, grenades, accessoires, armurerie.
+- **v1.3.0** : butin, inventaire (2 armes, sac, soins), 3 cartes (plateformes, toits, mine), météo, barils et lampes, effondrement du décor.
+- **v2.0.0** : mode Survie (carte de 6000 px, jour/nuit, récolte, construction, faim, fabrication, pillards).
+- **v3.0.0** : manette et écran partagé à deux. **v3.0.1** : export macOS universel.
+- `IDEES.md` : feuille de route et idées classées, demandé par Chris.
 
-## Nuit du 07/10 — livré (branche nuit/2026-10-07)
-- Saut : rebond auto touche maintenue, buffer 0,2 s, 2 sauts en l'air. Bug « collé au sol » non reproduit par les tests clavier ;
-  hypothèse retenue : touche maintenue (just_pressed ne se redéclenche pas) → corrigé par le rebond auto.
-- Dégâts localisés (`fighters/body_parts.gd`) : tête ×2,5, membres ×0,6 ; vie par membre ; bras perdu = visée dégradée,
-  jambe perdue = lent/rampe ; tête ou torse détruits = mort (décapitation / coupé en deux). Joueur et bots.
-- Ralenti uniquement sur mort par la tête (joueur impliqué ou à l'écran). Gore : gibs physiques, jets artériels pulsés, taches.
-- Sons synthétisés (`tools/gen_sfx.py`, 16 sons), autoload `Sfx`, hauteur suit le ralenti.
-- Mêlée : coup de pied visé (E/F/molette), bots au contact. Armes au sol + ramassage par échange. Bord rouge de dégâts, viseur dynamique, ligne de visée.
-- Perf (tools/perf.sh, sway headless GPU, 1080p, 7 combattants) : ~130-144 i/s moyen, 1 % bas 55-65, GPU ~2 ms.
-- Piège : Xvfb plafonne à ~8 i/s en 1080p (copie logicielle) → jamais mesurer la perf dessus.
-- Piège : en mode test, la logique de manche relançait une manche et libérait les combattants d'un autre test → désactivée sous --tests.
-- Finitions (même nuit) : tir aux jambes au ras du sol, écran titre avec démo en fond + pause Échap (volume, HD/pixel,
-  réglages persistants dans user://settings.cfg, jamais écrits pendant les tests), musique synthétisée en boucle
-  (`tools/gen_music.py`), bots qui vont chercher une arme plus forte (railgun > pompe > fusil).
-- E10 (même nuit) : perf consolidée (taches gravées dans une texture SubViewport jamais effacée, grille d'occupation 16 px
-  pour les collisions de particules/cadavres, 14 cadavres max) → 1080p ~168 i/s, 1 % bas 77-98.
-  3 ambiances Pigment (`arena/themes.gd`, `assets/textures/<thème>/`), tirées par manche.
-  Mort du joueur = fin de partie (retour manche 1), record d'éliminations persistant (titre + HUD).
-- Modes (07/10, retour de Chris) : `game/modes.gd` (Arcade / Chrono / Objectif), `game/match_state.gd` (stats, chrono,
-  réapparitions 2,5 s au point le plus éloigné), `game/leaderboard.gd` (top 5 par mode+réglage, Objectif classé au temps),
-  `hud/scoreboard.gd` (fin de partie, jeu figé, Entrée rejouer / Échap menu). Pause → « Menu principal ».
-  Bug corrigé : fin de manche arcade avec un bot vivant (décompte de la victime en double).
-- V1.1 (07/10) : décor destructible (`arena/terrain.gd` + `terrain_chunk.gd`, cellules 8 px, 40 px de sol sur roche,
-  collisions et rendu par tronçon de 16 colonnes, index cellules par tronçon), ricochets (`Gun._trace`, chance selon
-  l'angle d'incidence), IA à personnalités (`fighters/ai/` : personality, navigator, aimer, bot_brain à états ENGAGE /
-  RUSH / RETREAT / LOOT / SEARCH / HIGH + esquive), perception cadencée à 80 ms, bots qui se régénèrent.
-  Bug corrigé : la régénération ramenait la vie à 100 même au-dessus (minf avec MAX_HP).
-  Piège GDScript : is_instance_valid sur une variable typée peut mentir dans les tests → weakref.
-- V1.2 (07/10) : munitions (chargeur/réserve/rechargement, munitions sur arme identique), visée précise (clic droit),
-  remontée du canon (`Gun.climb`, récupération après 0,18 s sans tirer), 5 armes de plus (pistolet, mitraillette,
-  précision, lance-grenades à gravité réduite, katana = `kind: blade`), grenades à main (G, 2 par vie),
-  accessoires (`Arsenal.ATTACHMENTS`, `Arsenal.compose`), déblocages persistants et armurerie au titre (`game/unlocks.gd`).
-  Archétypes : Tireur → précision, Acrobate → mitraillette, Fou → lance-grenades.
-- V1.3 (07/10) : butin et inventaire (`fighters/inventory.gd`, `weapons/loot.gd`, `hud/inventory_screen.gd`),
-  3 cartes (`arena/maps.gd` : plateformes / toits au-dessus du vide (`void_y`, mort par chute) / mine en roche creusée),
-  nouveaux types de cellules ROCK/BRICK, surface par colonne pour l'herbe, météo (`fx/weather.gd`) + vent (`Juice.wind`),
-  objets d'arène (`arena/props/` : barils explosifs en chaîne, lampes suspendues), effondrement (`Terrain._settle`,
-  `arena/falling_chunk.gd` ; montants de plateformes = appuis). Apparitions dans `game/spawner.gd`.
-  Perf : dessins regroupés (multiline), fantômes allégés, rien n'est redessiné hors écran → 1080p ~195 i/s, 1 % bas 67-88.
-  Outil : `core/prof.gd` (RIXE_PROF=1) pour profiler une section (Prof.begin/end) avec tools/perf.sh.
-- V2.0 (07/10) : mode Survie (`survival/` : état, directeur, construction, recettes), arène de largeur variable
-  (`arena.W`), cellules WOOD + `terrain.built` + signal `cell_broken(c, k, by)` pour la récolte, arbres/buissons/
-  portes/pointes (`arena/props/`), équipes (`Fighter.team`, couche de collision des portes `MASK_DOORS`),
-  fond de décor en région répétée (montagnes Pigment `tileable`).
-- V3.0 (07/10) : manette (`fighters/pad_brain.gd`, PlayerBrain hybride, `Controls.menu_key`), écran partagé
-  (`game/split_view.gd` : deux SubViewport partageant le World2D, rendu pleine définition réduit dans chaque moitié,
-  caméras dans `Juice.cameras`, vue principale éteinte), partie à deux (`game/duo.gd`). Démarrage sorti de main dans
-  `game/bootstrap.gd`. Multijoueur en ligne : en attente (infrastructure à décider).
+## Décisions prises
+| Décision | Raison | Date |
+|----------|--------|------|
+| Rendu HD par défaut, pixel en option (F1) | Chris veut des personnages nets | 07/10 |
+| Saut : touche maintenue = rebond auto, buffer 0,2 s, 2 sauts en l'air | Chris veut « spammer » le saut | 07/10 |
+| Ralenti seulement sur une mort par la tête | Consigne de Chris | 07/10 |
+| Tout se fait et se teste sur la tour, rien sur le portable | Consigne de Chris | 07/10 |
+| Physique à 120 Hz conservée | À 60 Hz le gain était nul : le coût venait des dessins, pas de la physique | 07/10 |
+| Arènes sous `arena/`, survie sous `survival/` | Découpage par domaine | 07/10 |
+| Mac : signature ad hoc, sans notarisation | Pas de compte développeur Apple | 07/10 |
+
+## Contexte non-évident
+- **Captures** : `tools/capture.sh` filme en temps réel (Xvfb + x11grab). Le movie maker de Godot enregistre la taille logique 640×360 en HD, donc inutilisable ici.
+- **Perf** : `tools/perf.sh` tourne sur un sway headless rendu par le GPU, avec un XDG_RUNTIME_DIR privé. Ne jamais mesurer sur Xvfb (~8 i/s en 1080p).
+- **Profilage** : `core/prof.gd` avec RIXE_PROF=1 (Prof.begin/end). Les gros postes ont été le dessin des bonhommes et les particules.
+  - Correctifs appliqués : tracés regroupés (draw_multiline), fantômes allégés, rien de dessiné hors écran.
+- **Tests** : `--tests=…` dans le jeu même, avec `--fixed-fps 120`. Les noms en `showcase*` sont des démos filmables, exclues de `all`.
+- **Réglages** : jamais écrits pendant les tests (`Settings.persist = false`).
+- **Pièges GDScript** :
+  - `is_instance_valid` peut mentir sur une variable typée : utiliser `weakref`.
+  - Un objet libéré passé à un paramètre typé provoque une erreur : passer par `Variant`.
+  - `class_name Tree` est interdit (classe native), d'où `WildTree`.
+- **Écran partagé** : deux SubViewport partagent le World2D. La vue principale est éteinte (caméra désactivée, transformation hors champ). Les caméras actives sont dans `Juice.cameras`.
+- **Export macOS** : nécessite `textures/vram_compression/import_etc2_astc=true`.
+
+## Prochaines étapes
+1. Retour de Chris sur v1.1 → v3.0.1 : ressenti des IA, survie, écran partagé, et tester l'app Mac sur un vrai Mac.
+2. Multijoueur en ligne pair à pair (E26), dès que Chris a choisi l'hébergement du serveur de mise en relation.
+3. Idées suivantes : voir `IDEES.md` (exécutions façon Mortal Kombat, marqueurs de touche, musique en couches, tenues).
+
+## Points en suspens
+- **Hébergement du serveur de mise en relation** (décision de Chris) : Cloudflare Worker (recommandé) ou Pi. Pas de sous-domaine sur le tunnel du Pi sans demande explicite.
+- Builds Windows et macOS jamais lancées sur une vraie machine.
+
+## Historique
+- 07/10 nuit : V1 arcade (E1–E10), branche nuit/2026-10-07 fusionnée dans main.
+- 07/10 : prototype montré, retours appliqués (HD, persos plus grands, bots moins forts, sauts), brief validé.
