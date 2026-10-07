@@ -32,3 +32,9 @@
   réapparitions 2,5 s au point le plus éloigné), `game/leaderboard.gd` (top 5 par mode+réglage, Objectif classé au temps),
   `hud/scoreboard.gd` (fin de partie, jeu figé, Entrée rejouer / Échap menu). Pause → « Menu principal ».
   Bug corrigé : fin de manche arcade avec un bot vivant (décompte de la victime en double).
+- V1.1 (07/10) : décor destructible (`arena/terrain.gd` + `terrain_chunk.gd`, cellules 8 px, 40 px de sol sur roche,
+  collisions et rendu par tronçon de 16 colonnes, index cellules par tronçon), ricochets (`Gun._trace`, chance selon
+  l'angle d'incidence), IA à personnalités (`fighters/ai/` : personality, navigator, aimer, bot_brain à états ENGAGE /
+  RUSH / RETREAT / LOOT / SEARCH / HIGH + esquive), perception cadencée à 80 ms, bots qui se régénèrent.
+  Bug corrigé : la régénération ramenait la vie à 100 même au-dessus (minf avec MAX_HP).
+  Piège GDScript : is_instance_valid sur une variable typée peut mentir dans les tests → weakref.

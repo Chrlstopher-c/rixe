@@ -36,9 +36,8 @@ func rebuild() -> void:
 		for s in body.get_children():
 			s.free()
 	var rows := {}
-	for c: Vector2i in terrain.kind:
-		if c.x >= _columns()[0] and c.x < _columns()[1]:
-			rows[c.y] = true
+	for c: Vector2i in terrain.by_chunk.get(index, {}):
+		rows[c.y] = true
 	for y: int in rows:
 		_runs(y)
 
@@ -68,9 +67,8 @@ func _shape(x0: int, x1: int, y: int, one_way: bool) -> void:
 
 
 func _draw() -> void:
-	for c: Vector2i in terrain.kind:
-		if c.x >= _columns()[0] and c.x < _columns()[1]:
-			_draw_cell(c, terrain.kind[c])
+	for c: Vector2i in terrain.by_chunk.get(index, {}):
+		_draw_cell(c, terrain.kind[c])
 
 
 func _draw_cell(c: Vector2i, k: int) -> void:

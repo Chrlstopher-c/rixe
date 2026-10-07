@@ -53,7 +53,7 @@ Chaque story : intention — VERIFY exécutable. Tests de jeu = `godot --headles
 - [x] E12.S2 — ricochets selon l'angle d'incidence (fusil 2 rebonds, pompe 1, railgun 1), son dédié, dégâts réduits, peut toucher le tireur — VERIFY: `--tests=ricochet`
 
 ## E13 — IA à personnalités
-- [ ] E13.S1 — 5 archétypes (Brute, Tireur, Acrobate, Renard, Fou) : agressivité, distance, mobilité, précision, seuil de fuite — VERIFY: `--tests=personalities`
-- [ ] E13.S2 — comportements : engager, foncer, fuir et se soigner, esquiver quand on est visé, flanquer, chercher une arme, se mettre à couvert — VERIFY: `--tests=behaviours`
-- [ ] E13.S3 — humanisation : temps de réaction, visée qui suit avec dépassement, rafales, mémoire de la dernière position vue, déblocage — VERIFY: `--tests=humanize` + capture relue
-- [ ] E13.S4 — navigation : monter vers une plateforme accessible, descendre, sauter les trous creusés — VERIFY: `--tests=navigation`
+- [x] E13.S1 — 5 archétypes (Brute, Tireur, Acrobate, Renard, Fou) : agressivité, distance, mobilité, précision, seuil de fuite — VERIFY: `--tests=personalities`
+- [x] E13.S2 — comportements : engager, foncer, fuir et se soigner, esquiver quand on est visé, flanquer, chercher une arme, se mettre à couvert — VERIFY: `--tests=behaviours`
+- [x] E13.S3 — humanisation : temps de réaction, visée qui suit avec dépassement, rafales, mémoire de la dernière position vue, déblocage — VERIFY: `--tests=humanize` + capture relue
+- [x] E13.S4 — navigation : monter vers une plateforme accessible, descendre, sauter les trous creusés — VERIFY: `--tests=navigation`

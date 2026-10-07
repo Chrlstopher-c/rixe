@@ -12,6 +12,8 @@ const DEBRIS := {K.DIRT: Color(0.38, 0.22, 0.14), K.PLAT: Color(0.45, 0.48, 0.56
 
 var kind := {}
 var hp := {}
+## Cellules par tronçon (index → {cellule: true}) : un tronçon ne parcourt que les siennes.
+var by_chunk := {}
 var tex := {}
 var rim := Color(1.6, 0.75, 0.5)
 var _chunks := {}
@@ -20,6 +22,7 @@ var _chunks := {}
 func clear() -> void:
 	kind.clear()
 	hp.clear()
+	by_chunk.clear()
 	for c in _chunks.values():
 		c.free()
 	_chunks.clear()
@@ -41,6 +44,7 @@ func fill(r: Rect2, k: int) -> void:
 			var c := Vector2i(x, y)
 			kind[c] = k
 			hp[c] = HP[k]
+			_chunk_cells(c.x)[c] = true
 			_dirty(c.x)
 
 
@@ -78,6 +82,7 @@ func _break(c: Vector2i) -> void:
 	var k: int = kind[c]
 	kind.erase(c)
 	hp.erase(c)
+	_chunk_cells(c.x).erase(c)
 	var center := cell_rect(c).get_center()
 	for i in 2:
 		var v := Vector2(randf_range(-90, 90), randf_range(-220, -60))
@@ -88,6 +93,13 @@ func _break(c: Vector2i) -> void:
 	dust.drag = 2.0
 	if Juice.stains:
 		Juice.stains.erase(cell_rect(c))
+
+
+func _chunk_cells(cell_x: int) -> Dictionary:
+	var cx := floori(float(cell_x) / CHUNK)
+	if not by_chunk.has(cx):
+		by_chunk[cx] = {}
+	return by_chunk[cx]
 
 
 func _dirty(cell_x: int) -> void:

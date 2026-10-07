@@ -2,7 +2,6 @@ extends Node2D
 ## Point d'entrée : construit le monde et enchaîne les manches (toi contre des bots, chacun pour soi).
 
 const PLAYER_COLOR := Color(0.3, 0.9, 1.0)
-const BOT_COLORS := [Color(1.0, 0.25, 0.3), Color(1.0, 0.6, 0.15), Color(0.95, 0.3, 0.95), Color(0.65, 1.0, 0.3)]
 
 var round_no := 1
 var seed_base := 1
@@ -19,6 +18,7 @@ var match_state := MatchState.new("arcade")
 ## Active les règles de partie pendant les tests (désactivées par défaut pour isoler les scénarios).
 var live_rules := false
 var _scoreboard: CanvasLayer
+var _bot_kinds := {}
 var player: Fighter
 var _fighters: Node2D
 var _hud: CanvasLayer
@@ -160,13 +160,13 @@ func _start_round() -> void:
 	var n := mini(2 + round_no, 6) if game_mode == "arcade" or attract else 5
 	var spots: Array = Juice.arena.spawn_points(n + 1, _rng)
 	var mine := _rng.randi_range(0, n)
-	var brain: RefCounted = BotBrain.new(1.0) if demo or attract else PlayerBrain.new()
+	var brain: RefCounted = BotBrain.new(1.0, "acrobate") if demo or attract else PlayerBrain.new()
 	player = _spawn("Toi", spots[mine], PLAYER_COLOR, brain, "rifle", true)
+	_bot_kinds.clear()
 	var b := 0
 	for i in spots.size():
 		if i != mine:
-			var w: String = Arsenal.ids()[_rng.randi_range(0, 2)]
-			_spawn("Bot %d" % (b + 1), spots[i], BOT_COLORS[b % 4], BotBrain.new(_rng.randf_range(0.2, 0.5)), w, false)
+			_spawn_bot(spots[i], "")
 			b += 1
 	_spawn_pickups()
 	_camera.target = player
@@ -208,6 +208,27 @@ func spawn_test_fighter(pos: Vector2, brain: RefCounted, weapon: String = "rifle
 	var f := _spawn("Test", pos, PLAYER_COLOR, brain, weapon, is_player)
 	f.shield = 0.0
 	return f
+
+
+## Bot d'un archétype (vide = au hasard) ; même nom et même caractère à chaque réapparition.
+func _spawn_bot(pos: Vector2, name: String) -> Fighter:
+	var kind: String = _bot_kinds.get(name, Personality.ids()[_rng.randi_range(0, Personality.ids().size() - 1)])
+	var level := clampf(0.25 + round_no * 0.08, 0.25, 0.8) if game_mode == "arcade" else 0.45
+	var brain := BotBrain.new(level, kind)
+	if name == "":
+		name = _unique_name(brain.p.label)
+		_bot_kinds[name] = kind
+	var w: String = brain.p.weapon if _rng.randf() < 0.6 else Arsenal.ids()[_rng.randi_range(0, 2)]
+	return _spawn(name, pos, Personality.ARCHETYPES[kind].color, brain, w, false)
+
+
+func _unique_name(label: String) -> String:
+	if not _bot_kinds.has(label):
+		return label
+	var i := 2
+	while _bot_kinds.has("%s %d" % [label, i]):
+		i += 1
+	return "%s %d" % [label, i]
 
 
 func _spawn_pickups() -> void:
@@ -316,13 +337,12 @@ static func _ordinal(n: int) -> String:
 func _respawn(entry: Dictionary) -> void:
 	var pos := _far_spawn()
 	if entry.player:
-		var brain: RefCounted = BotBrain.new(1.0) if demo else PlayerBrain.new()
+		var brain: RefCounted = BotBrain.new(1.0, "acrobate") if demo else PlayerBrain.new()
 		player = _spawn("Toi", pos, PLAYER_COLOR, brain, "rifle", true)
 		_camera.target = player
 		_hud.player = player
 	else:
-		var w: String = Arsenal.ids()[_rng.randi_range(0, 2)]
-		_spawn(entry.name, pos, entry.color, BotBrain.new(_rng.randf_range(0.2, 0.5)), w, false)
+		_spawn_bot(pos, entry.name)
 	Juice.fx.emit(5, pos + Vector2(0, -20), Vector2.ZERO, 0.4, 24.0, Color(entry.color * 1.8, 0.8))
 
 

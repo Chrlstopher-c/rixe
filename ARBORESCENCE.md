@@ -6,6 +6,10 @@
 - arena/arena.gd.uid
 - arena/backdrop.gd
 - arena/backdrop.gd.uid
+- arena/terrain_chunk.gd
+- arena/terrain_chunk.gd.uid
+- arena/terrain.gd
+- arena/terrain.gd.uid
 - arena/themes.gd
 - arena/themes.gd.uid
 - audio/sfx.gd
@@ -23,9 +27,17 @@
 - core/settings.gd.uid
 - .env.example
 - EPICS.md
+- export_presets.cfg
+- fighters/ai/aimer.gd
+- fighters/ai/aimer.gd.uid
+- fighters/ai/bot_brain.gd
+- fighters/ai/bot_brain.gd.uid
+- fighters/ai/navigator.gd
+- fighters/ai/navigator.gd.uid
+- fighters/ai/personality.gd
+- fighters/ai/personality.gd.uid
 - fighters/body_parts.gd
 - fighters/body_parts.gd.uid
-- fighters/bot_brain.gd
 - fighters/bot_brain.gd.uid
 - fighters/fighter.gd
 - fighters/fighter.gd.uid
@@ -74,6 +86,8 @@
 - stop.sh
 - tests/script_brain.gd
 - tests/script_brain.gd.uid
+- tests/test_ai.gd
+- tests/test_ai.gd.uid
 - tests/test_audio.gd
 - tests/test_audio.gd.uid
 - tests/test_combat.gd
@@ -94,6 +108,8 @@
 - tests/test_score.gd.uid
 - tests/test_showcase.gd
 - tests/test_showcase.gd.uid
+- tests/test_terrain.gd
+- tests/test_terrain.gd.uid
 - tests/test_themes.gd
 - tests/test_themes.gd.uid
 - TODO.md
@@ -109,6 +125,6 @@
 - weapons/gun.gd.uid
 - weapons/pickup.gd
 - weapons/pickup.gd.uid
-- assets/sfx/*.wav (16 sons générés)
+- assets/sfx/*.wav (17 sons générés)
 - assets/music/combat.wav (musique générée)
 - assets/textures/<crepuscule|acier|rouille>/ (générés par Pigment)

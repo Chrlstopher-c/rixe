@@ -110,8 +110,8 @@ func _timers(delta: float) -> void:
 		var low := clampf(1.0 - hp / 45.0, 0.0, 1.0) * 0.45
 		Juice.hurt = maxf(move_toward(Juice.hurt, 0.0, delta * 1.2), low)
 	_since_hit += delta
-	if is_player and _since_hit > REGEN_DELAY:
-		hp = minf(hp + REGEN_RATE * delta, MAX_HP)
+	if _since_hit > REGEN_DELAY and hp < MAX_HP:
+		hp = minf(hp + REGEN_RATE * delta * (1.0 if is_player else 0.6), MAX_HP)
 	recent_hit -= delta
 	_dash_cd -= delta
 	_coyote = COYOTE if is_on_floor() else _coyote - delta

@@ -31,7 +31,7 @@ func test_pickup(t: Node) -> void:
 
 
 func test_bot_pickup(t: Node) -> void:
-	var bot: Fighter = t.main.spawn_test_fighter(Vector2(500, -10), BotBrain.new(0.5), "rifle", false)
+	var bot: Fighter = t.main.spawn_test_fighter(Vector2(500, -10), BotBrain.new(0.5, "renard"), "rifle", false)
 	var p := WeaponPickup.new()
 	Juice.world.add_child(p)
 	p.global_position = Vector2(680, -30)
