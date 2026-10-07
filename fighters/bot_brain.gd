@@ -2,6 +2,8 @@ class_name BotBrain
 extends RefCounted
 ## IA de bot : choix de cible, distance idéale selon l'arme, sauts/descentes de plateformes, visée imparfaite, esquive.
 
+const RANK := {"rifle": 1, "shotgun": 2, "railgun": 3}
+
 var skill := 0.6
 var target: Node2D
 var _retarget := 0.0
@@ -27,17 +29,38 @@ func think(f: Node2D, delta: float) -> Dictionary:
 		target = _pick(f)
 		_retarget = randf_range(1.5, 3.5)
 		_react = lerpf(1.0, 0.4, skill)
+	var loot := _wanted_pickup(f)
+	if not is_instance_valid(target) and loot == null:
+		return it
+	var to: Vector2 = target.global_position - f.global_position if is_instance_valid(target) else Vector2.ZERO
+	if loot:
+		var to_loot: Vector2 = loot.global_position - f.global_position
+		it.move = signf(to_loot.x) if absf(to_loot.x) > 4.0 else 0.0
+		_vertical(f, to_loot, it)
+	else:
+		it.move = _horizontal(f, to, delta)
+		_vertical(f, to, it)
 	if not is_instance_valid(target):
 		return it
-	var to: Vector2 = target.global_position - f.global_position
-	it.move = _horizontal(f, to, delta)
-	_vertical(f, to, it)
 	_shoot(f, delta, it)
 	if f.recent_hit > 0.0 and randf() < delta * 2.0 * skill:
 		it.dash = true
 	if to.length() < 28.0 and randf() < delta * (2.0 + 4.0 * skill):
 		it.melee = true
 	return it
+
+
+## Arme au sol plus forte que la sienne, à portée raisonnable (préférence : railgun > pompe > fusil).
+func _wanted_pickup(f: Node2D) -> Node2D:
+	var mine: int = RANK.get(f.gun.id, 0)
+	var best: Node2D = null
+	for p in f.get_tree().get_nodes_in_group("pickups"):
+		if RANK.get(p.weapon_id, 0) <= mine or (p.immune == f and p.immune_t > 0.0):
+			continue
+		var d: float = f.global_position.distance_to(p.global_position)
+		if d < 240.0 and (best == null or d < f.global_position.distance_to(best.global_position)):
+			best = p
+	return best
 
 
 func _pick(f: Node2D) -> Node2D:

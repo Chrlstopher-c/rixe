@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["pickup"]
+	return ["pickup", "bot_pickup"]
 
 
 func test_pickup(t: Node) -> void:
@@ -28,3 +28,13 @@ func test_pickup(t: Node) -> void:
 		if c is WeaponPickup and c.weapon_id == "railgun":
 			n += 1
 	t.check(n == 1, "l'arme tombe à la mort")
+
+
+func test_bot_pickup(t: Node) -> void:
+	var bot: Fighter = t.main.spawn_test_fighter(Vector2(500, -10), BotBrain.new(0.5), "rifle", false)
+	var p := WeaponPickup.new()
+	Juice.world.add_child(p)
+	p.global_position = Vector2(680, -30)
+	p.setup("railgun", Vector2.ZERO)
+	var got: bool = await t.until(func() -> bool: return bot.gun.id == "railgun", 600)
+	t.check(got, "le bot va chercher le railgun posé à 180 px")

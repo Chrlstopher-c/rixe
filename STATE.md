@@ -21,3 +21,6 @@
 - Perf (tools/perf.sh, sway headless GPU, 1080p, 7 combattants) : ~130-144 i/s moyen, 1 % bas 55-65, GPU ~2 ms.
 - Piège : Xvfb plafonne à ~8 i/s en 1080p (copie logicielle) → jamais mesurer la perf dessus.
 - Piège : en mode test, la logique de manche relançait une manche et libérait les combattants d'un autre test → désactivée sous --tests.
+- Finitions (même nuit) : tir aux jambes au ras du sol, écran titre avec démo en fond + pause Échap (volume, HD/pixel,
+  réglages persistants dans user://settings.cfg, jamais écrits pendant les tests), musique synthétisée en boucle
+  (`tools/gen_music.py`), bots qui vont chercher une arme plus forte (railgun > pompe > fusil).

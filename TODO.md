@@ -5,9 +5,7 @@
 - CI : le dépôt n'est pas encore sur GitHub (création du dépôt = à décider par Chris) ; `.github/workflows/ci.yml` prêt.
 
 ## Pistes V1 (arcade)
-- Tirer aux pieds touche souvent le sol (rayon rasant) : élargir la zone jambes au contact du sol.
-- Écran de titre / menu, réglages (volume, HD/pixel), score de fin.
-- Musique synthétisée.
+- Score de fin de partie / meilleur score.
 
 ## Backlog (après V1, idées de Chris du 07/10)
 - **Mode survie** (à côté du mode arcade) : construire des bases (murs, portes), produire de la nourriture, cycle de survie.

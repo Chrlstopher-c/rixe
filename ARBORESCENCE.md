@@ -3,6 +3,7 @@
 - .env.example
 - .github/workflows/ci.yml
 - .gitignore
+- ARBORESCENCE.md
 - ARCHITECTURE.md
 - BRIEF.md
 - EPICS.md
@@ -29,6 +30,8 @@
 - core/game_camera.gd.uid
 - core/juice.gd
 - core/juice.gd.uid
+- core/settings.gd
+- core/settings.gd.uid
 - fighters/body_parts.gd
 - fighters/body_parts.gd.uid
 - fighters/bot_brain.gd
@@ -58,6 +61,8 @@
 - game/main.tscn
 - hud/hud.gd
 - hud/hud.gd.uid
+- hud/menu.gd
+- hud/menu.gd.uid
 - project.godot
 - restart.sh
 - start.sh
@@ -70,6 +75,8 @@
 - tests/test_combat.gd.uid
 - tests/test_melee.gd
 - tests/test_melee.gd.uid
+- tests/test_menu.gd
+- tests/test_menu.gd.uid
 - tests/test_movement.gd
 - tests/test_movement.gd.uid
 - tests/test_pickup.gd
@@ -80,6 +87,7 @@
 - tests/test_showcase.gd.uid
 - tools/capture.sh
 - tools/gen_assets.py
+- tools/gen_music.py
 - tools/gen_sfx.py
 - tools/perf.sh
 - tools/verify.sh
