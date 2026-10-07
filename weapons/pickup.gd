@@ -13,12 +13,15 @@ var immune_t := 0.0
 ## Munitions portées (-1 = plein).
 var mag := -1
 var reserve := -1
+var attachments := {}
 var _t := 0.0
 
 
-func setup(id: String, v: Vector2, dropper: Node2D = null, ammo_mag: int = -1, ammo_reserve: int = -1) -> void:
+func setup(id: String, v: Vector2, dropper: Node2D = null, ammo_mag: int = -1, ammo_reserve: int = -1,
+		mods: Dictionary = {}) -> void:
 	weapon_id = id
-	var d: Dictionary = Arsenal.WEAPONS[id]
+	attachments = mods.duplicate()
+	var d: Dictionary = Arsenal.compose(id, attachments)
 	mag = int(d.mag) if ammo_mag < 0 else ammo_mag
 	reserve = int(d.reserve) if ammo_reserve < 0 else ammo_reserve
 	vel = v
@@ -60,12 +63,14 @@ func _try_grab() -> void:
 
 func _swap(f: Node2D) -> void:
 	var old: Gun = f.gun
-	f.gun = Gun.new(f, weapon_id)
+	f.gun = Gun.new(f, weapon_id, attachments)
 	f.gun.mag = mag
 	f.gun.reserve = reserve
+	if f.is_player and Unlocks.unlock("weapon", weapon_id):
+		Juice.notify("Débloqué : " + String(Arsenal.WEAPONS[weapon_id].name))
 	Sfx.play("pickup", global_position, -2.0, 0.05)
 	Juice.fx.emit(5, global_position, Vector2.ZERO, 0.25, 10.0, Color(2.0, 1.8, 1.4, 0.8))
-	setup(old.id, Vector2(-f.facing * 60.0, -160.0), f, old.mag, old.reserve)
+	setup(old.id, Vector2(-f.facing * 60.0, -160.0), f, old.mag, old.reserve, old.attachments)
 
 
 func _take_ammo(f: Node2D) -> void:

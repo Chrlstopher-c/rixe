@@ -38,3 +38,8 @@
   RUSH / RETREAT / LOOT / SEARCH / HIGH + esquive), perception cadencée à 80 ms, bots qui se régénèrent.
   Bug corrigé : la régénération ramenait la vie à 100 même au-dessus (minf avec MAX_HP).
   Piège GDScript : is_instance_valid sur une variable typée peut mentir dans les tests → weakref.
+- V1.2 (07/10) : munitions (chargeur/réserve/rechargement, munitions sur arme identique), visée précise (clic droit),
+  remontée du canon (`Gun.climb`, récupération après 0,18 s sans tirer), 5 armes de plus (pistolet, mitraillette,
+  précision, lance-grenades à gravité réduite, katana = `kind: blade`), grenades à main (G, 2 par vie),
+  accessoires (`Arsenal.ATTACHMENTS`, `Arsenal.compose`), déblocages persistants et armurerie au titre (`game/unlocks.gd`).
+  Archétypes : Tireur → précision, Acrobate → mitraillette, Fou → lance-grenades.

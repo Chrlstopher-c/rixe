@@ -16,10 +16,12 @@ var _banner_t := 0.0
 var _feed: Array[Dictionary] = []
 var _font: Font = ThemeDB.fallback_font
 var _hp_shown := 100.0
+var _toasts: Array[Dictionary] = []
 
 
 func _ready() -> void:
 	layer = 20
+	Juice.notified.connect(func(text: String) -> void: _toasts.append({"text": text, "t": 0.0}))
 	_canvas.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_canvas.draw.connect(_draw_hud)
@@ -43,6 +45,9 @@ func _process(delta: float) -> void:
 	for f in _feed:
 		f.t += real
 	_feed = _feed.filter(func(f: Dictionary) -> bool: return f.t < 4.0)
+	for t in _toasts:
+		t.t += real
+	_toasts = _toasts.filter(func(t: Dictionary) -> bool: return t.t < 3.0)
 	var hp: float = player.hp if is_instance_valid(player) else 0.0
 	_hp_shown = lerpf(_hp_shown, hp, minf(real * 6.0, 1.0))
 	_canvas.queue_redraw()
@@ -60,6 +65,7 @@ func _draw_hud() -> void:
 	_draw_banner()
 	_draw_mode_center()
 	_draw_ammo()
+	_draw_toasts()
 	if show_crosshair:
 		_draw_crosshair(_canvas.get_local_mouse_position())
 
@@ -144,6 +150,10 @@ func _draw_ammo() -> void:
 		_canvas.draw_circle(Vector2(x - 8 - i * 9, size.y - 22), 3.0, Color(0.5, 0.9, 0.4))
 	_canvas.draw_string(_font, Vector2(x, size.y - 40), String(g.def.name).to_upper(), HORIZONTAL_ALIGNMENT_RIGHT,
 		124, 8, Color(1, 0.9, 0.95, 0.6))
+	var names := g.attachments.values().map(func(a: String) -> String: return Arsenal.ATTACHMENTS[a].name)
+	if not names.is_empty():
+		_canvas.draw_string(_font, Vector2(x - 120, size.y - 50), " · ".join(names), HORIZONTAL_ALIGNMENT_RIGHT, 244, 7,
+			Color(0.6, 1.8, 0.9, 0.7))
 	if g.reloading():
 		var r := Rect2(x + 4, size.y - 12, 120, 3)
 		_canvas.draw_rect(r, Color(0, 0, 0, 0.5))
@@ -152,3 +162,13 @@ func _draw_ammo() -> void:
 		var msg := "R : RECHARGER" if g.reserve > 0 else "PLUS DE MUNITIONS · E : COUP DE PIED"
 		_canvas.draw_string(_font, Vector2(0, size.y * 0.5 + 40), msg, HORIZONTAL_ALIGNMENT_CENTER, size.x, 10,
 			Color(2.0, 0.6, 0.6, 0.6 + 0.4 * sin(Time.get_ticks_msec() * 0.01)))
+
+
+func _draw_toasts() -> void:
+	for i in _toasts.size():
+		var t: Dictionary = _toasts[i]
+		var a := clampf(t.t * 6.0, 0.0, 1.0) * clampf((3.0 - t.t) * 2.0, 0.0, 1.0)
+		var y := 80.0 + i * 16.0
+		_canvas.draw_rect(Rect2(_canvas.size.x * 0.5 - 90, y - 11, 180, 15), Color(0.02, 0.08, 0.04, 0.6 * a))
+		_canvas.draw_string(_font, Vector2(0, y), t.text, HORIZONTAL_ALIGNMENT_CENTER, _canvas.size.x, 10,
+			Color(0.6, 2.0, 0.9, a))

@@ -22,6 +22,7 @@ var _t := 0.0
 var _canvas := Control.new()
 var _font: Font = ThemeDB.fallback_font
 var _rects: Array[Rect2] = []
+var loadout := {"weapon": "rifle", "attachments": {}}
 
 
 func _ready() -> void:
@@ -58,12 +59,19 @@ func _open(m: String) -> void:
 func _ids() -> Array[String]:
 	if mode == "board":
 		return ["board_mode", "back"]
+	if mode == "armory":
+		var ids: Array[String] = ["weapon"]
+		if Arsenal.accepts(loadout.weapon):
+			for s in Arsenal.SLOTS:
+				ids.append("slot_" + s)
+		ids.append("back")
+		return ids
 	if mode == "pause":
 		return ["resume", "restart", "volume", "display", "title", "quit"]
 	var ids: Array[String] = ["mode"]
 	if Modes.has_option(game_mode):
 		ids.append("option")
-	ids.append_array(["play", "board", "volume", "display", "quit"])
+	ids.append_array(["play", "armory", "board", "volume", "display", "quit"])
 	return ids
 
 
@@ -77,6 +85,10 @@ func _text(id: String) -> String:
 			return "JOUER"
 		"board":
 			return "CLASSEMENT"
+		"armory":
+			return "ARMURERIE"
+		"weapon":
+			return "ARME  ‹ %s ›" % String(Arsenal.WEAPONS[loadout.weapon].name).to_upper()
 		"volume":
 			return "VOLUME  %d %%" % roundi(volume * 100.0)
 		"display":
@@ -89,6 +101,12 @@ func _text(id: String) -> String:
 			return "RECOMMENCER"
 		"back":
 			return "RETOUR"
+	if id.begins_with("slot_"):
+		var slot := id.substr(5)
+		var a: String = loadout.attachments.get(slot, "")
+		var label: String = {"optic": "VISEUR", "mag": "CHARGEUR", "barrel": "CANON", "stock": "CROSSE"}[slot]
+		var name := "aucun" if a == "" else String(Arsenal.ATTACHMENTS[a].name)
+		return "%s  ‹ %s ›" % [label, name.to_upper()]
 	return "QUITTER"
 
 
@@ -122,7 +140,7 @@ func _back() -> void:
 	match mode:
 		"pause":
 			resume_requested.emit()
-		"board":
+		"board", "armory":
 			show_title()
 		_:
 			quit_requested.emit()
@@ -137,12 +155,33 @@ func _adjust(id: String, step: int) -> void:
 		"option":
 			var count: int = (Modes.ALL[game_mode].options as Array).size()
 			options[game_mode] = posmod(options[game_mode] + step, count)
+		"weapon":
+			loadout.weapon = _cycle(Unlocks.weapons(), loadout.weapon, step)
+			if not Arsenal.accepts(loadout.weapon):
+				loadout.attachments = {}
+			Unlocks.save_loadout(loadout)
 		"volume":
 			volume = clampf(volume + step * 0.1, 0.0, 1.0)
 			volume_changed.emit(volume)
 		"display":
 			hd = not hd
 			hd_changed.emit(hd)
+		_:
+			if id.begins_with("slot_"):
+				var slot := id.substr(5)
+				var a := _cycle(Unlocks.attachments(slot), loadout.attachments.get(slot, ""), step)
+				if a == "":
+					loadout.attachments.erase(slot)
+				else:
+					loadout.attachments[slot] = a
+				Unlocks.save_loadout(loadout)
+
+
+static func _cycle(list: Array, current: String, step: int) -> String:
+	if list.is_empty():
+		return current
+	var i := list.find(current)
+	return list[posmod(i + step, list.size())]
 
 
 func activate(i: int) -> void:
@@ -153,6 +192,9 @@ func activate(i: int) -> void:
 			start_requested.emit(game_mode, options[game_mode])
 		"board":
 			_open("board")
+		"armory":
+			loadout = Unlocks.loadout()
+			_open("armory")
 		"back":
 			show_title()
 		"resume":
@@ -190,12 +232,16 @@ func _draw_menu() -> void:
 		_canvas.draw_string(_font, Vector2(0, top + 20), Modes.ALL[game_mode].desc, HORIZONTAL_ALIGNMENT_CENTER,
 			size.x, 10, Color(1, 0.85, 0.9, 0.75))
 	else:
-		var head := "PAUSE" if mode == "pause" else "CLASSEMENT"
+		var head: String = {"pause": "PAUSE", "board": "CLASSEMENT", "armory": "ARMURERIE"}[mode]
 		_canvas.draw_string(_font, Vector2(0, top), head, HORIZONTAL_ALIGNMENT_CENTER, size.x, 28, Color(1.6, 1.5, 1.5))
 	if mode == "board":
 		_draw_board(size.x * 0.5, top + 26)
+	if mode == "armory":
+		var hint := "Ramasse une arme ou un accessoire en partie pour le débloquer ici"
+		_canvas.draw_string(_font, Vector2(0, top + 20), hint, HORIZONTAL_ALIGNMENT_CENTER, size.x, 9,
+			Color(1, 0.9, 0.95, 0.6))
 	_draw_items(size.x * 0.5, size.y * (0.4 if mode == "title" else 0.36) + (150.0 if mode == "board" else 0.0))
-	var help := "ZQSD bouger · Espace sauter · clic tirer · clic droit viser · R recharger · Maj dash · E coup de pied"
+	var help := "ZQSD bouger · Espace sauter · clic tirer · clic droit viser · R recharger · G grenade · Maj dash · E pied"
 	_canvas.draw_string(_font, Vector2(0, size.y - 12), help, HORIZONTAL_ALIGNMENT_CENTER, size.x, 8,
 		Color(1, 0.9, 0.95, 0.55))
 

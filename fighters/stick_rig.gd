@@ -291,6 +291,7 @@ func _draw_firearm(d: Dictionary, look: String) -> void:
 	draw_rect(Rect2(-5.5, -0.3, 2.5, t + 0.6), metal)
 	draw_rect(Rect2(0.5, t * 0.5, 1.6, 2.4), metal)
 	draw_rect(Rect2(1.0, -t * 0.5, L - 7.0, 0.6), fighter.team_color * 1.6)
+	_draw_attachments(L, t, metal)
 	match look:
 		"scope":
 			draw_rect(Rect2(0.5, -t * 0.5 - 2.0, 5.0, 1.6), metal)
@@ -302,6 +303,23 @@ func _draw_firearm(d: Dictionary, look: String) -> void:
 		var pulse := 2.5 + sin(_t * 18.0) * 1.0
 		for i in 3:
 			draw_rect(Rect2(2.0 + i * 3.0, -d.thick * 0.5 - 0.4, 1.2, d.thick + 0.8), Color(0.4, 1.4, 2.6) * pulse * 0.5)
+
+
+func _draw_attachments(L: float, t: float, metal: Color) -> void:
+	var a: Dictionary = fighter.gun.attachments
+	match a.get("optic", ""):
+		"reddot":
+			draw_rect(Rect2(1.0, -t * 0.5 - 1.4, 2.0, 1.4), metal)
+			draw_circle(Vector2(2.0, -t * 0.5 - 0.7), 0.45, Color(3.0, 0.4, 0.4))
+		"scope":
+			draw_rect(Rect2(-0.5, -t * 0.5 - 2.2, 6.0, 1.8), metal)
+			draw_rect(Rect2(5.0, -t * 0.5 - 2.2, 0.8, 1.8), Color(0.6, 1.6, 2.4))
+	if a.get("mag", "") == "extmag":
+		draw_rect(Rect2(0.5, t * 0.5, 1.6, 4.2), metal)
+	if a.get("stock", "") == "stock":
+		draw_rect(Rect2(-7.5, -0.6, 4.0, t + 1.6), metal)
+	if a.get("barrel", "") == "barrel":
+		draw_rect(Rect2(L - 1.0, -0.55, 2.5, 1.1), Color(0.2, 0.2, 0.25))
 
 
 ## Katana : poignée, garde, lame brillante ; le coup balaie un arc avec une traînée.

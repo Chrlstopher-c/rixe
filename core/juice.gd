@@ -2,6 +2,8 @@ extends Node
 ## Autoload : temps de jeu (hitstop, ralenti), tremblement, ondes de choc, références partagées de la scène.
 
 signal fighter_killed(victim: Node2D, killer: Node2D)
+## Message court pour le joueur (déblocage, etc.), affiché par l'interface.
+signal notified(text: String)
 
 const MASK_WORLD := 1
 const MASK_FIGHTERS := 2
@@ -69,6 +71,10 @@ func shake(amount: float, at: Vector2 = Vector2.INF) -> void:
 	if at != Vector2.INF and camera:
 		amount *= clampf(1.0 - camera.get_screen_center_position().distance_to(at) / 520.0, 0.0, 1.0)
 	trauma = minf(trauma + amount, 1.0)
+
+
+func notify(text: String) -> void:
+	notified.emit(text)
 
 
 func on_screen(p: Vector2) -> bool:

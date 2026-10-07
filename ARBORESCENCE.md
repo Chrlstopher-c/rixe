@@ -70,6 +70,8 @@
 - game/modes.gd.uid
 - game/run_score.gd
 - game/run_score.gd.uid
+- game/unlocks.gd
+- game/unlocks.gd.uid
 - .github/workflows/ci.yml
 - .gitignore
 - hud/hud.gd
@@ -78,6 +80,7 @@
 - hud/menu.gd.uid
 - hud/scoreboard.gd
 - hud/scoreboard.gd.uid
+- IDEES.md
 - project.godot
 - README.md
 - restart.sh
@@ -88,6 +91,10 @@
 - tests/script_brain.gd.uid
 - tests/test_ai.gd
 - tests/test_ai.gd.uid
+- tests/test_armory.gd
+- tests/test_armory.gd.uid
+- tests/test_arsenal.gd
+- tests/test_arsenal.gd.uid
 - tests/test_audio.gd
 - tests/test_audio.gd.uid
 - tests/test_combat.gd
@@ -112,6 +119,8 @@
 - tests/test_terrain.gd.uid
 - tests/test_themes.gd
 - tests/test_themes.gd.uid
+- tests/test_weapons.gd
+- tests/test_weapons.gd.uid
 - TODO.md
 - tools/capture.sh
 - tools/gen_assets.py
@@ -121,10 +130,14 @@
 - tools/verify.sh
 - weapons/arsenal.gd
 - weapons/arsenal.gd.uid
+- weapons/attachment_pickup.gd
+- weapons/attachment_pickup.gd.uid
+- weapons/grenade.gd
+- weapons/grenade.gd.uid
 - weapons/gun.gd
 - weapons/gun.gd.uid
 - weapons/pickup.gd
 - weapons/pickup.gd.uid
-- assets/sfx/*.wav (17 sons générés)
+- assets/sfx/*.wav (27 sons générés)
 - assets/music/combat.wav (musique générée)
 - assets/textures/<crepuscule|acier|rouille>/ (générés par Pigment)

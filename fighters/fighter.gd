@@ -54,12 +54,12 @@ var _dash_cd := 0.0
 var _drop_t := 0.0
 
 
-func setup(nm: String, color: Color, think: RefCounted, weapon_id: String, player: bool) -> void:
+func setup(nm: String, color: Color, think: RefCounted, weapon_id: String, player: bool, mods: Dictionary = {}) -> void:
 	display_name = nm
 	team_color = color
 	brain = think
 	is_player = player
-	gun = Gun.new(self, weapon_id)
+	gun = Gun.new(self, weapon_id, mods)
 
 
 func _ready() -> void:
@@ -329,7 +329,7 @@ func drop_weapon(v: Vector2) -> void:
 	var p := WeaponPickup.new()
 	Juice.world.add_child(p)
 	p.global_position = rig.to_global(rig.j.pivot)
-	p.setup(gun.id, v, self, gun.mag, gun.reserve)
+	p.setup(gun.id, v, self, gun.mag, gun.reserve, gun.attachments)
 
 
 func _corpse_points() -> Dictionary:

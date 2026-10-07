@@ -9,7 +9,7 @@ Organisation par domaine de jeu. Chaque dossier a un sens unique :
 | `arena/` | génération de l'arène, décor destructible (cellules, tronçons), ambiances, fond en parallaxe |
 | `fighters/` | combattants : déplacement, squelette procédural, ragdoll, dégâts localisés, cerveau du joueur |
 | `fighters/ai/` | intelligence des bots : personnalité (chiffres), navigation (où aller), visée (comment viser), cerveau (quoi faire) |
-| `weapons/` | catalogue d'armes (`arsenal.gd`) et logique de tir (`gun.gd`) |
+| `weapons/` | catalogue d'armes et d'accessoires (`arsenal.gd`), tir/lame/projectile (`gun.gd`), grenades, objets au sol |
 | `fx/` | effets visuels : couche de particules, recettes d'effets, taches, post-traitement |
 | `audio/` | bruitages : lecteur 2D et banque de sons |
 | `hud/` | interface en surimpression |

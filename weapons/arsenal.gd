@@ -60,6 +60,35 @@ const WEAPONS := {
 	},
 }
 
+## Accessoires : un par emplacement ; leurs effets multiplient les caractéristiques de l'arme.
+const ATTACHMENTS := {
+	"reddot": {"name": "Point rouge", "slot": "optic", "mods": {"spread": 0.7, "ads_spread": 0.6}},
+	"scope": {"name": "Lunette", "slot": "optic", "mods": {"ads_spread": 0.3, "range": 1.4, "ads_reach": 1.7}},
+	"extmag": {"name": "Chargeur étendu", "slot": "mag", "mods": {"mag": 1.5, "reload": 1.15}},
+	"barrel": {"name": "Canon long", "slot": "barrel", "mods": {"dmg": 1.15, "range": 1.25, "spread": 0.85,
+		"length": 1.25}},
+	"stock": {"name": "Crosse", "slot": "stock", "mods": {"climb": 0.55, "kick": 0.6}},
+}
+const SLOTS := ["optic", "mag", "barrel", "stock"]
+
+
+## Caractéristiques d'une arme équipée d'accessoires (emplacement → identifiant).
+static func compose(id: String, attachments: Dictionary) -> Dictionary:
+	var d: Dictionary = WEAPONS[id].duplicate()
+	if not d.has("ads_spread"):
+		d.ads_spread = d.spread * 0.4
+	for slot in attachments:
+		var mods: Dictionary = ATTACHMENTS[attachments[slot]].mods
+		for k in mods:
+			d[k] = float(d.get(k, 1.0)) * float(mods[k])
+	d.mag = roundi(float(d.mag))
+	return d
+
+
+static func accepts(id: String) -> bool:
+	return WEAPONS[id].get("kind", "hitscan") != "blade"
+
+
 ## Grenades à main par vie, puissance et retard.
 const GRENADES := 2
 const GRENADE := {"dmg": 80.0, "radius": 52.0, "fuse": 1.7, "throw": 360.0}

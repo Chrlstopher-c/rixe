@@ -70,5 +70,5 @@ Chaque story : intention — VERIFY exécutable. Tests de jeu = `godot --headles
 - [x] E15.S2 — grenades (G) : rebonds, explosion qui creuse le décor et arrache des membres, bots qui en lancent — VERIFY: `--tests=grenade`
 
 ## E16 — Personnalisation
-- [ ] E16.S1 — accessoires (point rouge, lunette, chargeur étendu, canon long, crosse) trouvés dans l'arène, visibles sur l'arme — VERIFY: `--tests=attachments`
-- [ ] E16.S2 — armurerie au titre : arme et accessoires de départ, accessoires débloqués en les ramassant une fois — VERIFY: `--tests=armory`
+- [x] E16.S1 — accessoires (point rouge, lunette, chargeur étendu, canon long, crosse) trouvés dans l'arène, visibles sur l'arme — VERIFY: `--tests=attachments`
+- [x] E16.S2 — armurerie au titre : arme et accessoires de départ, accessoires débloqués en les ramassant une fois — VERIFY: `--tests=armory`

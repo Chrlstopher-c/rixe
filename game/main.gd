@@ -151,7 +151,7 @@ func _start_round() -> void:
 	for c in _fighters.get_children():
 		c.queue_free()
 	for c in Juice.world.get_children():
-		if c is Ragdoll or c is WeaponPickup:
+		if c is Ragdoll or c is WeaponPickup or c is AttachmentPickup or c is Grenade:
 			c.queue_free()
 	Juice.fx.clear()
 	Juice.stains.clear()
@@ -162,7 +162,7 @@ func _start_round() -> void:
 	var spots: Array = Juice.arena.spawn_points(n + 1, _rng)
 	var mine := _rng.randi_range(0, n)
 	var brain: RefCounted = BotBrain.new(1.0, "acrobate") if demo or attract else PlayerBrain.new()
-	player = _spawn("Toi", spots[mine], PLAYER_COLOR, brain, "rifle", true)
+	player = _spawn_player(spots[mine], brain)
 	_bot_kinds.clear()
 	var b := 0
 	for i in spots.size():
@@ -187,7 +187,7 @@ func reset_for_test() -> void:
 	for c in _fighters.get_children():
 		c.free()
 	for c in Juice.world.get_children():
-		if c is Ragdoll or c is WeaponPickup:
+		if c is Ragdoll or c is WeaponPickup or c is AttachmentPickup or c is Grenade:
 			c.free()
 	Juice.fx.clear()
 	Juice.arena.generate_flat()
@@ -241,12 +241,30 @@ func _spawn_pickups() -> void:
 		var p := WeaponPickup.new()
 		Juice.world.add_child(p)
 		p.global_position = Vector2(r.get_center().x, r.position.y - 20.0)
-		p.setup(Arsenal.ids()[_rng.randi_range(0, 2)], Vector2.ZERO)
+		p.setup(Arsenal.ids()[_rng.randi_range(0, Arsenal.ids().size() - 1)], Vector2.ZERO)
+	var atts := Arsenal.ATTACHMENTS.keys()
+	for i in _rng.randi_range(1, 2):
+		if plats.is_empty():
+			return
+		var r: Rect2 = plats[_rng.randi_range(0, plats.size() - 1)]
+		var a := AttachmentPickup.new()
+		Juice.world.add_child(a)
+		a.global_position = Vector2(r.position.x + 12.0, r.position.y - 20.0)
+		a.setup(atts[_rng.randi_range(0, atts.size() - 1)], Vector2.ZERO)
 
 
-func _spawn(nm: String, pos: Vector2, color: Color, brain: RefCounted, weapon: String, is_player: bool) -> Fighter:
+## Le joueur humain part avec l'équipement choisi à l'armurerie ; la démo garde le fusil.
+func _spawn_player(pos: Vector2, brain: RefCounted) -> Fighter:
+	if brain is PlayerBrain:
+		var l := Unlocks.loadout()
+		return _spawn("Toi", pos, PLAYER_COLOR, brain, l.weapon, true, l.attachments)
+	return _spawn("Toi", pos, PLAYER_COLOR, brain, "rifle", true)
+
+
+func _spawn(nm: String, pos: Vector2, color: Color, brain: RefCounted, weapon: String, is_player: bool,
+		mods: Dictionary = {}) -> Fighter:
 	var f := Fighter.new()
-	f.setup(nm, color, brain, weapon, is_player)
+	f.setup(nm, color, brain, weapon, is_player, mods)
 	f.position = pos
 	_fighters.add_child(f)
 	return f
@@ -339,7 +357,7 @@ func _respawn(entry: Dictionary) -> void:
 	var pos := _far_spawn()
 	if entry.player:
 		var brain: RefCounted = BotBrain.new(1.0, "acrobate") if demo else PlayerBrain.new()
-		player = _spawn("Toi", pos, PLAYER_COLOR, brain, "rifle", true)
+		player = _spawn_player(pos, brain)
 		_camera.target = player
 		_hud.player = player
 	else:

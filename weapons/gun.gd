@@ -17,14 +17,27 @@ var climb := 0.0
 var _since_shot := 99.0
 ## Coup de lame en cours (0 → 1) pour l'animation.
 var swing := 0.0
+## Accessoires montés (emplacement → identifiant).
+var attachments := {}
 
 
-func _init(holder: Node2D, weapon_id: String) -> void:
+func _init(holder: Node2D, weapon_id: String, mods: Dictionary = {}) -> void:
 	owner = holder
 	id = weapon_id
-	def = Arsenal.WEAPONS[weapon_id]
+	attachments = mods.duplicate()
+	def = Arsenal.compose(id, attachments)
 	mag = int(def.mag)
 	reserve = int(def.reserve)
+
+
+## Monte un accessoire ; renvoie celui qu'il remplace (ou "").
+func equip(att: String) -> String:
+	var slot: String = Arsenal.ATTACHMENTS[att].slot
+	var old: String = attachments.get(slot, "")
+	attachments[slot] = att
+	def = Arsenal.compose(id, attachments)
+	mag = mini(mag, int(def.mag))
+	return old
 
 
 func kind() -> String:
@@ -122,7 +135,7 @@ func _fire() -> void:
 
 
 func _spread() -> float:
-	var s: float = def.get("ads_spread", def.spread * 0.4) if owner.get("aiming") else def.spread
+	var s: float = def.ads_spread if owner.get("aiming") else def.spread
 	if owner.body.arms_left() < 2:
 		s = s * 2.5 + 0.04
 	return s

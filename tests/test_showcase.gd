@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["showcase", "showcase_end"]
+	return ["showcase", "showcase_end", "showcase_armory"]
 
 
 func _fire_at(t: Node, brain: ScriptBrain, target: Variant, joint: String, frames: int) -> void:
@@ -60,3 +60,18 @@ func test_showcase_end(t: Node) -> void:
 	await t.until(func() -> bool: return main._scoreboard.visible, 1200)
 	await t.frames(240)
 	t.check(main._scoreboard.visible, "écran de fin affiché")
+
+
+func test_showcase_armory(t: Node) -> void:
+	var main: Node = t.main
+	for w in ["smg", "sniper", "katana"]:
+		Unlocks.unlock("weapon", w)
+	for a in ["scope", "extmag", "stock"]:
+		Unlocks.unlock("attachment", a)
+	Unlocks.save_loadout({"weapon": "sniper", "attachments": {"optic": "scope", "stock": "stock"}})
+	main.attract = true
+	main._start_round()
+	main._menu.show_title()
+	main._menu.activate(main._menu._ids().find("armory"))
+	await t.frames(400)
+	t.check(main._menu.mode == "armory", "armurerie ouverte")
