@@ -35,10 +35,11 @@ func test_behaviours(t: Node) -> void:
 	var me := _dummy(t, Vector2(300, -10))
 	var brute := _bot(t, Vector2(700, -10), "brute")
 	var brute_ref: WeakRef = weakref(brute)
-	await t.frames(480)
-	var gap := 0.0
-	if brute_ref.get_ref():
-		gap = brute.global_position.distance_to(me.global_position)
+	var gap := INF
+	for i in 480:
+		if brute_ref.get_ref():
+			gap = minf(gap, brute.global_position.distance_to(me.global_position))
+		await t.frames(1)
 	t.check(gap < 200.0, "la brute fonce au contact (écart %.0f)" % gap)
 	if brute_ref.get_ref():
 		brute.queue_free()

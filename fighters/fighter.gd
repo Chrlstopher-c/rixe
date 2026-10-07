@@ -105,6 +105,11 @@ func _ready() -> void:
 	z_index = 10
 
 
+## Lanceur retiré en pleine prise (fin de manche, départ) : sa victime ne reste pas figée.
+func _exit_tree() -> void:
+	grapple._release()
+
+
 func _physics_process(delta: float) -> void:
 	if not alive:
 		return
