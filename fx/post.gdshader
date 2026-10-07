@@ -10,6 +10,7 @@ uniform vec4 waves[4];
 uniform float aspect = 1.7777;
 uniform float grain = 0.006;
 uniform float vignette = 0.4;
+uniform float hurt = 0.0;
 
 vec2 wave_offset(vec2 uv) {
 	vec2 off = vec2(0.0);
@@ -44,7 +45,9 @@ void fragment() {
 	}
 	col /= 8.0;
 	vec2 c = (SCREEN_UV - 0.5) * vec2(aspect, 1.0);
-	col *= 1.0 - vignette * smoothstep(0.35, 1.05, length(c));
+	float edge = smoothstep(0.35, 1.05, length(c));
+	col *= 1.0 - vignette * edge;
+	col = mix(col, vec3(0.5, 0.0, 0.03), hurt * edge * (0.75 + 0.25 * sin(TIME * 9.0)));
 	col += (hash(SCREEN_UV * 731.0 + TIME) - 0.5) * grain;
 	COLOR = vec4(col, 1.0);
 }

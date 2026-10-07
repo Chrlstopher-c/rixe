@@ -27,6 +27,7 @@ func _process(delta: float) -> void:
 	_mat.set_shader_parameter("aberration", Juice.aberration)
 	_mat.set_shader_parameter("aspect", size.x / size.y)
 	_mat.set_shader_parameter("waves", _waves(size))
+	_mat.set_shader_parameter("hurt", Juice.hurt)
 
 
 func _waves(size: Vector2) -> PackedVector4Array:

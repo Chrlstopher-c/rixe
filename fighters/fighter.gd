@@ -105,6 +105,9 @@ func _aim() -> void:
 func _timers(delta: float) -> void:
 	hit_flash -= delta
 	shield -= delta
+	if is_player:
+		var low := clampf(1.0 - hp / 45.0, 0.0, 1.0) * 0.45
+		Juice.hurt = maxf(move_toward(Juice.hurt, 0.0, delta * 1.2), low)
 	_since_hit += delta
 	if is_player and _since_hit > REGEN_DELAY:
 		hp = minf(hp + REGEN_RATE * delta, MAX_HP)
@@ -227,6 +230,7 @@ func _hit_feedback(from: Node2D, dmg: float) -> void:
 	if player_involved and dmg >= 20.0:
 		Juice.hitstop(0.04)
 	if is_player:
+		Juice.hurt = minf(Juice.hurt + 0.35, 0.8)
 		Juice.aberration = minf(Juice.aberration + 0.35, 1.5)
 		Juice.shake(0.18)
 

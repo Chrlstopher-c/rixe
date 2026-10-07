@@ -80,6 +80,11 @@ func _draw_banner() -> void:
 
 func _draw_crosshair(m: Vector2) -> void:
 	var c := Color(2.0, 1.9, 1.9, 0.9)
+	var gap := 3.0
+	if is_instance_valid(player):
+		var spread: float = player.gun.def.spread * (1.0 if player.body.arms_left() == 2 else 2.5)
+		gap += spread * player.global_position.distance_to(player.get_global_mouse_position()) * 0.6
+		gap += player.rig.recoil * 1.2
 	for d in [Vector2.RIGHT, Vector2.LEFT, Vector2.UP, Vector2.DOWN]:
-		_canvas.draw_line(m + d * 3.0, m + d * 7.0, c, 1.0)
-	_canvas.draw_circle(m, 0.8, c)
+		_canvas.draw_line(m + d * gap, m + d * (gap + 4.0), c, 1.0)
+	_canvas.draw_circle(m, 0.7, c)

@@ -198,12 +198,26 @@ func _draw() -> void:
 		var visor: Vector2 = j.head + Vector2(fighter.facing * 1.2, -0.5)
 		draw_line(visor, visor + Vector2(fighter.facing * 2.4, 0.3), fighter.team_color * 3.0, 1.2)
 	_draw_stumps()
+	if fighter.is_player:
+		_draw_laser()
 	for i in range(1, _kick_trail.size()):
 		var a := float(i) / _kick_trail.size()
 		draw_line(to_local(_kick_trail[i - 1]), to_local(_kick_trail[i]), Color(2.4, 2.2, 2.1, a * 0.8), 2.5 * a, Juice.hd)
 	if fighter.shield > 0.0:
 		var a := 0.25 + 0.25 * sin(_t * 20.0)
 		draw_arc(Vector2(0, -15), 19.0, 0.0, TAU, 40, Color(fighter.team_color * 1.8, a), 1.2, Juice.hd)
+
+
+func _draw_laser() -> void:
+	var from := muzzle_global()
+	var to := from + fighter.aim_dir * 260.0
+	var q := PhysicsRayQueryParameters2D.create(from, to, Juice.MASK_WORLD | Juice.MASK_PLATFORMS)
+	var hit := get_world_2d().direct_space_state.intersect_ray(q)
+	if not hit.is_empty():
+		to = hit.position
+	var col := Color(fighter.team_color * 1.4, 0.12)
+	draw_line(to_local(from), to_local(to), col, 0.6, Juice.hd)
+	draw_circle(to_local(to), 0.9, Color(fighter.team_color * 2.5, 0.6))
 
 
 func has(part: String) -> bool:

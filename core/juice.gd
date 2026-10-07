@@ -16,6 +16,8 @@ var hd := true
 var trauma := 0.0
 var aberration := 0.0
 var zoom_punch := 0.0
+## Intensité du bord rouge de dégâts : vie basse du joueur + coups récents.
+var hurt := 0.0
 var shockwaves: Array[Dictionary] = []
 var _hitstop := 0.0
 var _slowmo := 0.0
@@ -82,6 +84,7 @@ func shockwave(pos: Vector2, strength: float = 1.0) -> void:
 
 func reset() -> void:
 	trauma = 0.0
+	hurt = 0.0
 	aberration = 0.0
 	zoom_punch = 0.0
 	shockwaves.clear()
