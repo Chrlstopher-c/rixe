@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Test en ligne de bout en bout : relais local (wrangler dev) + deux jeux headless (hôte, invité) en temps réel.
-# Usage : tools/online_test.sh <scénario>  (link, match…) ; RIXE_RELAY=wss://… pour viser un relais déployé.
+# Usage : tools/online_test.sh <scénario>  (link, match, checks, version…) ; RIXE_RELAY=wss://… pour viser un relais
+# déployé ; RIXE_HOST_CMD / RIXE_GUEST_CMD pour lancer un jeu exporté (ex. la version Windows sous Proton-GE).
 set -uo pipefail
 cd "$(dirname "$0")/.."
 SCEN="${1:-link}"
@@ -18,9 +19,11 @@ if [ -z "${RIXE_RELAY:-}" ]; then
 fi
 export RIXE_ROOM="$(tr -dc 'A-Z' < /dev/urandom | head -c 4)"
 export RIXE_REALTIME=1
-timeout 180 godot --headless --path . --max-fps 120 -- --tests="online_${SCEN}_host" > "$LOGS/host.log" 2>&1 &
+HOST_CMD=${RIXE_HOST_CMD:-godot --headless --path .}
+GUEST_CMD=${RIXE_GUEST_CMD:-godot --headless --path .}
+timeout 240 $HOST_CMD --max-fps 120 -- --tests="online_${SCEN}_host" > "$LOGS/host.log" 2>&1 &
 HPID=$!
-timeout 180 godot --headless --path . --max-fps 120 -- --tests="online_${SCEN}_guest" > "$LOGS/guest.log" 2>&1 &
+timeout 240 $GUEST_CMD --max-fps 120 -- --tests="online_${SCEN}_guest" > "$LOGS/guest.log" 2>&1 &
 GPID=$!
 wait $HPID; HC=$?
 wait $GPID; GC=$?

@@ -11,6 +11,10 @@ const HUD_EVERY := 0.25
 ## Nom du combattant de l'invité côté hôte (comme le 2e joueur en écran partagé).
 const GUEST := "J2"
 const HOST_LABEL := "Hôte"
+## Version du protocole réseau : deux jeux ne jouent ensemble que s'ils ont la même version et le même protocole.
+const PROTO := 2
+## Délai pour recevoir la présentation de l'autre (un jeu trop ancien ne se présente pas).
+const HI_TIMEOUT := 5.0
 
 var main: Node
 var link: NetLink
@@ -24,6 +28,14 @@ var local_only := false
 var epoch := 0
 var guest_spot := Vector2.ZERO
 var started := false
+var version: String = ProjectSettings.get_setting("application/config/version", "dev")
+## L'autre jeu s'est présenté avec la même version.
+var peer_ok := false
+## Décors recalés depuis l'hôte (invité) : un écart de génération entre machines a été corrigé.
+var map_resyncs := 0
+## Après un recalage, le décor de l'invité correspond bien à celui de l'hôte.
+var map_ok := true
+var _hi_wait := -1.0
 var _snap_t := 0.0
 var _hud_t := 0.0
 
@@ -36,6 +48,7 @@ static func begin(m: Node, role: String, code: String) -> NetSession:
 	m.add_child(s)
 	s.link.received.connect(s._on_message)
 	s.link.peer_changed.connect(s._on_peer)
+	s.link.joined.connect(s._on_joined)
 	s.link.failed.connect(s._on_failed)
 	s.link.open(code, role)
 	Juice.net = s
@@ -51,7 +64,7 @@ func is_host() -> bool:
 
 
 func connected() -> bool:
-	return link.ready_to_play()
+	return link.ready_to_play() and peer_ok
 
 
 func leave() -> void:
@@ -118,13 +131,14 @@ func item_changed(item: Node2D) -> void:
 ## Manche générée : l'hôte la décrit (graine, carte, place de l'invité), l'invité la regénère à l'identique.
 func round_started() -> void:
 	started = true
+	var h: int = Juice.arena.terrain.checksum()
 	if is_host():
 		epoch += 1
 	fighters.reset()
 	world.reset_round()
 	if is_host():
 		send_event({"t": "round", "seed": main.seed_base, "round": main.round_no, "mode": main.game_mode,
-			"opt": main.game_option, "map": main.forced_map, "pos": guest_spot})
+			"opt": main.game_option, "map": main.forced_map, "pos": guest_spot, "h": h})
 
 
 ## Hôte : réapparition de l'invité (chrono, objectif) ; l'invité recrée son combattant à cet endroit.
@@ -145,9 +159,13 @@ func spawn_guest(pos: Vector2) -> Fighter:
 
 
 func _process(delta: float) -> void:
+	var real: float = Juice.real_delta(delta)
+	if _hi_wait >= 0.0 and not peer_ok:
+		_hi_wait -= real
+		if _hi_wait < 0.0:
+			_refuse("L'autre joueur a une version trop ancienne du jeu (avant %s) : mettez-le à jour" % version)
 	if not connected() or not started:
 		return
-	var real: float = Juice.real_delta(delta)
 	_snap_t -= real
 	if _snap_t <= 0.0:
 		_snap_t = SNAP
@@ -181,9 +199,39 @@ func _on_failed(reason: String) -> void:
 	ended.emit(reason)
 
 
+func _on_joined(peer_here: bool) -> void:
+	if peer_here:
+		_greet()
+
+
+## Présentation à l'autre jeu : version et protocole.
+func _greet() -> void:
+	peer_ok = false
+	_hi_wait = HI_TIMEOUT
+	link.send({"t": "hi", "v": version, "p": PROTO})
+
+
+func _on_hi(msg: Dictionary) -> void:
+	var v := String(msg.get("v", "?"))
+	if v != version or int(msg.get("p", 0)) != PROTO:
+		_refuse("Versions différentes : toi %s, l'autre %s. Mettez le jeu à jour des deux côtés" % [version, v])
+		return
+	peer_ok = true
+	_hi_wait = -1.0
+
+
+func _refuse(reason: String) -> void:
+	push_warning("partie en ligne refusée : " + reason)
+	_hi_wait = -1.0
+	ended.emit(reason)
+	leave()
+
+
 func _on_peer(here: bool) -> void:
 	if here:
+		_greet()
 		return
+	peer_ok = false
 	if is_host():
 		fighters.drop_puppet(GUEST)
 		Juice.notify("%s a quitté la partie" % GUEST)
@@ -193,6 +241,9 @@ func _on_peer(here: bool) -> void:
 
 func _on_message(msg: Dictionary) -> void:
 	var t: String = msg.get("t", "")
+	if t == "hi":
+		_on_hi(msg)
+		return
 	if t == "round" and not is_host():
 		_on_round(msg)
 		return
@@ -208,6 +259,13 @@ func _on_message(msg: Dictionary) -> void:
 			fighters.on_died(msg)
 		"spawn":
 			main.follow(spawn_guest(msg.pos))
+		"need_map":
+			send_event({"t": "map", "pack": Juice.arena.terrain.pack_cells(), "h": Juice.arena.terrain.checksum()})
+		"map":
+			Juice.arena.terrain.unpack_cells(msg.pack)
+			map_ok = Juice.arena.terrain.checksum() == int(msg.h)
+			if not map_ok:
+				push_warning("décor toujours différent après recalage")
 		_:
 			if not world.on_message(t, msg):
 				_on_match_message(t, msg)
@@ -224,6 +282,19 @@ func _on_round(msg: Dictionary) -> void:
 	else:
 		main.round_no = int(msg.round)
 		main._start_round()
+	check_map(int(msg.get("h", 0)))
+
+
+## Invité : décor regénéré comparé à celui de l'hôte ; s'il diffère (calcul différent d'une machine à l'autre),
+## l'hôte envoie le sien et l'invité s'y recale.
+func check_map(expected: int) -> void:
+	if Juice.arena.terrain.checksum() == expected:
+		return
+	map_resyncs += 1
+	map_ok = false
+	push_warning("décor différent de l'hôte (manche %d) : recalage" % main.round_no)
+	Juice.notify("Décor recalé sur celui de l'hôte")
+	send_event({"t": "need_map"})
 
 
 func _on_match_message(t: String, msg: Dictionary) -> void:

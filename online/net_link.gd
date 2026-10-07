@@ -10,6 +10,8 @@ signal failed(reason: String)
 const PING_EVERY := 3.0
 ## Nouvelles tentatives si la connexion tombe avant l'accueil du relais (réseau qui hoquette).
 const RETRIES := 3
+## Une connexion qui ne s'établit pas dans ce délai est abandonnée (sous Windows, un refus peut ne jamais remonter).
+const CONNECT_TIMEOUT := 6.0
 const REASONS := {4001: "Ce code est déjà pris", 4002: "La partie est complète", 4004: "Aucune partie avec ce code"}
 
 var role := ""
@@ -24,6 +26,7 @@ var _ping_sent := 0
 var _base := ""
 var _tries := 0
 var _retry_t := -1.0
+var _connect_ms := 0
 
 
 func _ready() -> void:
@@ -38,6 +41,7 @@ func open(room: String, as_role: String, base: String = RelayConfig.url()) -> vo
 
 
 func _connect() -> void:
+	_connect_ms = Time.get_ticks_msec()
 	_ws = WebSocketPeer.new()
 	_ws.inbound_buffer_size = 1 << 20
 	_ws.outbound_buffer_size = 1 << 20
@@ -74,18 +78,28 @@ func _process(delta: float) -> void:
 			_connect()
 		return
 	_ws.poll()
+	if _ws.get_ready_state() == WebSocketPeer.STATE_CONNECTING:
+		if Time.get_ticks_msec() - _connect_ms > CONNECT_TIMEOUT * 1000.0:
+			push_warning("relais : pas de réponse en %.0f s" % CONNECT_TIMEOUT)
+			_ws.close()
+			_lost(-1)
+		return
 	match _ws.get_ready_state():
 		WebSocketPeer.STATE_OPEN:
 			_read()
 			_keepalive(delta)
 		WebSocketPeer.STATE_CLOSED:
-			var c := _ws.get_close_code()
-			if not _open and not REASONS.has(c) and _tries < RETRIES:
-				_tries += 1
-				_retry_t = 0.5 * _tries
-				push_warning("relais : connexion coupée avant l'accueil (code %d), nouvel essai" % c)
-				return
-			_fail(REASONS.get(c, "Connexion perdue" if _open else "Relais injoignable"))
+			_lost(_ws.get_close_code())
+
+
+## Connexion tombée : nouvel essai si on n'a pas encore été accueilli, sinon échec avec la raison lisible.
+func _lost(c: int) -> void:
+	if not _open and not REASONS.has(c) and _tries < RETRIES:
+		_tries += 1
+		_retry_t = 0.5 * _tries
+		push_warning("relais : connexion coupée avant l'accueil (code %d), nouvel essai" % c)
+		return
+	_fail(REASONS.get(c, "Connexion perdue" if _open else "Relais injoignable"))
 
 
 func _read() -> void:

@@ -5,7 +5,7 @@ extends RefCounted
 
 func names() -> Array[String]:
 	return ["online_link_host", "online_link_guest", "online_match_host", "online_match_guest", "online_show_host",
-		"online_show_guest"]
+		"online_show_guest", "online_checks_host", "online_checks_guest", "online_version_host", "online_version_guest"]
 
 
 func _link(t: Node, role: String) -> NetLink:
@@ -96,7 +96,7 @@ func test_online_match_host(t: Node) -> void:
 	main.live_rules = true
 	var s := NetSession.begin(main, "host", OS.get_environment("RIXE_ROOM"))
 	var box := _inbox(s)
-	t.check(await t.until(func() -> bool: return s.connected(), 3000), "l'invité a rejoint")
+	t.check(await t.until(func() -> bool: return s.connected(), 7200), "l'invité a rejoint")
 	main._on_start("arcade", 0)
 	var born_hash := terrain_hash()
 	main.player.brain = ScriptBrain.new()
@@ -247,3 +247,70 @@ func test_online_show_guest(t: Node) -> void:
 			main.player.brain = BotBrain.new(1.0, "brute")
 		await t.frames(1)
 	s.leave()
+
+
+# Contrôles : décor identique (et recalage s'il diffère), refus clair si les versions diffèrent.
+
+func test_online_checks_host(t: Node) -> void:
+	var main: Node = t.main
+	main.live_rules = true
+	var s := NetSession.begin(main, "host", OS.get_environment("RIXE_ROOM"))
+	var box := _inbox(s)
+	t.check(await t.until(func() -> bool: return s.connected(), 7200), "l'invité a rejoint (mêmes versions)")
+	main._on_start("arcade", 0)
+	_tough(main.player)
+	var resyncs: Variant = await _heard(t, box, "resyncs")
+	t.check(resyncs == 0, "décor généré à l'identique chez l'invité (recalages : %s)" % [resyncs])
+	_say(s, "corrupt", Juice.arena.terrain.checksum())
+	var fixed: Variant = await _heard(t, box, "fixed")
+	t.check(fixed == true, "décor abîmé chez l'invité : recalé sur celui de l'hôte")
+	await _heard(t, box, "bye", 600)
+	s.leave()
+
+
+func test_online_checks_guest(t: Node) -> void:
+	var main: Node = t.main
+	main.live_rules = true
+	var s := await _join(t, main)
+	var box := _inbox(s)
+	await t.until(func() -> bool: return is_instance_valid(main.player) and s.started, 1200)
+	_tough(main.player)
+	await t.frames(30)
+	_say(s, "resyncs", s.map_resyncs)
+	var host_hash: Variant = await _heard(t, box, "corrupt")
+	var cells: Dictionary = Juice.arena.terrain.kind
+	for i in 40:
+		cells.erase(cells.keys()[0])
+	s.check_map(int(host_hash) if host_hash is int else 0)
+	var done: bool = await t.until(func() -> bool: return s.map_resyncs == 1 and s.map_ok, 600)
+	t.check(s.map_resyncs == 1, "écart détecté")
+	_say(s, "fixed", done and s.map_ok)
+	await t.frames(30)
+	_say(s, "bye")
+	await t.frames(30)
+	s.leave()
+
+
+func test_online_version_host(t: Node) -> void:
+	var s := NetSession.begin(t.main, "host", OS.get_environment("RIXE_ROOM"))
+	var why := []
+	s.ended.connect(func(r: String) -> void: why.append(r))
+	await t.until(func() -> bool: return not why.is_empty(), 3000)
+	t.check(not why.is_empty() and String(why[0]).begins_with("Versions différentes"), "hôte : refus clair (%s)" % [why])
+	t.check(Juice.net == null, "hôte : partie en ligne fermée")
+
+
+func test_online_version_guest(t: Node) -> void:
+	var s: NetSession = null
+	var why := []
+	for i in 20:
+		s = NetSession.begin(t.main, "guest", OS.get_environment("RIXE_ROOM"))
+		s.version = "0.0.0"
+		why.clear()
+		s.ended.connect(func(r: String) -> void: why.append(r))
+		await t.until(func() -> bool: return not why.is_empty(), 600)
+		if why.is_empty() or not String(why[0]).begins_with("Aucune"):
+			break
+		await t.frames(60)
+	t.check(not why.is_empty() and String(why[0]).contains("toi 0.0.0"), "invité : refus clair (%s)" % [why])
+	t.check(Juice.net == null, "invité : partie en ligne fermée, jamais connecté")

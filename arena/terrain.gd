@@ -42,6 +42,46 @@ func clear() -> void:
 	_chunks.clear()
 
 
+## Empreinte du décor, identique sur toutes les machines (entiers seulement) : contrôle de synchro en ligne.
+func checksum() -> int:
+	var h := kind.size()
+	for c: Vector2i in kind:
+		h = (h + ((c.x * 73856093) ^ (c.y * 19349663) ^ (int(kind[c]) * 83492791))) & 0x3fffffffffffffff
+	return h
+
+
+## Décor complet compressé (cellules et solidité), pour recaler une machine désynchronisée.
+func pack_cells() -> Dictionary:
+	var xs := PackedInt32Array()
+	var ys := PackedInt32Array()
+	var ks := PackedByteArray()
+	var hs := PackedFloat32Array()
+	for c: Vector2i in kind:
+		xs.append(c.x)
+		ys.append(c.y)
+		ks.append(int(kind[c]))
+		hs.append(float(hp[c]))
+	var raw := var_to_bytes([xs, ys, ks, hs])
+	return {"size": raw.size(), "data": raw.compress(FileAccess.COMPRESSION_ZSTD)}
+
+
+func unpack_cells(pack: Dictionary) -> void:
+	var a: Array = bytes_to_var(PackedByteArray(pack.data).decompress(int(pack.size), FileAccess.COMPRESSION_ZSTD))
+	for c: Vector2i in kind:
+		_dirty(c.x)
+	kind.clear()
+	hp.clear()
+	by_chunk.clear()
+	var xs: PackedInt32Array = a[0]
+	for i in xs.size():
+		var c := Vector2i(xs[i], a[1][i])
+		kind[c] = int(a[2][i])
+		hp[c] = a[3][i]
+		_chunk_cells(c.x)[c] = true
+		_dirty(c.x)
+	flush()
+
+
 static func cell_of(p: Vector2) -> Vector2i:
 	return Vector2i(floori(p.x / CELL), floori(p.y / CELL))
 

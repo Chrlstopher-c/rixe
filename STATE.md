@@ -16,6 +16,7 @@ Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lie
 - Exécutions : bot sous 25 PV vacillant (chevron), corps à corps = exécution en deux temps (membre puis décapitation / coupé en deux / tête en l'air).
 - Musique en trois couches synchrones (calme, combat selon l'action, tension en fin de manche), passe-bas au ralenti.
 - Annonceur vocal (Qwen3-TTS VoiceDesign en local), relais déployé, v3.1.0 publiée.
+- v3.1.1 : contrôle de version en ligne (présentation « hi », refus clair), empreinte du décor à chaque manche + recalage depuis l'hôte, délai max de connexion (sous Windows un refus ne remonte jamais). Testé Linux ↔ Windows (Proton-GE, `tools/win_run.sh`) dans les deux sens, en local et via le vrai relais ; ARM (Mac Apple Silicon) non testé, couvert par le recalage du décor.
 - En ligne (E26.S1-S4) : relais Cloudflare Worker + Durable Object (`relay/`), lien et session Godot (`online/`), salon EN LIGNE, test à deux jeux en CI.
 - Règles de manche sorties de `main.gd` dans `game/round_rules.gd`.
 

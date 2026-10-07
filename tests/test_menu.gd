@@ -74,7 +74,10 @@ func test_lobby(t: Node) -> void:
 	_key(KEY_ENTER)
 	await t.frames(3)
 	t.check(lobby.screen == "joined" and Juice.net != null, "code complet : connexion lancée")
-	var failed: bool = await t.until(func() -> bool: return lobby.failed, 1200)
+	var t0 := Time.get_ticks_msec()
+	while not lobby.failed and Time.get_ticks_msec() - t0 < 25000:
+		await t.frames(1)
+	var failed: bool = lobby.failed
 	t.check(failed and lobby.screen == "join", "relais absent : retour à la saisie, erreur affichée (%s)" % lobby.status)
 	_key(KEY_ESCAPE)
 	_key(KEY_ESCAPE)

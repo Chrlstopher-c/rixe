@@ -17,7 +17,9 @@ Manette : stick gauche bouger, A sauter, stick droit viser, gâchette droite tir
 Au titre, « EN LIGNE » : l'un héberge (un code de 4 lettres s'affiche, il choisit le mode et lance), l'autre tape le code. Les messages passent par un petit relais Cloudflare (Worker) ; son adresse vient de `RIXE_RELAY` ou du fichier `online/relay.cfg` (hors dépôt, embarqué à l'export, voir `online/relay.cfg.example`), sinon `ws://127.0.0.1:8787`.
 - Relais en local : `cd relay && pnpm install && pnpm dev` ; tests : `pnpm test`
 - Déployer : `cd relay && pnpm run deploy` (compte Cloudflare connecté par `wrangler login`), puis écrire l'adresse `wss://…workers.dev` dans `online/relay.cfg`
-- `tools/online_test.sh link|match` : relais local + deux jeux headless qui jouent ensemble
+- `tools/online_test.sh link|match|checks|version` : relais local + deux jeux headless qui jouent ensemble
+- Multiplateforme : `RIXE_HOST_CMD="build/linux/rixe.x86_64 --headless" RIXE_GUEST_CMD=tools/win_run.sh tools/online_test.sh match` (jeu Windows sous Proton-GE)
+- Contrôles en ligne : même version exigée des deux côtés (refus clair sinon) ; décor comparé à chaque manche et recalé sur celui de l'hôte s'il diffère
 
 ## Outils
 - `tools/verify.sh [tests]` : import + tests headless (PASS/FAIL)
