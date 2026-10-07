@@ -2,13 +2,23 @@
 *Dernière mise à jour : 2026-10-07*
 
 ## Résumé de l'état actuel
-Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lien `~/projects/rixe`). Dernière version publiée : **v3.1.2** (en ligne testé par Chris avec un ami, deux PC Arch Linux, « fluide »).
+Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lien `~/projects/rixe`). Dernière version publiée : **v3.2.0** (v3.1.2 testée en ligne par Chris avec un ami, deux PC Arch Linux, « fluide »).
 - Dépôt public : github.com/Chrlstopher-c/rixe. CI verte (47 tests headless + relais + partie en ligne à deux jeux).
 - Releases sur GitHub pour Linux (testée), Windows (testée sous Proton-GE, pas sur un vrai PC Windows) et macOS universel (compilée, jamais lancée sur un vrai Mac).
 - Modes : Arcade, Chrono, Objectif, Survie. Écran partagé à deux, manette, et partie à deux en ligne (code de 4 lettres).
 - En ligne : relais Cloudflare Worker déployé (wrangler connecté sur la tour, compte de Chris), aller-retour ~11 ms ; adresse dans `online/relay.cfg` (hors dépôt, embarquée dans les builds).
 - Perf 1080p sur la tour : 150 à 210 i/s en moyenne, 1 % bas entre 50 et 100 selon la carte et le nombre de combattants.
 - Textures générées par Pigment (`/mnt/projects/pigment`, dépôt privé, MCP `pigment`).
+
+## Ce qui a été fait — nuit du 07 au 08/10 (v3.2.0, en autonomie)
+- En ligne : exécution par l'invité, jusqu'à 4 joueurs (relais à places, diffusion), pseudos, arrivée en cours de partie.
+- Parties personnalisées (local et en ligne) : mode, durée, carte, équipes et choix d'équipe, bots, niveau, armes.
+- Classement mondial sur le Worker (Durable Object SQLite `Scores`), onglet MONDIAL.
+- Mouvements (roulade, glissade, saut mural, parade), chiffres de dégâts, flèches de tir hors champ, ralenti à la demande,
+  boss toutes les 5 manches, progression (niveaux, tenues, succès, défi du jour, stats), annonces vocales en plus.
+- Visuel : ombres d'explosions (option, coupée par défaut : coût des occulteurs), impacts persistants, fumée au sol,
+  néons, premier plan en parallaxe. Cartes Usine (tapis, presses, vitres) et Forêt de nuit ; verre et béton (Pigment).
+- Audio : une ambiance musicale par thème, écho selon la carte. Rediffusion 15 s, mode photo, éditeur de cartes.
 
 ## Ce qui a été fait — session du 07/10 (suite, après compaction)
 - Marqueurs de touche (blanc, rouge à la tête, cerclé sur élimination), sons hit/headshot, kill cam sur la dernière élimination (ralenti, zoom, bandes noires).
@@ -42,6 +52,8 @@ Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lie
 | Mac : signature ad hoc, sans notarisation | Pas de compte développeur Apple | 07/10 |
 | En ligne : relais WebSocket (Durable Object), pas WebRTC | Marche derrière toutes les box sans port ni binaire natif ; +10-30 ms | 07/10 |
 | En ligne : hôte autoritaire, chacun maître de son combattant, « qui provoque l'effet calcule ses dégâts » | Pas de double dégât, pas de prédiction à écrire | 07/10 |
+| Ombres coupées par défaut | Les occulteurs coûtent ~20 % d'i/s même sans lumière à ombre ; 1 % bas < 50 sur mine/toits | 08/10 |
+| En ligne à 4 : diffusion à tous avec l'octet de l'expéditeur, messages adressés par « to » | Pas de serveur de jeu ; chaque invité voit les autres directement | 08/10 |
 | Adresse du relais hors dépôt (`online/relay.cfg`, embarquée à l'export) | Règle : aucun identifiant d'infrastructure dans un dépôt public | 07/10 |
 
 ## Contexte non-évident

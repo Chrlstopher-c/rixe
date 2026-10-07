@@ -13,6 +13,8 @@ Organisation par domaine de jeu. Chaque dossier a un sens unique :
 | `fx/` | effets visuels : particules, recettes d'effets, taches, météo, post-traitement |
 | `audio/` | bruitages (lecteur 2D), musique en couches, annonceur vocal (`announcer.gd`) |
 | `survival/` | mode Survie : ressources/faim/jour-nuit (`survival.gd`), orchestration (`director.gd`), construction, recettes |
+| `game/` (ajouts) | `game_config.gd` (parties perso), `profile.gd` (progression), `replay.gd`, `photo_mode.gd`, `map_store.gd` (cartes de l'éditeur), `round_rules.gd` |
+| `fighters/` (ajouts) | `moves.gd` (roulade, glissade, saut mural, parade), `boss.gd`, `outfit.gd` (tenues), `remains.gd` (butin et dépouille) |
 | `online/` | partie en ligne côté jeu : lien au relais (`net_link.gd`), session (`net_session.gd` : manches, fin de partie), combattants (`net_fighters.gd` : instantanés, marionnettes, touches, morts), monde (`net_world.gd` : tirs, décor, barils, objets), salon (`lobby.gd`) |
 | `relay/` | relais en ligne (Cloudflare Worker + Durable Object, TypeScript) : salons à code de 4 lettres, ne lit jamais le jeu ; ignoré par Godot (`.gdignore`) |
 | `hud/` | interface : jeu, menus (titre, pause, armurerie, classement, viseur), viseur (`crosshair.gd`), fin de partie, inventaire |
