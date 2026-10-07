@@ -70,7 +70,7 @@ func _process(delta: float) -> void:
 		_check = 0.3
 		var t: Terrain = Juice.arena.terrain
 		spots = spots.filter(func(s: Vector3i) -> bool: return _intact(s, t))
-	if randf() < 0.5:
+	if not spots.is_empty() and randf() < 0.5:
 		var s := spots[randi() % spots.size()]
 		_rings.append(Vector3((s.y + randf_range(0.3, s.z - 0.3)) * Terrain.CELL, s.x * Terrain.CELL + 2.0, 0.0))
 	for i in _rings.size():
