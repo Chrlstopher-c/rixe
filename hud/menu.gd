@@ -5,6 +5,7 @@ signal start_requested(mode: String, option: int)
 signal online_requested
 signal crosshair_requested
 signal custom_requested
+signal profile_requested
 signal resume_requested
 signal title_requested
 signal restart_requested
@@ -87,8 +88,8 @@ func _ids() -> Array[String]:
 		ids.append("option")
 	if game_mode != "survie":
 		ids.append("players")
-	ids.append_array(["play", "custom", "online", "armory", "crosshair", "board", "volume", "display", "numbers",
-		"quit"])
+	ids.append_array(["play", "custom", "online", "profile", "armory", "crosshair", "board", "volume", "display",
+		"numbers", "quit"])
 	return ids
 
 
@@ -118,6 +119,8 @@ func _text(id: String) -> String:
 			return "CHIFFRES DE DÉGÂTS  ‹ %s ›" % ("OUI" if Juice.damage_numbers else "NON")
 		"custom":
 			return "PARTIE PERSONNALISÉE"
+		"profile":
+			return "PROFIL ET TENUE"
 		"armory":
 			return "ARMURERIE"
 		"weapon":
@@ -264,6 +267,9 @@ func activate(i: int) -> void:
 		"custom":
 			close()
 			custom_requested.emit()
+		"profile":
+			close()
+			profile_requested.emit()
 		"armory":
 			loadout = Unlocks.loadout()
 			_open("armory")

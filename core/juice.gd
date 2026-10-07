@@ -8,6 +8,8 @@ signal notified(text: String)
 signal executed(victim: Node2D, killer: Node2D)
 ## Ralenti à la demande déclenché.
 signal focus_used
+## Exploit du joueur de cette machine (« parry », « flawless ») : profil, succès.
+signal feat(kind: String)
 
 const MASK_WORLD := 1
 const MASK_FIGHTERS := 2

@@ -224,6 +224,7 @@ func _draw() -> void:
 	var c := BODY if fighter.hit_flash <= 0.0 else BODY.lerp(Color(2.2, 2.0, 2.0), 0.55)
 	var back := c.lerp(Color(0.2, 0.13, 0.25), 0.35)
 	var bf := 1 if fighter.facing > 0 else 0
+	Outfit.draw_back(self, j, fighter.facing, fighter.team_color, fighter.outfit, Juice.hd)
 	_outline()
 	_part_limb("leg%d" % bf, back, 2.2)
 	draw_line(j.hip, j.shoulder, c, 2.8, Juice.hd)
@@ -236,6 +237,7 @@ func _draw() -> void:
 		draw_circle(j.head, 3.7, c)
 		var visor: Vector2 = j.head + Vector2(fighter.facing * 1.2, -0.5)
 		draw_line(visor, visor + Vector2(fighter.facing * 2.4, 0.3), fighter.team_color * 3.0, 1.2)
+		Outfit.draw_front(self, j, fighter.facing, fighter.team_color, fighter.outfit, Juice.hd)
 	_draw_stumps()
 	if fighter.is_player:
 		_draw_laser()

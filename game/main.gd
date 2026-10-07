@@ -29,6 +29,7 @@ var spawner: Spawner
 var rules := RoundRules.new(self)
 var announcer: Announcer
 var world_board := WorldBoard.new()
+var profile := Profile.new()
 var director: SurvivalDirector
 var duo: Duo
 var _post: CanvasLayer

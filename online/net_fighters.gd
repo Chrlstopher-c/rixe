@@ -62,7 +62,7 @@ func snapshot() -> Dictionary:
 		flags |= (F_ROLL if f.moves.roll_t > 0.0 else 0) | (F_SLIDE if f.moves.slide_t > 0.0 else 0)
 		flags |= (F_STUN if f.moves.stunned() else 0) | (F_BOSS if f.boss else 0)
 		rows.append([f.net_id, f.net_life, f.global_position, f.velocity, f.aim_dir, f.hp, f.gun.id,
-			f.gun.attachments, f.body.missing.duplicate(), f.team, f.team_color, flags, f.melee.t, f.dash_t])
+			f.gun.attachments, f.body.missing.duplicate(), f.team, f.team_color, flags, f.melee.t, f.dash_t, f.outfit])
 	return {"t": "s", "f": rows}
 
 
@@ -88,6 +88,7 @@ func _make_puppet(row: Array) -> Fighter:
 	f.net_id = id
 	f.net_life = row[1]
 	f.remote = true
+	f.outfit = row[14] if row.size() > 14 else {}
 	if int(row[11]) & F_BOSS:
 		Boss.make(f)
 	f.team = row[9]

@@ -8,6 +8,8 @@ const PLAYER_COLOR := Color(0.3, 0.9, 1.0)
 var fighters: Node2D
 var rng: RandomNumberGenerator
 var config := GameConfig.new()
+## Tenue du joueur de cette machine (profil).
+var outfit := {}
 var _bot_kinds := {}
 ## Équipe de chaque bot (par nom), gardée d'une réapparition à l'autre.
 var _bot_teams := {}
@@ -43,8 +45,16 @@ func spawn_player(pos: Vector2, brain: RefCounted) -> Fighter:
 		f = spawn("Toi", pos, PLAYER_COLOR, brain, w, true, l.attachments if w == l.weapon else {})
 	else:
 		f = spawn("Toi", pos, PLAYER_COLOR, brain, config.pick_weapon("rifle", rng), true)
+	_dress(f)
 	join_team(f, "Toi", 0)
 	return f
+
+
+func _dress(f: Fighter) -> void:
+	if outfit.is_empty():
+		return
+	f.outfit = outfit.duplicate()
+	f.team_color = Outfit.color(outfit)
 
 
 ## Équipe d'un joueur humain selon les réglages (couleur d'équipe comprise) ; rien en chacun pour soi.

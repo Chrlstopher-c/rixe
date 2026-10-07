@@ -116,7 +116,8 @@ func test_wall_jump(t: Node) -> void:
 	await t.until(func() -> bool: return f.is_on_wall(), 60)
 	brain.press_jump()
 	await t.frames(3)
-	t.check(f.velocity.x > 100.0 and f.velocity.y < 0.0, "contre le mur, sauter repart dans l'autre sens (%s)" % f.velocity)
+	t.check(f.velocity.x > 100.0 and f.velocity.y < 0.0,
+		"contre le mur, sauter repart dans l'autre sens (%s)" % f.velocity)
 	brain.move = 0.0
 
 

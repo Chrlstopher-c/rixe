@@ -67,6 +67,7 @@ func _on_killed(victim: Node2D, killer: Node2D) -> void:
 	_clean += 1
 	if _clean == FLAWLESS:
 		say("flawless", 0.6)
+		Juice.feat.emit("flawless")
 	match _streak:
 		2:
 			say("double", 0.35)

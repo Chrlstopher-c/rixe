@@ -75,6 +75,8 @@ static func _screens(m: Node) -> void:
 	m._menu.best = m.score.best
 	m._menu.start_requested.connect(m._on_start)
 	m.add_child(m.world_board)
+	m.add_child(m.profile)
+	m.spawner.outfit = m.profile.outfit
 	m._menu.world_board = m.world_board
 	m.announcer = Announcer.new()
 	m.add_child(m.announcer)
@@ -92,6 +94,12 @@ static func _screens(m: Node) -> void:
 		else:
 			m._menu.show_title())
 	m._menu.custom_requested.connect(m._custom.open_local)
+	var prof: CanvasLayer = preload("res://hud/profile_screen.gd").new()
+	prof.profile = m.profile
+	prof.spawner = m.spawner
+	m.add_child(prof)
+	m._menu.profile_requested.connect(prof.open)
+	prof.back_requested.connect(m._menu.show_title)
 	m._lobby.back_requested.connect(m._menu.show_title)
 	var sight: CanvasLayer = preload("res://hud/crosshair_screen.gd").new()
 	m.add_child(sight)

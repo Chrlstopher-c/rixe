@@ -69,6 +69,8 @@ func _rounds_after_kill(victim: Node2D) -> void:
 		_kill_cam(victim)
 		_banner("MANCHE GAGNÉE")
 		_announce("round_won")
+		m.profile.add("rounds", 1, Profile.XP.round)
+		m.profile.best("best_round", m.round_no + 1)
 		m.round_no += 1
 		m._restart_in = 3.0
 
@@ -142,6 +144,9 @@ func end_match() -> void:
 	if counts and value > 0.0:
 		m.world_board.submit(key, value)
 	m.score.end_run(m.game_mode == "arcade")
+	m.profile.add("matches", 1, 20)
+	if Juice.net:
+		m.profile.add("online", 1)
 	m.score.reset()
 	m._hud.best = m.score.best
 	m._menu.best = m.score.best

@@ -61,6 +61,8 @@ var net_life := 0
 var remote := false
 ## Boss d'arcade (voir Boss).
 var boss := false
+## Tenue (joueurs humains, voir Outfit).
+var outfit := {}
 ## Diagnostic du tir (RIXE_DEBUG_FIRE=1) : une ligne par seconde dans la console.
 var _debug_fire := OS.get_environment("RIXE_DEBUG_FIRE") != ""
 var _debug_t := 0.0

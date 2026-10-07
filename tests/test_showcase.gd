@@ -5,7 +5,7 @@ extends RefCounted
 func names() -> Array[String]:
 	return ["showcase", "showcase_end", "showcase_armory", "showcase_inventory", "showcase_survival", "showcase_duo",
 		"showcase_killcam", "showcase_execution",
-		"showcase_crosshair", "showcase_custom"]
+		"showcase_crosshair", "showcase_custom", "showcase_profile"]
 
 
 func _fire_at(t: Node, brain: ScriptBrain, target: Variant, joint: String, frames: int) -> void:
@@ -203,4 +203,32 @@ func test_showcase_custom(t: Node) -> void:
 	c.open_online(s, "KZRP")
 	await t.frames(240)
 	s.leave()
+	t.check(true, "vitrine")
+
+
+func test_showcase_profile(t: Node) -> void:
+	var main: Node = t.main
+	var pr: Profile = main.profile
+	pr.xp = 60 * 12 * 12
+	pr.stats = {"kills": 142, "heads": 51, "decaps": 12, "execs": 6, "parries": 4, "bosses": 1, "rounds": 33,
+		"best_round": 11, "matches": 9}
+	pr._check()
+	pr.outfit = {"hat": "couronne", "mask": "aucun", "cape": "longue", "color": "violet"}
+	main.spawner.outfit = pr.outfit
+	main.attract = true
+	main._menu.show_title()
+	await t.frames(30)
+	main._menu.activate(main._menu._ids().find("profile"))
+	var scr: CanvasLayer = null
+	for c in main.get_children():
+		if c is CanvasLayer and c.get("profile") == pr:
+			scr = c
+	await t.frames(120)
+	for id in ["hat", "mask", "cape", "color", "hat"]:
+		scr.adjust(id, 1)
+		await t.frames(60)
+	scr.activate(scr.ROWS.size() - 1)
+	main._on_start("arcade", 0)
+	main.player.brain = BotBrain.new(1.0, "acrobate")
+	await t.frames(120 * 6)
 	t.check(true, "vitrine")

@@ -101,6 +101,7 @@ func parries(attacker: Node2D) -> bool:
 	Sfx.play("tink", at, 2.0, 0.05)
 	Juice.hitstop(0.08)
 	Juice.shake(0.3, at)
-	if f.is_player:
+	if Fighter.local_human(f):
 		Juice.notify("PARADE !")
+		Juice.feat.emit("parry")
 	return true
