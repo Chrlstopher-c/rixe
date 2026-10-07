@@ -33,6 +33,8 @@ common/max_physics_steps_per_frame=8
 
 [rendering]
 
+textures/vram_compression/import_etc2_astc=true
+
 textures/canvas_textures/default_texture_filter=0
 viewport/hdr_2d=true
 renderer/rendering_method="forward_plus"
