@@ -24,6 +24,8 @@ func _cleanup(main: Node) -> void:
 	main._scoreboard.close()
 	main.get_tree().paused = false
 	main._restart_in = -1.0
+	main._end_in = -1.0
+	Juice.reset()
 	main.round_no = 1
 	main.game_mode = "arcade"
 
@@ -44,9 +46,13 @@ func test_arcade_last_bot(t: Node) -> void:
 	await t.frames(3)
 	t.check(main._restart_in < 0.0, "la manche continue tant qu'un bot est en vie")
 	t.check(main._hud.bots_left == 1, "il reste 1 bot (affiché %d)" % main._hud.bots_left)
+	t.check(Juice.focus_t <= 0.0, "pas de kill cam avant le dernier bot")
 	_kill(bots[2], main.player)
 	await t.frames(3)
 	t.check(main._restart_in >= 0.0 and main.round_no == 2, "le dernier bot tombé termine la manche")
+	t.check(Juice.focus_t > 0.0 and Juice._slowmo > 0.0, "kill cam sur la dernière élimination")
+	await t.frames(20)
+	t.check(Juice.focus_w > 0.3 and main._camera.zoom.x > main._camera.base_zoom + 0.1, "la caméra serre sur la victime")
 	_cleanup(main)
 
 
@@ -76,7 +82,7 @@ func test_objectif(t: Node) -> void:
 	await t.frames(5)
 	for b in _bots(main):
 		_kill(b, main.player)
-	await t.frames(5)
+	await t.until(func() -> bool: return main._scoreboard.visible, 900)
 	t.check(main.match_state.over and main.match_state.winner == "Toi", "5 éliminations = victoire")
 	t.check(main._scoreboard.visible and main._scoreboard._title == "VICTOIRE", "écran de victoire")
 	_cleanup(main)

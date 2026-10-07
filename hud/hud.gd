@@ -54,6 +54,7 @@ func _process(delta: float) -> void:
 
 
 func _draw_hud() -> void:
+	_draw_letterbox()
 	_draw_health()
 	var info := _info_line()
 	_canvas.draw_string(_font, Vector2(12, 30), info, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(1, 0.9, 0.95, 0.75))
@@ -70,6 +71,16 @@ func _draw_hud() -> void:
 		_draw_survival(Juice.survival)
 	if show_crosshair:
 		_draw_crosshair(_canvas.get_local_mouse_position())
+
+
+## Bandes noires de la kill cam.
+func _draw_letterbox() -> void:
+	var w := smoothstep(0.0, 1.0, Juice.focus_w)
+	if w <= 0.0:
+		return
+	var h := _canvas.size.y * 0.11 * w
+	_canvas.draw_rect(Rect2(0, 0, _canvas.size.x, h), Color.BLACK)
+	_canvas.draw_rect(Rect2(0, _canvas.size.y - h, _canvas.size.x, h), Color.BLACK)
 
 
 func _draw_health() -> void:

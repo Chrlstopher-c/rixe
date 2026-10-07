@@ -22,6 +22,8 @@ func _init(game: Node, names: String) -> void:
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	Engine.time_scale = 1.0
+	if DisplayServer.get_name() == "headless":
+		Juice.fixed_step = 1.0 / 120.0
 	await get_tree().process_frame
 	var ran := 0
 	for suite in _suites:

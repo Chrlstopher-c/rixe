@@ -279,6 +279,8 @@ func take_hit(dmg: float, dir: Vector2, at: Vector2, from: Node2D, knock: float)
 		if last_zone == "head" or last_zone == "torso":
 			death_cause = "decap" if last_zone == "head" else "split"
 			hp = 0.0
+	if is_instance_valid(from) and from.get("is_player") and from != self:
+		Effects.hit_marker(at, last_zone == "head", hp <= 0.0)
 	if hp <= 0.0:
 		_die(dir, from, res.dmg)
 

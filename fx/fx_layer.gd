@@ -22,6 +22,7 @@ class P:
 
 var parts: Array[P] = []
 var tracers: Array[Dictionary] = []
+var markers: Array[Dictionary] = []
 var _lights: Array[PointLight2D] = []
 var _light_i := 0
 
@@ -46,6 +47,7 @@ func _ready() -> void:
 func clear() -> void:
 	parts.clear()
 	tracers.clear()
+	markers.clear()
 
 
 func emit(kind: int, pos: Vector2, vel: Vector2, life: float, size: float, color: Color) -> P:
@@ -72,6 +74,10 @@ func _process(delta: float) -> void:
 	for t in tracers:
 		t.life -= delta
 	tracers = tracers.filter(func(t: Dictionary) -> bool: return t.life > 0.0)
+	var real: float = Juice.real_delta(delta)
+	for m in markers:
+		m.life -= real
+	markers = markers.filter(func(m: Dictionary) -> bool: return m.life > 0.0)
 	for l in _lights:
 		l.energy = move_toward(l.energy, 0.0, delta * 30.0)
 	queue_redraw()
@@ -129,6 +135,23 @@ func _draw() -> void:
 		draw_multiline_colors(thin, thin_c, 1.0)
 	if not thick.is_empty():
 		draw_multiline_colors(thick, thick_c, 1.8)
+	_draw_markers()
+
+
+## Croix qui jaillit puis se resserre en s'effaçant (temps réel : lisible même au ralenti).
+func _draw_markers() -> void:
+	if markers.is_empty():
+		return
+	var pts := PackedVector2Array()
+	var cols := PackedColorArray()
+	for m in markers:
+		var k: float = m.life / m.max
+		var pop := 1.0 + 0.6 * clampf((k - 0.75) * 4.0, 0.0, 1.0)
+		var s: float = m.size * pop
+		for d in [Vector2(1, 1), Vector2(1, -1), Vector2(-1, 1), Vector2(-1, -1)]:
+			pts.append_array([m.pos + d * 2.5 * s, m.pos + d * 6.0 * s])
+			cols.append(Color(m.color, minf(k * 3.0, 1.0)))
+	draw_multiline_colors(pts, cols, 1.4)
 
 
 static func _seen(views: Array[Rect2], p: Vector2) -> bool:

@@ -30,7 +30,7 @@ func test_survival(t: Node) -> void:
 	await _hunger_and_craft(t, p, s)
 	p.shield = 0.0
 	p.take_hit(9999.0, Vector2.RIGHT, p.global_position + Vector2(0, -22), null, 0.0)
-	await t.frames(5)
+	await t.until(func() -> bool: return main._scoreboard.visible, 900)
 	t.check(main._scoreboard.visible and main._scoreboard._title == "TU ES TOMBÉ", "mort du joueur = fin de la survie")
 	_cleanup(main)
 

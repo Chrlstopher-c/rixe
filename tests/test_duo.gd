@@ -24,7 +24,7 @@ func test_duo(t: Node) -> void:
 	t.check(not main._scoreboard.visible, "J2 tombé : la partie continue")
 	p1.shield = 0.0
 	p1.take_hit(9999.0, Vector2.RIGHT, p1.global_position + Vector2(0, -22), null, 0.0)
-	await t.frames(5)
+	await t.until(func() -> bool: return main._scoreboard.visible, 900)
 	t.check(main._scoreboard.visible, "les deux tombés : fin de partie")
 	main._scoreboard.close()
 	main.get_tree().paused = false

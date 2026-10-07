@@ -214,6 +214,18 @@ def tink() -> np.ndarray:
     return env(sum(np.sin(2 * np.pi * f * t(0.1)) * a for f, a in [(1900, 1), (2900, 0.5)]), 0.0005, 0.02) * 0.6
 
 
+def hit() -> np.ndarray:
+    click = env(hp(noise(0.03), 2500), 0.0002, 0.004)
+    return click * 0.7 + env(np.sin(2 * np.pi * 1300 * t(0.03)), 0.0003, 0.006) * 0.4
+
+
+def headshot() -> np.ndarray:
+    partials = [(1560, 1), (2340, 0.55), (3900, 0.25)]
+    ding = env(sum(np.sin(2 * np.pi * f * t(0.4)) * a for f, a in partials), 0.0005, 0.09)
+    crack = env(hp(noise(0.06), 1800), 0.0002, 0.01)
+    return tail(mix(crack * 0.9, ding * 0.7), 0.25, 0.2)
+
+
 def round_start() -> np.ndarray:
     tt = t(0.9)
     chord = sum(np.sin(2 * np.pi * f * tt) for f in [110, 165, 220, 330])
@@ -226,6 +238,7 @@ SOUNDS = {
     "punch": punch, "slowmo": slowmo, "pickup": pickup, "round": round_start, "ricochet": ricochet,
     "reload_out": reload_out, "reload_in": reload_in, "dry": dry, "pistol": pistol, "smg": smg,
     "sniper": sniper, "launcher": launcher, "explosion": explosion, "slash": slash, "tink": tink,
+    "hit": hit, "headshot": headshot,
 }
 
 

@@ -62,7 +62,8 @@ func _process(delta: float) -> void:
 	_shade.color = tint
 	if backdrop:
 		backdrop.set_tint(tint)
-	_torch.energy = (1.0 - light) * 1.1
+	if is_instance_valid(_torch):
+		_torch.energy = (1.0 - light) * 1.1
 	if not state.night:
 		_roam -= delta
 		if _roam <= 0.0:

@@ -30,6 +30,8 @@ var _fighters: Node2D
 var _hud: CanvasLayer
 var _camera: Camera2D
 var _restart_in := -1.0
+## Fin de partie différée le temps de la kill cam (secondes réelles, -1 = rien en attente).
+var _end_in := -1.0
 var _rng := RandomNumberGenerator.new()
 var _tests := ""
 var _off: PackedStringArray = []
@@ -103,6 +105,7 @@ func _start_round() -> void:
 
 
 func _clear_world() -> void:
+	_end_in = -1.0
 	Juice.reset()
 	for c in _fighters.get_children():
 		c.queue_free()
@@ -225,7 +228,7 @@ func _on_killed(victim: Node2D, killer: Node2D) -> void:
 	if game_mode == "survie" and not attract:
 		if victim == player and not _scoreboard.visible:
 			match_state.finish_arcade()
-			_end_match()
+			_end_after_kill(victim)
 		return
 	if is_instance_valid(killer) and killer == player:
 		score.add_kill()
@@ -233,7 +236,7 @@ func _on_killed(victim: Node2D, killer: Node2D) -> void:
 	if attract or demo or not Modes.respawns(game_mode):
 		_rounds_after_kill(victim)
 	elif match_state.over:
-		_end_match()
+		_end_after_kill(victim)
 
 
 ## Mode arcade (et démo) : la manche se gagne quand plus aucun bot n'est en vie.
@@ -249,10 +252,11 @@ func _rounds_after_kill(victim: Node2D) -> void:
 			_restart_in = 3.0
 		else:
 			match_state.finish_arcade()
-			_end_match()
+			_end_after_kill(victim)
 		return
 	_hud.bots_left = _alive_bots()
 	if _hud.bots_left <= 0:
+		Juice.kill_cam(victim.global_position + Vector2(0, -26))
 		_hud.banner("MANCHE GAGNÉE")
 		round_no += 1
 		_restart_in = 3.0
@@ -266,8 +270,17 @@ func _alive_bots() -> int:
 	return n
 
 
+## La dernière élimination se rejoue au ralenti avant l'écran de fin.
+func _end_after_kill(victim: Node2D) -> void:
+	if _end_in >= 0.0 or _scoreboard.visible:
+		return
+	Juice.kill_cam(victim.global_position + Vector2(0, -26))
+	_end_in = 1.6
+
+
 ## Fin de partie : classement des combattants, score du joueur soumis au tableau du mode, jeu figé.
 func _end_match() -> void:
+	_end_in = -1.0
 	var rows := match_state.ranking()
 	var key := Modes.board_key(game_mode, game_option)
 	var lower := Modes.lower_is_better(game_mode)
@@ -296,6 +309,11 @@ func _process(delta: float) -> void:
 		_restart_in -= real
 		if _restart_in < 0.0:
 			_start_round()
+	if _end_in >= 0.0:
+		_end_in -= real
+		if _end_in < 0.0:
+			_end_match()
+		return
 	if attract or demo or match_state == null or not Modes.respawns(game_mode) or _scoreboard.visible:
 		return
 	for entry in match_state.tick(real):

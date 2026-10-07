@@ -109,3 +109,13 @@ static func explosion(pos: Vector2, radius: float) -> void:
 	Juice.shake(0.8, pos)
 	Juice.zoom_punch = maxf(Juice.zoom_punch, 0.06)
 	Juice.aberration += 0.4
+
+
+## Marqueur de touche du joueur : croix blanche, rouge à la tête, plus grosse et cerclée sur une élimination.
+static func hit_marker(pos: Vector2, head: bool, kill: bool) -> void:
+	var col := Color(2.2, 0.25, 0.25) if head or kill else Color(2.0, 2.0, 2.0)
+	var life := 0.32 if kill else 0.2
+	Juice.fx.markers.append({"pos": pos, "life": life, "max": life, "color": col, "size": 1.6 if kill else 1.0})
+	if kill:
+		Juice.fx.emit(5, pos, Vector2.ZERO, 0.25, 10.0, Color(col, 0.8))
+	Sfx.play_ui("headshot" if head else "hit", -4.0 if head else -13.0)

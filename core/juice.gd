@@ -36,10 +36,20 @@ var zoom_punch := 0.0
 ## Intensité du bord rouge de dégâts : vie basse du joueur + coups récents.
 var hurt := 0.0
 var shockwaves: Array[Dictionary] = []
+## Kill cam : point filmé, temps restant (réel) et poids de transition partagé par caméras et interface.
+var focus := Vector2.ZERO
+var focus_t := 0.0
+var focus_w := 0.0
 var _hitstop := 0.0
 var _slowmo := 0.0
 var _slowmo_scale := 1.0
 var _stopped := false
+## Temps réel de l'image, mesuré une fois par image (horloge, ou pas fixe avec --fixed-fps).
+var _real := 0.0
+var _real_frame := -1
+var _last_us := 0
+## Pas réel imposé (tests lancés avec --fixed-fps, que le jeu ne voit pas dans ses arguments) ; 0 = horloge.
+var fixed_step := 0.0
 
 
 func _process(delta: float) -> void:
@@ -50,11 +60,21 @@ func _process(delta: float) -> void:
 	for w in shockwaves:
 		w.age += real
 	shockwaves = shockwaves.filter(func(w: Dictionary) -> bool: return w.age < w.life)
+	focus_t -= real
+	focus_w = move_toward(focus_w, 1.0 if focus_t > 0.0 else 0.0, real * (5.0 if focus_t > 0.0 else 3.0))
 	_tick_time(real)
 
 
-func real_delta(delta: float) -> float:
-	return delta / maxf(Engine.time_scale, 0.01)
+## Ne dépend pas de delta : diviser par Engine.time_scale se trompe l'image où l'échelle change (hitstop),
+## et une seule image lente vidait alors tout un ralenti.
+func real_delta(_delta: float) -> float:
+	var f := Engine.get_process_frames()
+	if f != _real_frame:
+		_real_frame = f
+		var now := Time.get_ticks_usec()
+		_real = fixed_step if fixed_step > 0.0 else clampf((now - _last_us) / 1000000.0, 0.0, 0.1)
+		_last_us = now
+	return _real
 
 
 func _tick_time(real: float) -> void:
@@ -84,6 +104,16 @@ func shake(amount: float, at: Vector2 = Vector2.INF) -> void:
 	if at != Vector2.INF and camera:
 		amount *= clampf(1.0 - camera.get_screen_center_position().distance_to(at) / 520.0, 0.0, 1.0)
 	trauma = minf(trauma + amount, 1.0)
+
+
+## Dernière élimination de la manche : ralenti fort, caméra qui serre sur la victime, bandes noires.
+func kill_cam(at: Vector2, sec: float = 1.5) -> void:
+	focus = at
+	focus_t = sec
+	hitstop(0.08)
+	slowmo(sec, 0.22)
+	aberration += 0.6
+	Sfx.play_ui("slowmo", -2.0)
 
 
 func notify(text: String) -> void:
@@ -120,6 +150,8 @@ func reset() -> void:
 	aberration = 0.0
 	zoom_punch = 0.0
 	shockwaves.clear()
+	focus_t = 0.0
+	focus_w = 0.0
 	_hitstop = 0.0
 	_slowmo = 0.0
 	Engine.time_scale = 1.0

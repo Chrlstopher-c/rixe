@@ -3,7 +3,8 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["showcase", "showcase_end", "showcase_armory", "showcase_inventory", "showcase_survival", "showcase_duo"]
+	return ["showcase", "showcase_end", "showcase_armory", "showcase_inventory", "showcase_survival", "showcase_duo",
+		"showcase_killcam"]
 
 
 func _fire_at(t: Node, brain: ScriptBrain, target: Variant, joint: String, frames: int) -> void:
@@ -122,3 +123,22 @@ func test_showcase_duo(t: Node) -> void:
 	main.duo.player2.brain = BotBrain.new(1.0, "brute")
 	await t.frames(1500)
 	t.check(true, "vitrine")
+
+
+func test_showcase_killcam(t: Node) -> void:
+	var main: Node = t.main
+	main.live_rules = true
+	main.attract = false
+	main.match_state = MatchState.new("arcade")
+	var brain := ScriptBrain.new()
+	main.player = main.spawn_test_fighter(Vector2(380, -10), brain, "rifle", true)
+	main.follow(main.player)
+	var foe: Fighter = main.spawn_test_fighter(Vector2(620, -10), ScriptBrain.new(), "rifle", false)
+	foe.team_color = Color(1.0, 0.25, 0.3)
+	await t.frames(90)
+	await _fire_at(t, brain, foe, "hip", 120)
+	if is_instance_valid(foe) and foe.alive:
+		foe.take_hit(999.0, Vector2.RIGHT, foe.rig.to_global(foe.rig.j.hip), main.player, 60.0)
+	await t.frames(360)
+	t.check(main.round_no == 2, "manche gagnée")
+	main.live_rules = false

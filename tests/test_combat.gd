@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["hitzones", "dismember", "headshot_slowmo", "legshot"]
+	return ["hitzones", "dismember", "headshot_slowmo", "legshot", "hit_markers"]
 
 
 func _target(t: Node, is_player: bool = false) -> Fighter:
@@ -78,3 +78,24 @@ func test_legshot(t: Node) -> void:
 	brain.fire = false
 	var legs1: float = foe.body.hp.leg0 + foe.body.hp.leg1
 	t.check(legs1 < legs0 - 10.0, "viser les pieds blesse les jambes (%.0f → %.0f)" % [legs0, legs1])
+
+
+func test_hit_markers(t: Node) -> void:
+	var shooter: Fighter = t.main.spawn_test_fighter(Vector2(300, -10), ScriptBrain.new(), "rifle", true)
+	var a := await _target(t)
+	var bot: Fighter = t.main.spawn_test_fighter(Vector2(200, -10), ScriptBrain.new(), "rifle", false)
+	a.hp = 999.0
+	Juice.fx.markers.clear()
+	_shoot_at(a, "hip", 5.0, bot)
+	t.check(Juice.fx.markers.is_empty(), "pas de marqueur quand un bot touche")
+	_shoot_at(a, "hip", 5.0, shooter)
+	t.check(Juice.fx.markers.size() == 1 and Juice.fx.markers[0].color.g > 1.0, "croix blanche sur une touche au corps")
+	_shoot_at(a, "head", 1.0, shooter)
+	t.check(Juice.fx.markers.size() == 2 and Juice.fx.markers[1].color.g < 0.5, "croix rouge sur une touche à la tête")
+	a.hp = 1.0
+	_shoot_at(a, "hip", 5.0, shooter)
+	t.check(Juice.fx.markers.size() == 3 and Juice.fx.markers[2].size > 1.0, "croix agrandie sur une élimination")
+	await t.frames(60)
+	t.check(Juice.fx.markers.is_empty(), "les marqueurs s'effacent")
+	shooter.queue_free()
+	bot.queue_free()

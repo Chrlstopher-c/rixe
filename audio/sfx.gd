@@ -4,11 +4,12 @@ extends Node
 const POOL := 24
 const SOUNDS := ["rifle", "shotgun", "railgun", "impact", "flesh", "gore", "jump", "air_jump", "land", "dash",
 	"shell", "swing", "punch", "slowmo", "pickup", "round", "ricochet",
-	"reload_out", "reload_in", "dry", "pistol", "smg", "sniper", "launcher", "explosion", "slash", "tink"]
+	"reload_out", "reload_in", "dry", "pistol", "smg", "sniper", "launcher", "explosion", "slash", "tink", "hit", "headshot"]
 
 var streams := {}
 var _players: Array[AudioStreamPlayer2D] = []
-var _flat: AudioStreamPlayer
+var _flat: Array[AudioStreamPlayer] = []
+var _flat_i := 0
 var music: AudioStreamPlayer
 const MUSIC_DB := -11.0
 var _next := 0
@@ -24,8 +25,10 @@ func _ready() -> void:
 		p.attenuation = 1.6
 		add_child(p)
 		_players.append(p)
-	_flat = AudioStreamPlayer.new()
-	add_child(_flat)
+	for i in 4:
+		var f := AudioStreamPlayer.new()
+		add_child(f)
+		_flat.append(f)
 	music = AudioStreamPlayer.new()
 	var track: AudioStreamWAV = load("res://assets/music/combat.wav")
 	track.loop_mode = AudioStreamWAV.LOOP_FORWARD
@@ -50,9 +53,11 @@ func play(name: String, at: Vector2, volume_db: float = 0.0, pitch_var: float = 
 
 
 func play_ui(name: String, volume_db: float = 0.0) -> void:
-	_flat.stream = streams.get(name)
-	_flat.volume_db = volume_db
-	_flat.play()
+	var f := _flat[_flat_i]
+	_flat_i = (_flat_i + 1) % _flat.size()
+	f.stream = streams.get(name)
+	f.volume_db = volume_db
+	f.play()
 
 
 func start_music() -> void:
