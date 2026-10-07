@@ -25,6 +25,7 @@ func _cleanup(main: Node) -> void:
 	main.get_tree().paused = false
 	main._restart_in = -1.0
 	main._end_in = -1.0
+	main.forced_map = ""
 	Juice.reset()
 	main.round_no = 1
 	main.game_mode = "arcade"
@@ -59,6 +60,7 @@ func test_arcade_last_bot(t: Node) -> void:
 func test_chrono(t: Node) -> void:
 	var main: Node = t.main
 	main.live_rules = true
+	main.forced_map = "plateformes"
 	main._on_start("chrono", 0)
 	main.match_state.time_left = 6.0
 	await t.frames(5)
