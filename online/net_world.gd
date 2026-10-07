@@ -158,6 +158,13 @@ func _announce(item: Node2D) -> void:
 			"data": _describe(item)})
 
 
+## Hôte : renvoie tous les objets au sol (un invité vient d'arriver en cours de partie).
+func announce_all() -> void:
+	for item in _items.values():
+		if is_instance_valid(item):
+			_announce(item)
+
+
 func _describe(item: Node2D) -> Array:
 	if item is WeaponPickup:
 		return ["w", item.weapon_id, item.mag, item.reserve, item.attachments]

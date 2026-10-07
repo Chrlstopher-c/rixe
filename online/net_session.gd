@@ -8,11 +8,10 @@ signal ended(reason: String)
 
 const SNAP := 0.05
 const HUD_EVERY := 0.25
-## Nom du combattant de l'invité côté hôte (comme le 2e joueur en écran partagé).
-const GUEST := "J2"
+## Nom affiché de l'hôte chez les invités (avant de connaître son pseudo).
 const HOST_LABEL := "Hôte"
-## Version du protocole réseau : deux jeux ne jouent ensemble que s'ils ont la même version et le même protocole.
-const PROTO := 2
+## Version du protocole réseau : des jeux ne jouent ensemble que s'ils ont la même version et le même protocole.
+const PROTO := 3
 ## Délai pour recevoir la présentation de l'autre (un jeu trop ancien ne se présente pas).
 const HI_TIMEOUT := 5.0
 
@@ -20,27 +19,32 @@ var main: Node
 var link: NetLink
 var fighters := NetFighters.new(self)
 var world := NetWorld.new(self)
+var match_sync := NetMatch.new(self)
 ## Changement reçu en cours d'application : ne pas le renvoyer.
 var applying := false
 ## Dégâts de zone rejoués des deux côtés (barils) : chacun ne touche que ses propres combattants.
 var local_only := false
 ## Manche en cours (l'hôte l'incrémente) : les messages d'une ancienne manche sont ignorés.
 var epoch := 0
+## Invité : sa place d'apparition ; hôte : place prévue pour chaque invité (identifiant → position).
 var guest_spot := Vector2.ZERO
+var guest_spots := {}
 var started := false
 var version: String = ProjectSettings.get_setting("application/config/version", "dev")
-## L'autre jeu s'est présenté avec la même version.
-var peer_ok := false
+## Places des jeux qui se sont présentés avec la même version ; places refusées par l'hôte (version différente).
+var ok_slots: Array[int] = []
+var _blocked: Array[int] = []
 ## Décors recalés depuis l'hôte (invité) : un écart de génération entre machines a été corrigé.
 var map_resyncs := 0
 ## Après un recalage, le décor de l'invité correspond bien à celui de l'hôte.
 var map_ok := true
-var _hi_wait := -1.0
+## Attente de la présentation de chaque place (secondes restantes).
+var _hi_wait := {}
 var _snap_t := 0.0
 var _hud_t := 0.0
 
 
-static func begin(m: Node, role: String, code: String) -> NetSession:
+static func begin(m: Node, role: String, code: String, max_players: int = 2) -> NetSession:
 	var s := NetSession.new()
 	s.main = m
 	s.link = NetLink.new()
@@ -50,7 +54,7 @@ static func begin(m: Node, role: String, code: String) -> NetSession:
 	s.link.peer_changed.connect(s._on_peer)
 	s.link.joined.connect(s._on_joined)
 	s.link.failed.connect(s._on_failed)
-	s.link.open(code, role)
+	s.link.open(code, role, RelayConfig.url(), max_players)
 	Juice.net = s
 	return s
 
@@ -63,8 +67,39 @@ func is_host() -> bool:
 	return link.is_host()
 
 
+## Prêt à jouer : l'invité a reconnu l'hôte ; l'hôte a au moins un invité reconnu.
 func connected() -> bool:
-	return link.ready_to_play() and peer_ok
+	if not link.ready_to_play():
+		return false
+	return 0 in ok_slots if not is_host() else not ok_slots.is_empty()
+
+
+## Identifiant de mon combattant : « Toi » pour l'hôte, « J2 » à « J4 » pour les invités (place + 1).
+func my_id() -> String:
+	return "Toi" if is_host() else slot_id(link.slot)
+
+
+static func slot_id(slot: int) -> String:
+	return "Toi" if slot == 0 else "J%d" % (slot + 1)
+
+
+## Identifiants des invités reconnus (côté hôte).
+func guest_ids() -> Array[String]:
+	var out: Array[String] = []
+	for sl in ok_slots:
+		if sl != 0:
+			out.append(slot_id(sl))
+	return out
+
+
+## Joueurs du salon (moi compris), pour l'affichage : [{id, nick, slot}].
+func players() -> Array[Dictionary]:
+	var out: Array[Dictionary] = [{"id": my_id(), "nick": Names.load_nick(), "slot": link.slot}]
+	for sl in ok_slots:
+		var key := HOST_LABEL if sl == 0 else slot_id(sl)
+		out.append({"id": slot_id(sl), "nick": Names.label(key), "slot": sl})
+	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.slot < b.slot)
+	return out
 
 
 func leave() -> void:
@@ -159,22 +194,41 @@ func round_started() -> void:
 	fighters.reset()
 	world.reset_round()
 	if is_host():
-		send_event({"t": "round", "seed": main.seed_base, "round": main.round_no, "mode": main.game_mode,
-			"opt": main.game_option, "map": main.forced_map, "pos": guest_spot, "h": h})
+		send_event(_round_msg(h))
+
+
+func _round_msg(h: int) -> Dictionary:
+	return {"t": "round", "seed": main.seed_base, "round": main.round_no, "mode": main.game_mode,
+		"opt": main.game_option, "map": main.forced_map, "spots": guest_spots, "h": h}
+
+
+## Hôte : places d'apparition des invités, prises après la sienne ; renvoie les index utilisés.
+func assign_spots(spots: Array, mine: int) -> Array[int]:
+	var used: Array[int] = []
+	guest_spots.clear()
+	var ids := guest_ids()
+	for i in ids.size():
+		var k := (mine + 1 + i) % spots.size()
+		if k == mine:
+			guest_spots[ids[i]] = main.spawner.far_spawn()
+			continue
+		guest_spots[ids[i]] = spots[k]
+		used.append(k)
+	return used
 
 
 ## Hôte : réapparition de l'invité (chrono, objectif) ; l'invité recrée son combattant à cet endroit.
 func respawn(entry: Dictionary, pos: Vector2) -> bool:
-	if entry.name != GUEST:
+	if not entry.name in guest_ids():
 		return false
-	send_event({"t": "spawn", "pos": pos})
+	send_event({"t": "spawn", "to": entry.name, "pos": pos})
 	return true
 
 
 ## Invité : son combattant, à la place donnée par l'hôte.
 func spawn_guest(pos: Vector2) -> Fighter:
 	var f: Fighter = main._spawn_player(pos, PlayerBrain.new())
-	f.net_id = GUEST
+	f.net_id = my_id()
 	if main.game_mode == "arcade":
 		f.team = "joueurs"
 	return f
@@ -182,10 +236,7 @@ func spawn_guest(pos: Vector2) -> Fighter:
 
 func _process(delta: float) -> void:
 	var real: float = Juice.real_delta(delta)
-	if _hi_wait >= 0.0 and not peer_ok:
-		_hi_wait -= real
-		if _hi_wait < 0.0:
-			_refuse("L'autre joueur a une version trop ancienne du jeu (avant %s) : mettez-le à jour" % version)
+	_tick_hi(real)
 	if not connected() or not started:
 		return
 	_snap_t -= real
@@ -204,72 +255,122 @@ func _process(delta: float) -> void:
 
 func _send_hud() -> void:
 	var ms: MatchState = main.match_state
-	send_event({"t": "hud", "info": main._hud.info_for(GUEST), "time": ms.time_left, "respawn": ms.respawn_in(GUEST),
-		"bots": main._hud.bots_left})
+	for id in guest_ids():
+		send_event({"t": "hud", "to": id, "info": main._hud.info_for(id), "time": ms.time_left,
+			"respawn": ms.respawn_in(id), "bots": main._hud.bots_left})
 
 
-## Invité tombé : la caméra suit l'hôte en attendant.
+## Invité tombé : la caméra suit un autre joueur encore debout.
 func _spectate() -> void:
 	if is_instance_valid(main.player) and main.player.alive:
 		return
-	var host: Variant = fighters.puppets.get("Toi")
-	if is_instance_valid(host) and host.alive and main._camera.target != host:
-		main._camera.target = host
+	var cam: Variant = main._camera.target
+	if is_instance_valid(cam) and cam.alive:
+		return
+	for p in fighters.puppets.values():
+		if is_instance_valid(p) and p.alive and p.is_player:
+			main._camera.target = p
+			return
 
 
 func _on_failed(reason: String) -> void:
 	ended.emit(reason)
 
 
-func _on_joined(peer_here: bool) -> void:
-	if peer_here:
-		_greet()
+func _on_joined(_peer_here: bool) -> void:
+	for sl in link.peers:
+		_hi_wait[sl] = HI_TIMEOUT
+	_greet()
 
 
-## Présentation à l'autre jeu : version et protocole.
+## Présentation aux autres jeux : version, protocole, pseudo.
 func _greet() -> void:
-	peer_ok = false
-	_hi_wait = HI_TIMEOUT
 	link.send({"t": "hi", "v": version, "p": PROTO, "n": Names.load_nick()})
 
 
+func _tick_hi(real: float) -> void:
+	for sl: int in _hi_wait.keys():
+		_hi_wait[sl] -= real
+		if _hi_wait[sl] > 0.0:
+			continue
+		_hi_wait.erase(sl)
+		if sl in ok_slots or sl in _blocked:
+			continue
+		if sl == 0 and not is_host():
+			_refuse("L'hôte a une version trop ancienne du jeu (avant %s) : mettez-le à jour" % version)
+		elif is_host():
+			_blocked.append(sl)
+			Juice.notify("Un joueur avec une version trop ancienne a été refusé")
+
+
 func _on_hi(msg: Dictionary) -> void:
+	var sl: int = msg.get("_from", -1)
 	var v := String(msg.get("v", "?"))
 	if v != version or int(msg.get("p", 0)) != PROTO:
-		_refuse("Versions différentes : toi %s, l'autre %s. Mettez le jeu à jour des deux côtés" % [version, v])
+		var why := "Versions différentes : toi %s, l'hôte %s. Mettez le jeu à jour" % [v, version]
+		if is_host():
+			_blocked.append(sl)
+			link.send({"t": "bye", "to": slot_id(sl), "why": why})
+		elif sl == 0:
+			_refuse("Versions différentes : toi %s, l'hôte %s. Mettez le jeu à jour des deux côtés" % [version, v])
 		return
-	peer_ok = true
-	_hi_wait = -1.0
-	Names.others[GUEST if is_host() else HOST_LABEL] = Names.clean(String(msg.get("n", ""))) if msg.get("n", "") != "" \
-		else (GUEST if is_host() else HOST_LABEL)
+	if sl in _blocked:
+		return
+	_hi_wait.erase(sl)
+	var nick := Names.clean(String(msg.get("n", "")))
+	var key := HOST_LABEL if sl == 0 else slot_id(sl)
+	Names.others[key] = nick if nick != "" else key
+	if not sl in ok_slots:
+		ok_slots.append(sl)
+		if is_host() and started:
+			_late_join(slot_id(sl))
+
+
+## Hôte : un invité arrive en cours de partie ; il reçoit la manche, sa place et les objets au sol.
+func _late_join(id: String) -> void:
+	guest_spots[id] = main.spawner.far_spawn()
+	var msg := _round_msg(Juice.arena.terrain.checksum())
+	msg["to"] = id
+	send_event(msg)
+	world.announce_all()
 
 
 func _refuse(reason: String) -> void:
 	push_warning("partie en ligne refusée : " + reason)
-	_hi_wait = -1.0
+	_hi_wait.clear()
 	ended.emit(reason)
 	leave()
 
 
-func _on_peer(here: bool) -> void:
+func _on_peer(sl: int, here: bool) -> void:
 	if here:
+		_hi_wait[sl] = HI_TIMEOUT
 		_greet()
 		return
-	peer_ok = false
-	if is_host():
-		fighters.drop_puppet(GUEST)
-		Juice.notify("%s a quitté la partie" % GUEST)
-	else:
+	ok_slots.erase(sl)
+	_hi_wait.erase(sl)
+	if sl == 0 and not is_host():
 		ended.emit("L'hôte a quitté la partie")
+		return
+	var id := slot_id(sl)
+	fighters.drop_puppet(id)
+	Juice.notify("%s a quitté la partie" % Names.label(HOST_LABEL if sl == 0 else id))
 
 
 func _on_message(msg: Dictionary) -> void:
 	var t: String = msg.get("t", "")
+	if int(msg.get("_from", -1)) in _blocked:
+		return
 	if t == "hi":
 		_on_hi(msg)
 		return
+	if msg.has("to") and msg.to != my_id():
+		return
+	if t == "bye":
+		_refuse(String(msg.get("why", "Refusé par l'hôte")))
+		return
 	if t == "round" and not is_host():
-		_on_round(msg)
+		match_sync.on_round(msg)
 		return
 	if int(msg.get("e", -1)) != epoch:
 		return
@@ -286,7 +387,8 @@ func _on_message(msg: Dictionary) -> void:
 		"exec":
 			_on_exec(msg)
 		"need_map":
-			send_event({"t": "map", "pack": Juice.arena.terrain.pack_cells(), "h": Juice.arena.terrain.checksum()})
+			send_event({"t": "map", "to": slot_id(int(msg.get("_from", 1))), "pack": Juice.arena.terrain.pack_cells(),
+				"h": Juice.arena.terrain.checksum()})
 		"map":
 			Juice.arena.terrain.unpack_cells(msg.pack)
 			map_ok = Juice.arena.terrain.checksum() == int(msg.h)
@@ -294,74 +396,15 @@ func _on_message(msg: Dictionary) -> void:
 				push_warning("décor toujours différent après recalage")
 		_:
 			if not world.on_message(t, msg):
-				_on_match_message(t, msg)
+				match_sync.on_message(t, msg)
 	applying = false
 
 
-func _on_round(msg: Dictionary) -> void:
-	epoch = int(msg.e)
-	guest_spot = msg.pos
-	main.seed_base = int(msg.seed)
-	main.forced_map = String(msg.map)
-	if not started or main.game_mode != msg.mode or int(msg.round) == 1:
-		main._on_start(String(msg.mode), int(msg.opt), int(msg.round))
-	else:
-		main.round_no = int(msg.round)
-		main._start_round()
-	check_map(int(msg.get("h", 0)))
-
-
-## Invité : décor regénéré comparé à celui de l'hôte ; s'il diffère (calcul différent d'une machine à l'autre),
-## l'hôte envoie le sien et l'invité s'y recale.
+## Invité : contrôle du décor après une manche (voir NetMatch).
 func check_map(expected: int) -> void:
-	if Juice.arena.terrain.checksum() == expected:
-		return
-	map_resyncs += 1
-	map_ok = false
-	push_warning("décor différent de l'hôte (manche %d) : recalage" % main.round_no)
-	Juice.notify("Décor recalé sur celui de l'hôte")
-	send_event({"t": "need_map"})
+	match_sync.check_map(expected)
 
 
-func _on_match_message(t: String, msg: Dictionary) -> void:
-	match t:
-		"hud":
-			main._hud.remote_info = msg.info
-			main._hud.respawn_t = msg.respawn
-			main._hud.bots_left = msg.bots
-			main.match_state.time_left = msg.time
-		"banner":
-			main._hud.banner(msg.text)
-		"say":
-			main.announcer.say(String(msg.k), 0.5)
-		"killcam":
-			Juice.kill_cam(msg.at)
-		"end":
-			_show_end(msg)
-
-
-## Écran de fin de l'invité : le classement de l'hôte, vu de l'invité (« Toi » = l'invité, « Hôte » = l'hôte).
-func _show_end(msg: Dictionary) -> void:
-	var state := MatchState.new(String(msg.mode), int(msg.opt))
-	for id: String in msg.stats:
-		state.stats[_mine(id)] = msg.stats[id]
-	state.winner = _mine(String(msg.winner))
-	state.elapsed = float(msg.elapsed)
-	state.over = true
-	main.match_state = state
-	var rows := state.ranking()
-	var texts := EndTexts.make(String(msg.mode), rows, state, int(msg.round), 0)
-	main.rules.show_end(texts[0], texts[1], rows, [], -1)
-
-
-func _mine(id: String) -> String:
-	if id == GUEST:
-		return "Toi"
-	return HOST_LABEL if id == "Toi" else id
-
-
-## Hôte : fin de partie envoyée avec les statistiques brutes (l'invité refait ses propres textes).
+## Hôte : fin de partie envoyée aux invités.
 func send_end() -> void:
-	var ms: MatchState = main.match_state
-	send_event({"t": "end", "mode": ms.mode, "opt": ms.option, "stats": ms.stats, "winner": ms.winner,
-		"elapsed": ms.elapsed, "round": main.round_no})
+	match_sync.send_end()

@@ -1,9 +1,10 @@
 class_name NetLink
 extends Node
-## Lien vers le relais : un WebSocket par joueur, rôle hôte ou invité, messages = dictionnaires sérialisés.
+## Lien vers le relais : un WebSocket par joueur, place 0 = hôte, 1 à 3 = invités ; messages = dictionnaires
+## sérialisés, diffusés par le relais à tous les autres avec la place de l'expéditeur (clé « _from » à la réception).
 
 signal joined(peer_here: bool)
-signal peer_changed(here: bool)
+signal peer_changed(slot: int, here: bool)
 signal received(msg: Dictionary)
 signal failed(reason: String)
 
@@ -18,6 +19,11 @@ var role := ""
 var code := ""
 var rtt := 0.0
 var peer_here := false
+## Ma place dans le salon et celles des autres joueurs présents.
+var slot := -1
+var peers: Array[int] = []
+## Nombre de joueurs maximum (choisi par l'hôte à la création du salon).
+var max_players := 2
 var _ws := WebSocketPeer.new()
 var _open := false
 var _done := false
@@ -33,9 +39,10 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 
 
-func open(room: String, as_role: String, base: String = RelayConfig.url()) -> void:
+func open(room: String, as_role: String, base: String = RelayConfig.url(), max_count: int = 2) -> void:
 	code = room.to_upper()
 	role = as_role
+	max_players = max_count
 	_base = base
 	_connect()
 
@@ -45,7 +52,7 @@ func _connect() -> void:
 	_ws = WebSocketPeer.new()
 	_ws.inbound_buffer_size = 1 << 20
 	_ws.outbound_buffer_size = 1 << 20
-	var err := _ws.connect_to_url("%s/room/%s?role=%s" % [_base, code, role])
+	var err := _ws.connect_to_url("%s/room/%s?role=%s&max=%d" % [_base, code, role, max_players])
 	if err != OK:
 		push_warning("connexion au relais impossible : %s" % error_string(err))
 		_fail("Relais injoignable")
@@ -108,8 +115,11 @@ func _read() -> void:
 		if _ws.was_string_packet():
 			_control(pkt.get_string_from_utf8())
 			continue
-		var msg: Variant = bytes_to_var(pkt)
+		if pkt.size() < 2:
+			continue
+		var msg: Variant = bytes_to_var(pkt.slice(1))
 		if msg is Dictionary:
+			msg["_from"] = int(pkt[0])
 			received.emit(msg)
 
 
@@ -123,11 +133,21 @@ func _control(text: String) -> void:
 	match String(data.get("t", "")):
 		"hello":
 			_open = true
-			peer_here = bool(data.get("peer", false))
+			slot = int(data.get("slot", 0))
+			peers.clear()
+			for p in data.get("peers", []):
+				peers.append(int(p))
+			peer_here = not peers.is_empty()
 			joined.emit(peer_here)
 		"peer":
-			peer_here = bool(data.get("on", false))
-			peer_changed.emit(peer_here)
+			var who := int(data.get("slot", -1))
+			var on := bool(data.get("on", false))
+			if on and not who in peers:
+				peers.append(who)
+			elif not on:
+				peers.erase(who)
+			peer_here = not peers.is_empty()
+			peer_changed.emit(who, on)
 
 
 func _keepalive(delta: float) -> void:

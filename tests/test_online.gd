@@ -10,7 +10,8 @@ var _round_hashes := []
 func names() -> Array[String]:
 	return ["online_link_host", "online_link_guest", "online_match_host", "online_match_guest", "online_show_host",
 		"online_show_guest", "online_checks_host", "online_checks_guest", "online_version_host", "online_version_guest",
-		"online_exec_host", "online_exec_guest", "online_board_host", "online_board_guest"]
+		"online_exec_host", "online_exec_guest", "online_board_host", "online_board_guest",
+		"online_quad_host", "online_quad_guest"]
 
 
 func _link(t: Node, role: String) -> NetLink:
@@ -301,11 +302,11 @@ func test_online_checks_guest(t: Node) -> void:
 
 func test_online_version_host(t: Node) -> void:
 	var s := NetSession.begin(t.main, "host", OS.get_environment("RIXE_ROOM"))
-	var why := []
-	s.ended.connect(func(r: String) -> void: why.append(r))
-	await t.until(func() -> bool: return not why.is_empty(), 3000)
-	t.check(not why.is_empty() and String(why[0]).begins_with("Versions différentes"), "hôte : refus clair (%s)" % [why])
-	t.check(Juice.net == null, "hôte : partie en ligne fermée")
+	await t.until(func() -> bool: return not s._blocked.is_empty(), 3000)
+	t.check(not s._blocked.is_empty(), "hôte : invité d'une autre version refusé")
+	t.check(Juice.net == s and not s.connected(), "hôte : sa partie reste ouverte, sans l'invité")
+	await t.frames(120)
+	s.leave()
 
 
 func test_online_version_guest(t: Node) -> void:
@@ -321,6 +322,7 @@ func test_online_version_guest(t: Node) -> void:
 			break
 		await t.frames(60)
 	t.check(not why.is_empty() and String(why[0]).contains("toi 0.0.0"), "invité : refus clair (%s)" % [why])
+	t.check(not why.is_empty() and String(why[0]).contains("l'hôte"), "invité : version de l'hôte indiquée")
 	t.check(Juice.net == null, "invité : partie en ligne fermée, jamais connecté")
 
 
@@ -408,3 +410,65 @@ func test_online_board_host(t: Node) -> void:
 func test_online_board_guest(t: Node) -> void:
 	await t.frames(5)
 	t.check(true, "rien à faire côté invité")
+
+
+# Partie à 4 : l'hôte et trois invités (RIXE_GUESTS=3).
+
+func test_online_quad_host(t: Node) -> void:
+	var main: Node = t.main
+	main.live_rules = true
+	var s := NetSession.begin(main, "host", OS.get_environment("RIXE_ROOM"), 4)
+	var box := _inbox(s)
+	var all_in: bool = await t.until(func() -> bool: return s.guest_ids().size() == 3, 9000)
+	t.check(all_in, "trois invités reconnus (%s)" % [s.guest_ids()])
+	t.check(s.players().size() == 4, "quatre joueurs dans le salon")
+	main._on_start("arcade", 0)
+	_tough(main.player)
+	var three: bool = await t.until(func() -> bool: return _fighters(main, true, true).size() == 3, 1200)
+	t.check(three, "les trois invités apparaissent chez l'hôte")
+	var nicks := []
+	for id in ["J2", "J3", "J4"]:
+		nicks.append(Names.label(id))
+	t.check(nicks.all(func(n: String) -> bool: return n.begins_with("anon")), "pseudos des trois invités (%s)" % [nicks])
+	for i in 3:
+		await _heard(t, box, "seen%d" % (i + 1), 1800)
+	var j3: Variant = null
+	for f in _fighters(main, true, true):
+		if f.net_id == "J3":
+			j3 = f
+	if j3:
+		j3.take_hit(99999.0, Vector2.RIGHT, j3.global_position + Vector2(0, -22), main.player, 0.0)
+	var gone: bool = await t.until(func() -> bool: return _fighters(main, true, true).size() == 2, 900)
+	t.check(gone, "J3 tué par l'hôte : il tombe")
+	for b in _fighters(main, false, false):
+		b.shield = 0.0
+		b.take_hit(999.0, Vector2.RIGHT, b.global_position + Vector2(0, -22), main.player, 0.0)
+	var next: bool = await t.until(func() -> bool: return main.round_no == 2 and main._restart_in < 0.0, 900)
+	t.check(next, "manche 2")
+	var back: bool = await t.until(func() -> bool: return _fighters(main, true, true).size() == 3, 1200)
+	t.check(back, "les trois invités réapparaissent à la manche 2")
+	for i in 3:
+		await _heard(t, box, "bye%d" % (i + 1), 1200)
+	s.leave()
+
+
+func test_online_quad_guest(t: Node) -> void:
+	var main: Node = t.main
+	main.live_rules = true
+	var n := OS.get_environment("RIXE_GUEST_N")
+	await t.frames(int(n) * 40)
+	var s := await _join(t, main)
+	var box := _inbox(s)
+	await t.until(func() -> bool: return is_instance_valid(main.player) and s.started, 2400)
+	_tough(main.player)
+	var all_seen: bool = await t.until(func() -> bool: return _fighters(main, true, true).size() == 3, 1200)
+	t.check(all_seen, "invité %s (%s) : voit l'hôte et les deux autres invités" % [n, s.my_id()])
+	t.check(s.my_id() in ["J2", "J3", "J4"], "identifiant d'invité valide")
+	_say(s, "seen" + n)
+	var round2: bool = await t.until(func() -> bool: return main.round_no == 2 and is_instance_valid(main.player) \
+		and main.player.alive, 2400)
+	t.check(round2, "invité %s : manche 2, de nouveau en jeu" % n)
+	await t.frames(60)
+	_say(s, "bye" + n)
+	await t.frames(30)
+	s.leave()

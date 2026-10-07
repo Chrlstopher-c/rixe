@@ -135,8 +135,8 @@ autoritaire sur son propre combattant ; « qui provoque l'effet calcule ses dég
 - [x] E29.S2 — jeu : envoi en fin de partie, onglet MONDIAL au classement — VERIFY: test contre relais local
 
 ## E30 — En ligne à 4
-- [ ] E30.S1 — relais : salon jusqu'à 4 places (hôte + 3 invités), messages diffusés avec l'expéditeur — VERIFY: `cd relay && pnpm test`
-- [ ] E30.S2 — session à N invités (J2, J3, J4), marionnettes de chacun chez chacun — VERIFY: `tools/online_test.sh` à 3 et 4 jeux
+- [x] E30.S1 — relais : salon jusqu'à 4 places (hôte + 3 invités), messages diffusés avec l'expéditeur — VERIFY: `cd relay && pnpm test`
+- [x] E30.S2 — session à N invités (J2, J3, J4), marionnettes de chacun chez chacun — VERIFY: `tools/online_test.sh` à 3 et 4 jeux
 
 ## E31 — Parties personnalisées
 - [ ] E31.S1 — réglages de partie : mode, durée/objectif, carte, équipes, nombre et niveau des bots, armes, joueurs max — VERIFY: tests

@@ -11,9 +11,9 @@ function check(cond, msg) {
   if (!cond) failures++;
 }
 
-function open(code, role) {
+function open(code, role, max = 2) {
   return new Promise((resolve) => {
-    const ws = new WebSocket(`${BASE}/room/${code}?role=${role}`);
+    const ws = new WebSocket(`${BASE}/room/${code}?role=${role}&max=${max}`);
     const state = { ws, inbox: [], closed: null };
     ws.on("message", (data, binary) => state.inbox.push(binary ? Buffer.from(data) : JSON.parse(data.toString())));
     ws.on("open", () => resolve(state));
@@ -58,7 +58,7 @@ async function run() {
   const host = await open(code, "host");
   check(host.closed === null, "l'hôte ouvre le salon");
   await until(() => host.inbox.length > 0);
-  check(host.inbox[0]?.t === "hello" && host.inbox[0]?.role === "host" && !host.inbox[0]?.peer, "hôte accueilli, seul");
+  check(host.inbox[0]?.t === "hello" && host.inbox[0]?.slot === 0 && host.inbox[0]?.peers?.length === 0, "hôte accueilli, seul");
   const taken = await open(code, "host");
   await until(() => taken.closed !== null);
   check(taken.closed === 4001, "un 2e hôte est refusé (code déjà pris)");
@@ -67,16 +67,16 @@ async function run() {
   check(absent.closed === 4004, "rejoindre un code inconnu est refusé");
   const guest = await open(code, "guest");
   await until(() => guest.inbox.length > 0 && host.inbox.length > 1);
-  check(guest.inbox[0]?.peer === true, "l'invité voit l'hôte");
-  check(host.inbox[1]?.t === "peer" && host.inbox[1]?.on === true, "l'hôte voit arriver l'invité");
+  check(guest.inbox[0]?.slot === 1 && guest.inbox[0]?.peers?.includes(0), "l'invité a la place 1 et voit l'hôte");
+  check(host.inbox[1]?.t === "peer" && host.inbox[1]?.on === true && host.inbox[1]?.slot === 1, "l'hôte voit arriver l'invité");
   const full = await open(code, "guest");
   await until(() => full.closed !== null);
   check(full.closed === 4002, "un 2e invité est refusé (salon plein)");
   host.ws.send(Buffer.from([1, 2, 3]));
   guest.ws.send(Buffer.from([9, 8]));
   await until(() => guest.inbox.length > 1 && host.inbox.length > 2);
-  check(Buffer.isBuffer(guest.inbox[1]) && guest.inbox[1].equals(Buffer.from([1, 2, 3])), "hôte → invité relayé");
-  check(Buffer.isBuffer(host.inbox[2]) && host.inbox[2].equals(Buffer.from([9, 8])), "invité → hôte relayé");
+  check(Buffer.isBuffer(guest.inbox[1]) && guest.inbox[1].equals(Buffer.from([0, 1, 2, 3])), "hôte → invité, place 0 en tête");
+  check(Buffer.isBuffer(host.inbox[2]) && host.inbox[2].equals(Buffer.from([1, 9, 8])), "invité → hôte, place 1 en tête");
   guest.ws.close();
   await until(() => host.inbox.length > 3);
   check(host.inbox[3]?.t === "peer" && host.inbox[3]?.on === false, "l'hôte apprend le départ de l'invité");
@@ -92,6 +92,25 @@ async function post(board, name, score) {
 
 async function top(board) {
   return (await (await fetch(`${HTTP}/scores?board=${board}`)).json()).top;
+}
+
+// Salon à 4 : trois invités, chaque message part chez tous les autres.
+async function runFour() {
+  const code = "F" + String.fromCharCode(65 + Math.floor(Math.random() * 26)) + "UR";
+  const host = await open(code, "host", 4);
+  const guests = [];
+  for (let i = 0; i < 3; i++) guests.push(await open(code, "guest"));
+  await until(() => guests.every((g) => g.inbox.length > 0));
+  check(guests.map((g) => g.inbox[0].slot).join() === "1,2,3", "trois invités aux places 1, 2, 3");
+  const extra = await open(code, "guest");
+  await until(() => extra.closed !== null);
+  check(extra.closed === 4002, "5e joueur refusé (maximum 4)");
+  guests[1].ws.send(Buffer.from([7]));
+  await until(() => [host, guests[0], guests[2]].every((p) => p.inbox.some((m) => Buffer.isBuffer(m))));
+  const got = [host, guests[0], guests[2]].map((p) => p.inbox.find((m) => Buffer.isBuffer(m)));
+  check(got.every((b) => b && b.equals(Buffer.from([2, 7]))), "message de la place 2 reçu par les trois autres");
+  check(!guests[1].inbox.some((m) => Buffer.isBuffer(m)), "l'expéditeur ne reçoit pas son propre message");
+  for (const p of [host, ...guests]) p.ws.close();
 }
 
 async function runScores() {
@@ -113,6 +132,7 @@ async function runScores() {
 const server = await startServer();
 try {
   await run();
+  await runFour();
   await runScores();
 } catch (err) {
   console.log("erreur", err);

@@ -129,7 +129,8 @@ func _clear_world() -> void:
 ## Joueur et bots sur des points d'apparition distincts ; renvoie le nombre de bots.
 func _populate() -> int:
 	var n := mini(2 + round_no, 6) if game_mode == "arcade" or attract else 5
-	var spots: Array = Juice.arena.spawn_points(n + 1, _rng)
+	var guests: int = Juice.net.guest_ids().size() if Juice.net and Juice.net.is_host() and not attract else 0
+	var spots: Array = Juice.arena.spawn_points(n + 1 + guests, _rng)
 	var mine := _rng.randi_range(0, spots.size() - 1)
 	var taken := -1
 	if _net_guest():
@@ -140,15 +141,15 @@ func _populate() -> int:
 	else:
 		var brain: RefCounted = BotBrain.new(1.0, "acrobate") if demo or attract else PlayerBrain.new()
 		player = _spawn_player(spots[mine], brain)
+	var used: Array[int] = [mine, taken]
 	if Juice.net and not attract:
-		taken = (mine + 1) % spots.size()
-		Juice.net.guest_spot = spots[taken]
+		used.append_array(Juice.net.assign_spots(spots, mine))
 		if game_mode == "arcade":
 			player.team = "joueurs"
 	spawner.clear_names()
 	var b := 0
 	for i in spots.size():
-		if i != mine and i != taken:
+		if not i in used:
 			_spawn_bot(spots[i], "")
 			b += 1
 	return b
