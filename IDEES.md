@@ -72,7 +72,7 @@ Les idées de Chris (07/10) sont marquées (Chris).
 ## Textures et générateur (Pigment)
 - ~~Tenues de stickman : chapeaux, masques, capes, couleurs ; débloquées en jouant.~~ (fait)
 - ~~Nouvelles tuiles : verre, bois, béton, grille métallique.~~ (fait)
-- ~~Éléments de premier plan en parallaxe (câbles, feuillages).~~ (fait) — reste : décors animés en planches de sprites.
+- ~~Éléments de premier plan en parallaxe (câbles, feuillages).~~ (fait), décors animés en planches de sprites compris (ventilateurs, torches, drapeaux).
 
 ## Progression et rejouabilité
 - ~~Expérience et déblocages (armes, tenues), défis du jour, succès, statistiques détaillées.~~ (fait)

@@ -56,6 +56,7 @@ static func build(arena: Node2D, map: String, rng: RandomNumberGenerator) -> voi
 	arena.terrain.flush()
 	if not ("props" in Juice.off):
 		_props(arena, map, rng)
+		_decor(arena, map, rng)
 
 
 ## Barils explosifs posés au sol, lampes accrochées sous un plafond (plateforme, galerie).
@@ -82,6 +83,34 @@ static func _props(arena: Node2D, map: String, rng: RandomNumberGenerator) -> vo
 				lamp.setup(ceiling, minf(24.0, (y - ceiling.y) * 0.4))
 				arena.add_child(lamp)
 				lamps -= 1
+
+
+## Décors animés : torches dans les galeries, ventilateurs sous les passerelles de l'usine, drapeaux sur les toits.
+static func _decor(arena: Node2D, map: String, rng: RandomNumberGenerator) -> void:
+	var kind: String = {"mine": "torch", "usine": "fan", "toits": "flag"}.get(map, "")
+	if kind == "":
+		return
+	var placed := 0
+	for i in 30:
+		if placed >= 4:
+			return
+		var x := snappedf(rng.randf_range(40, arena.W - 40), 8.0)
+		var spots: Array[float] = arena.stand_spots(x)
+		if spots.is_empty():
+			continue
+		var y: float = spots[rng.randi_range(0, spots.size() - 1)]
+		var at := Vector2(x, y - (10.0 if kind == "torch" else 0.0))
+		if kind == "fan":
+			var ceiling := _ceiling(arena, Vector2(x, y - 20.0))
+			if ceiling == Vector2.INF or y - ceiling.y < 70.0:
+				continue
+			at = ceiling + Vector2(0, 34)
+		elif arena.solid_at(at + Vector2(0, -24)):
+			continue
+		var d := AnimatedDecor.new()
+		d.setup(kind, at, rng.randf())
+		arena.add_child(d)
+		placed += 1
 
 
 static func _ceiling(arena: Node2D, from: Vector2) -> Vector2:

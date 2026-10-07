@@ -20,6 +20,10 @@ func test_maps(t: Node) -> void:
 				if not ok:
 					t.check(false, "%s/%d : point %s posé sur un sol libre" % [map, seed, str(s)])
 					break
+	for map in ["mine", "usine", "toits"]:
+		arena.generate(5, map)
+		var n := arena.get_children().filter(func(c: Node) -> bool: return c is AnimatedDecor).size()
+		t.check(n > 0, "%s : décors animés posés (%d)" % [map, n])
 	arena.generate(5, "mine")
 	var hollow := 0
 	for x in range(40, 1560, 40):
