@@ -31,7 +31,7 @@ func set_theme(name: String) -> void:
 	theme = name
 	rim = Themes.ALL[name].rim
 	for n in ["ground", "metal", "bricks", "concrete", "glass", "grate"]:
-		_tex[n] = Themes.texture(name, n)
+		_tex[n] = Themes.lit(name, n)
 	terrain.tex = _tex
 	terrain.rim = rim
 	terrain.redraw_all()

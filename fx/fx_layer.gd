@@ -42,6 +42,7 @@ func _ready() -> void:
 		l.texture = tex
 		l.texture_scale = 2.5
 		l.energy = 0.0
+		l.height = 18.0
 		Shadows.cast(l)
 		add_child(l)
 		_lights.append(l)

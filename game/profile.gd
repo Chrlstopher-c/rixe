@@ -160,6 +160,6 @@ func _roll_daily() -> void:
 
 
 func save() -> void:
-	if enabled:
+	if enabled and Settings.persist:
 		Settings.set_pref("profile", "data", {"xp": xp, "stats": stats, "unlocked": unlocked, "daily": daily,
 			"outfit": outfit})

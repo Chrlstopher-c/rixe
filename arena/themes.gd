@@ -14,3 +14,16 @@ static func names() -> Array:
 
 static func texture(theme: String, file: String) -> Texture2D:
 	return load("res://assets/textures/%s/%s.png" % [theme, file])
+
+
+## Tuile avec sa normal map (si Pigment en a généré une) : le décor prend du relief sous les éclairs.
+static func lit(theme: String, file: String) -> Texture2D:
+	var base := texture(theme, file)
+	var path := "res://assets/textures/%s/%s_n.png" % [theme, file]
+	if not ResourceLoader.exists(path):
+		return base
+	var t := CanvasTexture.new()
+	t.diffuse_texture = base
+	t.normal_texture = load(path)
+	t.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	return t

@@ -5,7 +5,8 @@ from pathlib import Path
 
 # Pigment : dépôt voisin par défaut (../pigment), ou chemin donné par PIGMENT_PATH.
 sys.path.insert(0, os.environ.get("PIGMENT_PATH", str(Path(__file__).resolve().parents[2] / "pigment")))
-from pigment import lowpoly, pixel_tiles, sky  # noqa: E402
+from PIL import Image  # noqa: E402
+from pigment import lowpoly, normals, pixel_tiles, sky  # noqa: E402
 
 OUT = Path(__file__).resolve().parent.parent / "assets" / "textures"
 MOUNTAINS = [(21, 0.48, 0.30, 0.10, 0.30), (22, 0.36, 0.42, 0.12, 0.26), (23, 0.24, 0.52, 0.13, 0.22),
@@ -34,6 +35,8 @@ def theme(name: str, cfg: dict) -> None:
     pixel_tiles.concrete(32, seed=9, palette=metal).save(out / "concrete.png")
     pixel_tiles.glass(32, seed=11, palette=metal).save(out / "glass.png")
     pixel_tiles.grate(32, seed=13, palette=metal).save(out / "grate.png")
+    for tile in ["bricks", "metal", "ground", "concrete"]:
+        normals.from_height(Image.open(out / f"{tile}.png"), strength=2.5).save(out / f"{tile}_n.png")
 
 
 def main() -> None:

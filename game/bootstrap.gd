@@ -6,10 +6,12 @@ static func parse_args(m: Node) -> void:
 	for a in OS.get_cmdline_user_args():
 		if a == "--demo":
 			m.demo = true
+			Settings.persist = false
 		elif a == "--pixel":
 			Juice.hd = false
 		elif a.begins_with("--shot="):
 			m._shot(a.get_slice("=", 1))
+			Settings.persist = false
 		elif a.begins_with("--tests="):
 			m._tests = a.get_slice("=", 1)
 			Settings.persist = false
@@ -25,6 +27,7 @@ static func parse_args(m: Node) -> void:
 		elif a.begins_with("--perf="):
 			var probe := preload("res://core/perf_probe.gd").new()
 			probe.duration = float(a.get_slice("=", 1))
+			Settings.persist = false
 			probe.fighters = func() -> int: return m._fighters.get_child_count()
 			m.add_child(probe)
 		elif a.begins_with("--seed="):
