@@ -13,6 +13,12 @@ var _menu: CanvasLayer
 var _backdrop: CanvasLayer
 var _volume := 0.8
 var score := RunScore.new()
+var game_mode := "arcade"
+var game_option := 0
+var match_state := MatchState.new("arcade")
+## Active les règles de partie pendant les tests (désactivées par défaut pour isoler les scénarios).
+var live_rules := false
+var _scoreboard: CanvasLayer
 var player: Fighter
 var _fighters: Node2D
 var _hud: CanvasLayer
@@ -20,10 +26,7 @@ var _camera: Camera2D
 var _restart_in := -1.0
 var _rng := RandomNumberGenerator.new()
 var _tests := ""
-var _perf_left := -1.0
 var _off: PackedStringArray = []
-var _last_tick := 0
-var _frame_times: Array[float] = []
 
 
 func _ready() -> void:
@@ -66,8 +69,10 @@ func _parse_args() -> void:
 		elif a.begins_with("--round="):
 			round_no = int(a.get_slice("=", 1))
 		elif a.begins_with("--perf="):
-			_perf_left = float(a.get_slice("=", 1))
-			RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
+			var probe := preload("res://core/perf_probe.gd").new()
+			probe.duration = float(a.get_slice("=", 1))
+			probe.fighters = func() -> int: return _fighters.get_child_count()
+			add_child(probe)
 		elif a.begins_with("--seed="):
 			seed_base = int(a.get_slice("=", 1))
 
@@ -81,15 +86,7 @@ func _shot(path: String) -> void:
 
 
 func _build() -> void:
-	var env := WorldEnvironment.new()
-	env.environment = Environment.new()
-	env.environment.background_mode = Environment.BG_CANVAS
-	env.environment.glow_enabled = not ("glow" in _off)
-	env.environment.glow_intensity = 0.55
-	env.environment.glow_strength = 0.9
-	env.environment.glow_hdr_threshold = 1.0
-	env.environment.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
-	add_child(env)
+	_build_environment()
 	if not ("backdrop" in _off):
 		_backdrop = preload("res://arena/backdrop.gd").new()
 		add_child(_backdrop)
@@ -108,14 +105,35 @@ func _build() -> void:
 	Juice.camera = _camera
 	if not ("post" in _off):
 		add_child(preload("res://fx/post.gd").new())
+	_build_screens()
+
+
+func _build_environment() -> void:
+	var env := WorldEnvironment.new()
+	env.environment = Environment.new()
+	env.environment.background_mode = Environment.BG_CANVAS
+	env.environment.glow_enabled = not ("glow" in _off)
+	env.environment.glow_intensity = 0.55
+	env.environment.glow_strength = 0.9
+	env.environment.glow_hdr_threshold = 1.0
+	env.environment.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
+	add_child(env)
+
+
+func _build_screens() -> void:
 	_menu = preload("res://hud/menu.gd").new()
 	add_child(_menu)
 	_menu.best = score.best
 	_menu.start_requested.connect(_on_start)
 	_menu.resume_requested.connect(_resume)
+	_menu.title_requested.connect(_to_title)
 	_menu.quit_requested.connect(func() -> void: get_tree().quit())
 	_menu.hd_changed.connect(_set_hd)
 	_menu.volume_changed.connect(_on_volume)
+	_scoreboard = preload("res://hud/scoreboard.gd").new()
+	add_child(_scoreboard)
+	_scoreboard.replay_requested.connect(func() -> void: _on_start(game_mode, game_option))
+	_scoreboard.menu_requested.connect(_to_title)
 	_hud = preload("res://hud/hud.gd").new()
 	_hud.best = score.best
 	_hud.show_crosshair = not demo
@@ -128,8 +146,6 @@ func _child(parent: Node, node: Node) -> Node:
 
 
 func _start_round() -> void:
-	if OS.has_environment("RIXE_SPIKES"):
-		print("ROUND t=%.1f" % (Time.get_ticks_msec() / 1000.0))
 	Juice.reset()
 	for c in _fighters.get_children():
 		c.queue_free()
@@ -141,7 +157,7 @@ func _start_round() -> void:
 	_rng.seed = seed_base * 1000 + round_no
 	Juice.arena.generate(_rng.seed)
 	apply_theme(Themes.names()[_rng.randi_range(0, Themes.names().size() - 1)])
-	var n := mini(2 + round_no, 6)
+	var n := mini(2 + round_no, 6) if game_mode == "arcade" or attract else 5
 	var spots: Array = Juice.arena.spawn_points(n + 1, _rng)
 	var mine := _rng.randi_range(0, n)
 	var brain: RefCounted = BotBrain.new(1.0) if demo or attract else PlayerBrain.new()
@@ -158,7 +174,10 @@ func _start_round() -> void:
 	_hud.player = player
 	_hud.round_no = round_no
 	_hud.bots_left = b
-	_hud.banner("MANCHE %d" % round_no)
+	for f in _fighters.get_children():
+		if f is Fighter and not f.is_queued_for_deletion():
+			match_state.register(f)
+	_hud.banner("MANCHE %d" % round_no if game_mode == "arcade" or attract else Modes.label(game_mode))
 	Sfx.play_ui("round", -6.0)
 
 
@@ -212,59 +231,37 @@ func _spawn(nm: String, pos: Vector2, color: Color, brain: RefCounted, weapon: S
 
 
 func _on_killed(victim: Node2D, killer: Node2D) -> void:
-	if _tests != "":
+	if _tests != "" and not live_rules:
 		return
 	var kname: String = killer.display_name if is_instance_valid(killer) else "?"
 	_hud.feed("%s  élimine  %s" % [kname, victim.display_name], victim.team_color)
+	match_state.record_kill(victim, killer)
 	if is_instance_valid(killer) and killer == player:
 		score.add_kill()
 		_hud.kills = score.kills
+	if attract or demo or not Modes.respawns(game_mode):
+		_rounds_after_kill(victim)
+	elif match_state.over:
+		_end_match()
+
+
+## Mode arcade (et démo) : la manche se gagne quand plus aucun bot n'est en vie.
+func _rounds_after_kill(victim: Node2D) -> void:
 	if _restart_in >= 0.0:
 		return
 	if victim == player:
-		_game_over()
+		if attract or demo:
+			_hud.banner("ÉLIMINÉ")
+			_restart_in = 3.0
+		else:
+			match_state.finish_arcade()
+			_end_match()
 		return
-	_hud.bots_left = _alive_bots() - 1
+	_hud.bots_left = _alive_bots()
 	if _hud.bots_left <= 0:
 		_hud.banner("MANCHE GAGNÉE")
 		round_no += 1
 		_restart_in = 3.0
-
-
-## Mesure de perf : temps de frame réels après 2 s de chauffe ; imprime moyenne et 1 % bas puis quitte.
-func _measure(real: float) -> void:
-	if real > 0.03 and OS.has_environment("RIXE_SPIKES"):
-		var t := Time.get_ticks_msec() / 1000.0
-		print("SPIKE %.0fms t=%.1f parts=%d ts=%.2f" % [real * 1000.0, t, Juice.fx.parts.size(), Engine.time_scale])
-	_perf_left -= real
-	if Time.get_ticks_msec() > 2000:
-		_frame_times.append(real)
-	if _perf_left > 0.0 or _frame_times.is_empty():
-		return
-	var sorted := _frame_times.duplicate()
-	sorted.sort()
-	var avg: float = _frame_times.size() / sorted.reduce(func(a: float, b: float) -> float: return a + b, 0.0)
-	var low_n := maxi(1, sorted.size() / 100)
-	var worst: Array = sorted.slice(sorted.size() - low_n)
-	var low: float = low_n / worst.reduce(func(a: float, b: float) -> float: return a + b, 0.0)
-	var rid := get_viewport().get_viewport_rid()
-	var gpu := RenderingServer.viewport_get_measured_render_time_gpu(rid)
-	var cpu := RenderingServer.viewport_get_measured_render_time_cpu(rid)
-	print("PERF fps_moyen=%.1f fps_1pct_bas=%.1f rendu_gpu_ms=%.2f rendu_cpu_ms=%.2f combattants=%d frames=%d"
-		% [avg, low, gpu, cpu, _fighters.get_child_count(), sorted.size()])
-	get_tree().quit()
-
-
-## Mort du joueur = fin de partie : record éventuel, retour à la manche 1.
-func _game_over() -> void:
-	var human: bool = player.brain is PlayerBrain
-	var record := score.end_run(human) and human
-	var line := "ÉLIMINÉ  ·  %d élimination%s" % [score.kills, "s" if score.kills > 1 else ""]
-	_hud.banner(line + ("  ·  RECORD !" if record else ""))
-	score.reset()
-	_hud.best = score.best
-	round_no = 1
-	_restart_in = 3.5
 
 
 func _alive_bots() -> int:
@@ -275,16 +272,88 @@ func _alive_bots() -> int:
 	return n
 
 
+## Fin de partie : classement des combattants, score du joueur soumis au tableau du mode, jeu figé.
+func _end_match() -> void:
+	var rows := match_state.ranking()
+	var key := Modes.board_key(game_mode, game_option)
+	var lower := Modes.lower_is_better(game_mode)
+	var mine := match_state.kills_of("Toi")
+	var value: float = match_state.elapsed if lower else float(mine)
+	var counts := not lower or match_state.winner == "Toi"
+	var rank := Leaderboard.submit(key, value, lower) if counts and (lower or mine > 0) else -1
+	score.end_run(game_mode == "arcade")
+	score.reset()
+	_hud.best = score.best
+	_menu.best = score.best
+	var texts := _end_texts(rows)
+	_hud.visible = false
+	_scoreboard.open(texts[0], texts[1], rows, game_mode, Leaderboard.entries(key), rank)
+	get_tree().paused = true
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	Sfx.play_ui("round", -4.0)
+
+
+func _end_texts(rows: Array) -> Array[String]:
+	var place := 1
+	for i in rows.size():
+		if rows[i].name == "Toi":
+			place = i + 1
+	var mine := match_state.kills_of("Toi")
+	match game_mode:
+		"chrono":
+			return ["TEMPS ÉCOULÉ", "Tu finis %s sur %d · %d éliminations" % [_ordinal(place), rows.size(), mine]]
+		"objectif":
+			if match_state.winner == "Toi":
+				return ["VICTOIRE", "Objectif atteint en %s" % Leaderboard.format_score("objectif", match_state.elapsed)]
+			return ["%s GAGNE" % match_state.winner.to_upper(), "Tu finis %s · %d éliminations" % [_ordinal(place), mine]]
+	return ["ÉLIMINÉ", "Manche %d atteinte · %d éliminations" % [round_no, mine]]
+
+
+static func _ordinal(n: int) -> String:
+	return "1er" if n == 1 else "%de" % n
+
+
+func _respawn(entry: Dictionary) -> void:
+	var pos := _far_spawn()
+	if entry.player:
+		var brain: RefCounted = BotBrain.new(1.0) if demo else PlayerBrain.new()
+		player = _spawn("Toi", pos, PLAYER_COLOR, brain, "rifle", true)
+		_camera.target = player
+		_hud.player = player
+	else:
+		var w: String = Arsenal.ids()[_rng.randi_range(0, 2)]
+		_spawn(entry.name, pos, entry.color, BotBrain.new(_rng.randf_range(0.2, 0.5)), w, false)
+	Juice.fx.emit(5, pos + Vector2(0, -20), Vector2.ZERO, 0.4, 24.0, Color(entry.color * 1.8, 0.8))
+
+
+## Point d'apparition le plus éloigné des combattants en vie.
+func _far_spawn() -> Vector2:
+	var best := Vector2(Juice.arena.W * 0.5, -60)
+	var best_d := -1.0
+	for p: Vector2 in Juice.arena.spawn_points(10, _rng):
+		var d := INF
+		for f in _fighters.get_children():
+			if f is Fighter and f.alive:
+				d = minf(d, p.distance_to(f.global_position))
+		if d > best_d:
+			best_d = d
+			best = p
+	return best
+
+
 func _process(delta: float) -> void:
-	if _perf_left > 0.0:
-		var now := Time.get_ticks_usec()
-		if _last_tick > 0:
-			_measure((now - _last_tick) / 1000000.0)
-		_last_tick = now
+	var real: float = Juice.real_delta(delta)
 	if _restart_in >= 0.0:
-		_restart_in -= Juice.real_delta(delta)
+		_restart_in -= real
 		if _restart_in < 0.0:
 			_start_round()
+	if attract or demo or match_state == null or not Modes.respawns(game_mode) or _scoreboard.visible:
+		return
+	for entry in match_state.tick(real):
+		_respawn(entry)
+	_hud.respawn_t = match_state.respawn_in("Toi")
+	if match_state.over:
+		_end_match()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -293,21 +362,43 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_F1:
 				_set_hd(not Juice.hd)
 			KEY_R:
-				if not attract:
+				if not attract and game_mode == "arcade":
 					_start_round()
 			KEY_ESCAPE:
 				if not attract and not demo:
 					_pause()
 
 
-func _on_start() -> void:
+func _on_start(mode: String, option: int) -> void:
+	game_mode = mode
+	game_option = option
 	attract = false
 	round_no = 1
 	_restart_in = -1.0
 	_menu.close()
+	_scoreboard.close()
+	get_tree().paused = false
 	_hud.visible = true
+	_hud.mode = mode
 	score.reset()
 	_hud.kills = 0
+	match_state = MatchState.new(mode, option)
+	_hud.match_state = match_state
+	_start_round()
+	_set_hd(Juice.hd)
+
+
+func _to_title() -> void:
+	_scoreboard.close()
+	get_tree().paused = false
+	attract = true
+	game_mode = "arcade"
+	round_no = 1
+	_restart_in = -1.0
+	_hud.visible = false
+	match_state = MatchState.new("arcade")
+	_menu.best = score.best
+	_menu.show_title()
 	_start_round()
 	_set_hd(Juice.hd)
 

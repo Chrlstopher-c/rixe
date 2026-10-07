@@ -40,3 +40,8 @@ Chaque story : intention — VERIFY exécutable. Tests de jeu = `godot --headles
 - [x] E10.S1 — marge perf : 1 % bas ≥ 70 en 1080p — VERIFY: `tools/perf.sh 20` (×2)
 - [x] E10.S2 — 3 thèmes d'arène (crépuscule, nuit d'acier, rouille) générés par Pigment, tirés par manche — VERIFY: `--tests=themes`
 - [x] E10.S3 — meilleur score (éliminations d'une partie) persistant, affiché au titre et à la mort — VERIFY: `--tests=score`
+
+## E11 — Modes et classements (retour de Chris, 07/10)
+- [x] E11.S1 — bug : la manche arcade se terminait avec un bot encore en vie (victime décomptée deux fois) — VERIFY: `--tests=arcade_last_bot`
+- [x] E11.S2 — sélecteur de mode au titre : Arcade (une vie), Chrono (1/2/3/5/10 min, réapparitions), Objectif (5/10/20/30 élim.) — VERIFY: `--tests=chrono,objectif`
+- [x] E11.S3 — écran de fin (classement des combattants, élim./morts) et top 5 persistant par mode et réglage, vue « Classement » au titre — VERIFY: `--tests=leaderboard` + capture relue

@@ -1,15 +1,7 @@
 # Arborescence — Rixe
 
-- .env.example
-- .github/workflows/ci.yml
-- .gitignore
 - ARBORESCENCE.md
 - ARCHITECTURE.md
-- BRIEF.md
-- EPICS.md
-- README.md
-- STATE.md
-- TODO.md
 - arena/arena.gd
 - arena/arena.gd.uid
 - arena/backdrop.gd
@@ -18,14 +10,19 @@
 - arena/themes.gd.uid
 - audio/sfx.gd
 - audio/sfx.gd.uid
+- BRIEF.md
 - core/controls.gd
 - core/controls.gd.uid
 - core/game_camera.gd
 - core/game_camera.gd.uid
 - core/juice.gd
 - core/juice.gd.uid
+- core/perf_probe.gd
+- core/perf_probe.gd.uid
 - core/settings.gd
 - core/settings.gd.uid
+- .env.example
+- EPICS.md
 - fighters/body_parts.gd
 - fighters/body_parts.gd.uid
 - fighters/bot_brain.gd
@@ -45,21 +42,35 @@
 - fx/fx_layer.gd
 - fx/fx_layer.gd.uid
 - fx/post.gd
-- fx/post.gd.uid
 - fx/post.gdshader
 - fx/post.gdshader.uid
+- fx/post.gd.uid
 - fx/stains.gd
 - fx/stains.gd.uid
+- game/leaderboard.gd
+- game/leaderboard.gd.uid
 - game/main.gd
 - game/main.gd.uid
 - game/main.tscn
+- game/match_state.gd
+- game/match_state.gd.uid
+- game/modes.gd
+- game/modes.gd.uid
+- game/run_score.gd
+- game/run_score.gd.uid
+- .github/workflows/ci.yml
+- .gitignore
 - hud/hud.gd
 - hud/hud.gd.uid
 - hud/menu.gd
 - hud/menu.gd.uid
+- hud/scoreboard.gd
+- hud/scoreboard.gd.uid
 - project.godot
+- README.md
 - restart.sh
 - start.sh
+- STATE.md
 - stop.sh
 - tests/script_brain.gd
 - tests/script_brain.gd.uid
@@ -71,16 +82,21 @@
 - tests/test_melee.gd.uid
 - tests/test_menu.gd
 - tests/test_menu.gd.uid
+- tests/test_modes.gd
+- tests/test_modes.gd.uid
 - tests/test_movement.gd
 - tests/test_movement.gd.uid
 - tests/test_pickup.gd
 - tests/test_pickup.gd.uid
 - tests/test_runner.gd
 - tests/test_runner.gd.uid
+- tests/test_score.gd
+- tests/test_score.gd.uid
 - tests/test_showcase.gd
 - tests/test_showcase.gd.uid
 - tests/test_themes.gd
 - tests/test_themes.gd.uid
+- TODO.md
 - tools/capture.sh
 - tools/gen_assets.py
 - tools/gen_music.py
@@ -95,4 +111,4 @@
 - weapons/pickup.gd.uid
 - assets/sfx/*.wav (16 sons générés)
 - assets/music/combat.wav (musique générée)
-- assets/textures/<crepuscule|acier|rouille>/ (sky, mtn0-3, bricks, metal, ground — générés par Pigment)
+- assets/textures/<crepuscule|acier|rouille>/ (générés par Pigment)

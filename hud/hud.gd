@@ -5,6 +5,9 @@ var player: Node2D
 var round_no := 1
 var kills := 0
 var best := 0
+var mode := "arcade"
+var match_state: MatchState
+var respawn_t := -1.0
 var bots_left := 0
 var show_crosshair := true
 var _canvas := Control.new()
@@ -47,7 +50,7 @@ func _process(delta: float) -> void:
 
 func _draw_hud() -> void:
 	_draw_health()
-	var info := "MANCHE %d   ·   BOTS %d   ·   ÉLIMINATIONS %d   ·   RECORD %d" % [round_no, bots_left, kills, best]
+	var info := _info_line()
 	_canvas.draw_string(_font, Vector2(12, 30), info, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(1, 0.9, 0.95, 0.75))
 	for i in _feed.size():
 		var f: Dictionary = _feed[i]
@@ -55,6 +58,7 @@ func _draw_hud() -> void:
 		_canvas.draw_string(_font, Vector2(400, 18 + i * 11), f.text, HORIZONTAL_ALIGNMENT_RIGHT, 228, 8,
 			Color(f.color, a))
 	_draw_banner()
+	_draw_mode_center()
 	if show_crosshair:
 		_draw_crosshair(_canvas.get_local_mouse_position())
 
@@ -89,3 +93,34 @@ func _draw_crosshair(m: Vector2) -> void:
 	for d in [Vector2.RIGHT, Vector2.LEFT, Vector2.UP, Vector2.DOWN]:
 		_canvas.draw_line(m + d * gap, m + d * (gap + 4.0), c, 1.0)
 	_canvas.draw_circle(m, 0.7, c)
+
+
+func _info_line() -> String:
+	if mode == "arcade" or match_state == null:
+		return "MANCHE %d   ·   BOTS %d   ·   ÉLIMINATIONS %d   ·   RECORD %d" % [round_no, bots_left, kills, best]
+	var rows := match_state.ranking()
+	var place := 1
+	for i in rows.size():
+		if rows[i].name == "Toi":
+			place = i + 1
+	var lead: String = rows[0].name if not rows.is_empty() else "-"
+	var lead_k: int = rows[0].kills if not rows.is_empty() else 0
+	var mine := match_state.kills_of("Toi")
+	if mode == "objectif":
+		var goal := Modes.option_value(mode, match_state.option)
+		return "ÉLIMINATIONS %d / %d   ·   RANG %d   ·   EN TÊTE : %s (%d)" % [mine, goal, place, lead, lead_k]
+	return "ÉLIMINATIONS %d   ·   RANG %d / %d   ·   EN TÊTE : %s (%d)" % [mine, place, rows.size(), lead, lead_k]
+
+
+func _draw_mode_center() -> void:
+	var w := _canvas.size.x
+	if mode == "chrono" and match_state:
+		var t := ceili(match_state.time_left)
+		var urgent := match_state.time_left < 10.0
+		var col := Color(2.0, 0.5, 0.5) if urgent else Color(1.6, 1.55, 1.5)
+		var size := 22 if not urgent else int(22 + 4 * absf(sin(match_state.time_left * PI)))
+		_canvas.draw_string(_font, Vector2(0, 30), "%d:%02d" % [t / 60, t % 60], HORIZONTAL_ALIGNMENT_CENTER, w, size, col)
+	if respawn_t > 0.0:
+		_canvas.draw_rect(Rect2(0, 186, w, 26), Color(0, 0, 0, 0.4))
+		_canvas.draw_string(_font, Vector2(0, 204), "RÉAPPARITION  %d" % ceili(respawn_t), HORIZONTAL_ALIGNMENT_CENTER,
+			w, 14, Color(0.6, 1.8, 2.0))

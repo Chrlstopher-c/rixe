@@ -28,3 +28,7 @@
   pour les collisions de particules/cadavres, 14 cadavres max) → 1080p ~168 i/s, 1 % bas 77-98.
   3 ambiances Pigment (`arena/themes.gd`, `assets/textures/<thème>/`), tirées par manche.
   Mort du joueur = fin de partie (retour manche 1), record d'éliminations persistant (titre + HUD).
+- Modes (07/10, retour de Chris) : `game/modes.gd` (Arcade / Chrono / Objectif), `game/match_state.gd` (stats, chrono,
+  réapparitions 2,5 s au point le plus éloigné), `game/leaderboard.gd` (top 5 par mode+réglage, Objectif classé au temps),
+  `hud/scoreboard.gd` (fin de partie, jeu figé, Entrée rejouer / Échap menu). Pause → « Menu principal ».
+  Bug corrigé : fin de manche arcade avec un bot vivant (décompte de la victime en double).

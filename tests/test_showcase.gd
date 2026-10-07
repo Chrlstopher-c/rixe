@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["showcase"]
+	return ["showcase", "showcase_end"]
 
 
 func _fire_at(t: Node, brain: ScriptBrain, target: Variant, joint: String, frames: int) -> void:
@@ -49,3 +49,14 @@ func test_showcase(t: Node) -> void:
 	await _fire_at(t, brain, foe, "head", 300)
 	await t.frames(240)
 	t.check(not is_instance_valid(foe) or not foe.alive, "la cible meurt")
+
+
+func test_showcase_end(t: Node) -> void:
+	var main: Node = t.main
+	main.live_rules = true
+	main._on_start("chrono", 0)
+	main.player.brain = BotBrain.new(1.0)
+	main.match_state.time_left = 6.0
+	await t.until(func() -> bool: return main._scoreboard.visible, 1200)
+	await t.frames(240)
+	t.check(main._scoreboard.visible, "écran de fin affiché")
