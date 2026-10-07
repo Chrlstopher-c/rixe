@@ -90,3 +90,4 @@
 - weapons/pickup.gd
 - weapons/pickup.gd.uid
 - assets/sfx/*.wav (16 sons générés)
+- assets/music/combat.wav (musique générée)

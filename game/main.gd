@@ -37,6 +37,7 @@ func _ready() -> void:
 	if _tests != "":
 		add_child(preload("res://tests/test_runner.gd").new(self, _tests))
 		return
+	Sfx.start_music()
 	attract = not demo and not _skip_title
 	if attract:
 		_hud.visible = false

@@ -8,6 +8,8 @@ const SOUNDS := ["rifle", "shotgun", "railgun", "impact", "flesh", "gore", "jump
 var streams := {}
 var _players: Array[AudioStreamPlayer2D] = []
 var _flat: AudioStreamPlayer
+var music: AudioStreamPlayer
+const MUSIC_DB := -11.0
 var _next := 0
 
 
@@ -23,6 +25,13 @@ func _ready() -> void:
 		_players.append(p)
 	_flat = AudioStreamPlayer.new()
 	add_child(_flat)
+	music = AudioStreamPlayer.new()
+	var track: AudioStreamWAV = load("res://assets/music/combat.wav")
+	track.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	track.loop_end = int(track.get_length() * track.mix_rate)
+	music.stream = track
+	music.volume_db = MUSIC_DB
+	add_child(music)
 
 
 func play(name: String, at: Vector2, volume_db: float = 0.0, pitch_var: float = 0.08) -> void:
@@ -45,5 +54,12 @@ func play_ui(name: String, volume_db: float = 0.0) -> void:
 	_flat.play()
 
 
-func _process(_delta: float) -> void:
+func start_music() -> void:
+	if not music.playing:
+		music.play()
+
+
+func _process(delta: float) -> void:
 	AudioServer.playback_speed_scale = clampf(Engine.time_scale, 0.45, 1.0)
+	var goal := MUSIC_DB - (9.0 if Engine.time_scale < 0.6 else 0.0)
+	music.volume_db = move_toward(music.volume_db, goal, delta * 40.0)
