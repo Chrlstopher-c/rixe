@@ -96,6 +96,12 @@ static func _roofs(arena: Node2D, rng: RandomNumberGenerator) -> void:
 		var top := snappedf(rng.randf_range(-110, 0), 8.0)
 		arena.terrain.fill(Rect2(x, top, w, 32), Terrain.K.BRICK)
 		arena.add_building(Rect2(x, top + 32, w, 600))
+		if w > 90.0 and rng.randf() < 0.75:
+			var n := Neon.new()
+			n.position = Vector2(x + rng.randf_range(34, w - 34), top + rng.randf_range(70, 150))
+			n.setup(Vector2(rng.randf_range(34, 60), rng.randf_range(14, 22)),
+				Neon.PALETTE[rng.randi_range(0, Neon.PALETTE.size() - 1)], rng.randi_range(0, 2), rng.randf() * 10.0)
+			arena.add_child(n)
 		if rng.randf() < 0.6:
 			var pw := snappedf(rng.randf_range(56, minf(w - 16, 120)), 8.0)
 			var r := Rect2(snappedf(x + rng.randf_range(8, w - pw - 8), 8.0), top - arena.LEVEL_GAP, pw, arena.PLATFORM_H)

@@ -232,6 +232,7 @@ func _hit_world(at: Vector2, dir: Vector2, normal: Vector2, dmg: float, bounces:
 		_trace(at + normal * 0.6, out, left * 0.75, dmg * 0.65, bounces - 1, [])
 		return
 	Effects.impact(at, normal, def.tracer)
+	Effects.bullet_hole(at - normal * 1.5)
 	Sfx.play("impact", at, -8.0, 0.25)
 
 

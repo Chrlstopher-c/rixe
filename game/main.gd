@@ -11,6 +11,7 @@ var _skip_title := false
 var _menu: CanvasLayer
 var _lobby: CanvasLayer
 var _custom: CanvasLayer
+var _foreground: Foreground
 var _backdrop: CanvasLayer
 var _volume := 0.8
 var score := RunScore.new()
@@ -95,6 +96,8 @@ func _start_round() -> void:
 	var w: Array = Weather.pick(map_type, theme_name, _rng)
 	Juice.wind = w[1]
 	Juice.weather.set_kind(w[0])
+	if _foreground:
+		_foreground.regenerate(seed_base * 1000 + round_no, map_type)
 	var b := _populate_survival() if game_mode == "survie" and not attract else _populate()
 	if not _net_guest():
 		spawner.spawn_pickups()

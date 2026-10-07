@@ -86,6 +86,22 @@ static func spurt(pos: Vector2, vel: Vector2, amount: int) -> void:
 		b.drag = 0.4
 
 
+## Trou de balle qui reste sur le décor (effacé avec la cellule si elle casse).
+static func bullet_hole(pos: Vector2) -> void:
+	if Juice.stains:
+		Juice.stains.add(pos, randf_range(0.8, 1.3), Color(0.04, 0.03, 0.05, 0.85))
+
+
+## Fumée qui retombe et reste en nappe au ras du sol quelques secondes après une explosion.
+static func lingering_smoke(pos: Vector2, amount: int) -> void:
+	var fx: Node2D = Juice.fx
+	for i in amount:
+		var v := Vector2(randf_range(-40, 40), randf_range(-8, 4))
+		var s = fx.emit(2, pos + Vector2(randf_range(-20, 20), randf_range(-6, 6)), v, randf_range(4.0, 7.0),
+			randf_range(7.0, 11.0), Color(0.22, 0.2, 0.24, 0.22))
+		s.drag = 1.2
+
+
 ## Explosion : éclair, boule de feu, fumée qui monte, étincelles, débris, onde de choc, gros tremblement.
 static func explosion(pos: Vector2, radius: float) -> void:
 	var fx: Node2D = Juice.fx
@@ -105,6 +121,11 @@ static func explosion(pos: Vector2, radius: float) -> void:
 		s.grav = 400.0
 		s.drag = 1.5
 	fx.flash_light(pos, Color(1.0, 0.6, 0.3), 3.0)
+	lingering_smoke(pos + Vector2(0, 8), 6)
+	if Juice.stains:
+		for i in 5:
+			Juice.stains.add(pos + Vector2(randf_range(-radius, radius), randf_range(-radius, radius)) * 0.35,
+				randf_range(3.0, 6.0), Color(0.05, 0.04, 0.04, 0.7))
 	Juice.shockwave(pos, 1.6)
 	Juice.shake(0.8, pos)
 	Juice.zoom_punch = maxf(Juice.zoom_punch, 0.06)

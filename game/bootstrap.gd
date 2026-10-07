@@ -44,6 +44,8 @@ static func build(m: Node) -> void:
 	m.spawner = Spawner.new(m._fighters, m._rng)
 	Juice.fx = m._child(Juice.world, preload("res://fx/fx_layer.gd").new())
 	Juice.weather = m._child(Juice.world, preload("res://fx/weather.gd").new())
+	if not ("foreground" in m._off):
+		m._foreground = m._child(m, Foreground.new())
 	m._camera = preload("res://core/game_camera.gd").new()
 	m._camera.limit_left = -20
 	m._camera.limit_right = int(Juice.arena.W) + 20
