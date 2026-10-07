@@ -3,7 +3,7 @@ extends RefCounted
 ## Réglages d'une partie personnalisée (locale ou en ligne) : mode et durée/objectif, carte, équipes, bots (nombre
 ## et niveau), armes autorisées, joueurs maximum en ligne, équipe choisie par chaque joueur.
 
-const MAPS := ["hasard", "plateformes", "toits", "mine"]
+const MAPS := ["hasard", "plateformes", "toits", "mine", "usine", "foret"]
 const LEVELS := {"facile": 0.25, "normal": 0.45, "difficile": 0.65, "expert": 0.85}
 const LEVEL_ORDER := ["facile", "normal", "difficile", "expert"]
 const ARMS := {

@@ -72,5 +72,9 @@ func _draw() -> void:
 	for c: Vector2i in cells:
 		var r := Terrain.cell_rect(c)
 		var tex: Texture2D = terrain.tex.metal if cells[c] in [Terrain.K.PLAT, Terrain.K.CRATE] else terrain.tex.bricks
+		if cells[c] == Terrain.K.CONCRETE:
+			tex = terrain.tex.concrete
+		elif cells[c] == Terrain.K.GLASS:
+			tex = terrain.tex.glass
 		var src := Rect2(fposmod(r.position.x, 32.0), fposmod(r.position.y, 32.0), 8, 8)
 		draw_texture_rect_region(tex, r, src, Color(0.85, 0.82, 0.88))

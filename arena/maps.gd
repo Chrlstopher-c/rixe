@@ -5,6 +5,8 @@ const ALL := {
 	"plateformes": {"label": "PLATEFORMES", "weight": 2},
 	"toits": {"label": "TOITS", "weight": 1},
 	"mine": {"label": "MINE", "weight": 1},
+	"usine": {"label": "USINE", "weight": 1},
+	"foret": {"label": "FORÊT DE NUIT", "weight": 1},
 	"survie": {"label": "TERRES SAUVAGES", "weight": 0},
 }
 const SURVIVAL_W := 6000.0
@@ -30,6 +32,10 @@ static func build(arena: Node2D, map: String, rng: RandomNumberGenerator) -> voi
 			_roofs(arena, rng)
 		"mine":
 			_mine(arena, rng)
+		"usine":
+			_factory(arena, rng)
+		"foret":
+			_forest(arena, rng)
 		"survie":
 			_wilds(arena, rng)
 			arena.terrain.flush()
@@ -85,6 +91,71 @@ static func _platforms(arena: Node2D, rng: RandomNumberGenerator) -> void:
 		arena.terrain.fill(Rect2(x, -h, w, h), Terrain.K.CRATE)
 	for level in range(1, 4):
 		_level(arena, rng, -level * arena.LEVEL_GAP, 60.0, 190.0)
+
+
+## Usine : dalle de béton, tapis roulants en sens opposés, presses qui s'abattent dessus, cloisons vitrées,
+## piliers de béton et deux étages de passerelles.
+static func _factory(arena: Node2D, rng: RandomNumberGenerator) -> void:
+	arena.add_bedrock()
+	arena.terrain.fill(Rect2(0, 0, arena.W, arena.DIRT_DEPTH), Terrain.K.CONCRETE)
+	var x := 180.0
+	var dir := 1.0
+	while x < arena.W - 300.0:
+		var w := snappedf(rng.randf_range(200, 300), 8.0)
+		var belt := Rect2(x, -16, w, 16)
+		arena.add_machine(belt)
+		var c := Conveyor.new()
+		c.setup(belt, dir * rng.randf_range(60, 95))
+		arena.add_child(c)
+		var p := Press.new()
+		p.setup(x + w * rng.randf_range(0.3, 0.7), -2.0 * arena.LEVEL_GAP + 10.0, -16.0, rng.randf() * 4.0)
+		arena.add_child(p)
+		dir = -dir
+		x += w + snappedf(rng.randf_range(140, 220), 8.0)
+	for i in rng.randi_range(2, 3):
+		var gx := snappedf(rng.randf_range(100, arena.W - 100), 8.0)
+		if arena.terrain.at(Vector2(gx, -4)) == Terrain.K.NONE and not arena.rect_solid_at(Vector2(gx, -8)):
+			arena.terrain.fill(Rect2(gx, -48, 8, 48), Terrain.K.GLASS)
+	for i in rng.randi_range(2, 3):
+		var px := snappedf(rng.randf_range(100, arena.W - 100), 8.0)
+		if not arena.rect_solid_at(Vector2(px, -8)):
+			arena.terrain.fill(Rect2(px, -40, 16, 40), Terrain.K.CONCRETE)
+	for level in range(2, 4):
+		_level(arena, rng, -level * arena.LEVEL_GAP, 80.0, 200.0)
+
+
+## Forêt de nuit : collines, arbres serrés, buissons, cabanes de planches dans les arbres.
+static func _forest(arena: Node2D, rng: RandomNumberGenerator) -> void:
+	arena.add_bedrock()
+	var phase := [rng.randf() * TAU, rng.randf() * TAU]
+	var heights := {}
+	var x := 0.0
+	while x < arena.W:
+		var h := 24.0 * sin(x / 340.0 + phase[0]) + 10.0 * sin(x / 120.0 + phase[1])
+		var top := snappedf(clampf(-20.0 + h, -56.0, -8.0), 8.0)
+		heights[x] = top
+		arena.terrain.fill(Rect2(x, top, 8, arena.DIRT_DEPTH - top), Terrain.K.DIRT)
+		x += 8.0
+	x = 90.0
+	while x < arena.W - 90.0:
+		var top: float = heights[snappedf(x, 8.0)]
+		if rng.randf() < 0.7:
+			var tree := WildTree.new()
+			arena.add_child(tree)
+			tree.setup(Vector2(x, top + 1.0), rng.randi_range(8, 12), rng)
+		else:
+			var bush := Bush.new()
+			bush.position = Vector2(x, top)
+			arena.add_child(bush)
+		x += snappedf(rng.randf_range(60, 130), 8.0)
+	for i in rng.randi_range(3, 4):
+		var px := snappedf(rng.randf_range(80, arena.W - 200), 8.0)
+		var py := snappedf(rng.randf_range(-170, -100), 8.0)
+		var r := Rect2(px, py, snappedf(rng.randf_range(72, 120), 8.0), 8)
+		arena.terrain.fill(r, Terrain.K.WOOD)
+		arena.platforms.append(r)
+		_struts(arena, r)
+	arena.add_child(Fireflies.new())
 
 
 ## Immeubles séparés par des vides : toit destructible sur 4 cellules, structure indestructible dessous.

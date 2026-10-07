@@ -3,15 +3,18 @@ extends Node2D
 ## Décor destructible en cellules de 8 px (sol, plateformes, caisses) : vie par cellule, collisions et rendu par
 ## tronçons de 16 colonnes reconstruits seulement quand ils changent.
 
-enum K { NONE, DIRT, PLAT, CRATE, ROCK, BRICK, WOOD }
+enum K { NONE, DIRT, PLAT, CRATE, ROCK, BRICK, WOOD, GLASS, CONCRETE }
 
 const CELL := 8.0
 const CHUNK := 16
-const HP := {K.DIRT: 36.0, K.PLAT: 26.0, K.CRATE: 22.0, K.ROCK: 60.0, K.BRICK: 45.0, K.WOOD: 30.0}
+const HP := {K.DIRT: 36.0, K.PLAT: 26.0, K.CRATE: 22.0, K.ROCK: 60.0, K.BRICK: 45.0, K.WOOD: 30.0, K.GLASS: 5.0,
+	K.CONCRETE: 90.0}
 const DEBRIS := {K.DIRT: Color(0.38, 0.22, 0.14), K.PLAT: Color(0.45, 0.48, 0.56), K.CRATE: Color(0.5, 0.52, 0.6),
-	K.ROCK: Color(0.3, 0.27, 0.3), K.BRICK: Color(0.55, 0.3, 0.28), K.WOOD: Color(0.45, 0.28, 0.14)}
+	K.ROCK: Color(0.3, 0.27, 0.3), K.BRICK: Color(0.55, 0.3, 0.28), K.WOOD: Color(0.45, 0.28, 0.14),
+	K.GLASS: Color(1.6, 2.0, 2.4), K.CONCRETE: Color(0.42, 0.42, 0.45)}
 ## Ressource rendue par une cellule détruite (survie).
-const YIELD := {K.ROCK: "pierre", K.BRICK: "pierre", K.WOOD: "bois", K.CRATE: "metal", K.PLAT: "metal"}
+const YIELD := {K.ROCK: "pierre", K.BRICK: "pierre", K.WOOD: "bois", K.CRATE: "metal", K.PLAT: "metal",
+	K.CONCRETE: "pierre"}
 
 signal cell_broken(c: Vector2i, k: int, by: Variant)
 
@@ -219,6 +222,8 @@ func _break(c: Vector2i) -> void:
 	built.erase(c)
 	_chunk_cells(c.x).erase(c)
 	var center := cell_rect(c).get_center()
+	if k == K.GLASS:
+		_shatter(center)
 	for i in 2:
 		var v := Vector2(randf_range(-90, 90), randf_range(-220, -60))
 		var d = Juice.fx.emit(4, center, v, randf_range(1.0, 2.2), 1.6, DEBRIS[k])
@@ -228,6 +233,15 @@ func _break(c: Vector2i) -> void:
 	dust.drag = 2.0
 	if Juice.stains:
 		Juice.stains.erase(cell_rect(c))
+
+
+## Vitre qui éclate : éclats brillants et tintement.
+func _shatter(center: Vector2) -> void:
+	for i in 7:
+		var v := Vector2(randf_range(-150, 150), randf_range(-200, -20))
+		var s = Juice.fx.emit(0, center, v, randf_range(0.3, 0.7), 1.0, Color(1.8, 2.2, 2.6))
+		s.grav = 700.0
+	Sfx.play("tink", center, -2.0, 0.3)
 
 
 func _chunk_cells(cell_x: int) -> Dictionary:

@@ -31,6 +31,9 @@ def theme(name: str, cfg: dict) -> None:
     pixel_tiles.bricks(32, seed=3, palette=bricks).save(out / "bricks.png")
     pixel_tiles.metal_plate(32, seed=5, palette=metal).save(out / "metal.png")
     pixel_tiles.ground(64, 32, seed=7, soil=soil, top=top).save(out / "ground.png")
+    pixel_tiles.concrete(32, seed=9, palette=metal).save(out / "concrete.png")
+    pixel_tiles.glass(32, seed=11, palette=metal).save(out / "glass.png")
+    pixel_tiles.grate(32, seed=13, palette=metal).save(out / "grate.png")
 
 
 def main() -> None:

@@ -30,7 +30,7 @@ func _ready() -> void:
 func set_theme(name: String) -> void:
 	theme = name
 	rim = Themes.ALL[name].rim
-	for n in ["ground", "metal", "bricks"]:
+	for n in ["ground", "metal", "bricks", "concrete", "glass", "grate"]:
 		_tex[n] = Themes.texture(name, n)
 	terrain.tex = _tex
 	terrain.rim = rim
@@ -79,6 +79,11 @@ func add_bedrock() -> void:
 ## Structure d'immeuble indestructible (toits).
 func add_building(r: Rect2) -> void:
 	_add_solid(r, "building")
+
+
+## Bloc de machine indestructible (tapis roulant de l'usine), dessiné par la machine elle-même.
+func add_machine(r: Rect2) -> void:
+	_add_solid(r, "machine")
 
 
 func _add_solid(r: Rect2, kind: String) -> void:

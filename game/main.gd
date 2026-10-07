@@ -12,6 +12,7 @@ var _menu: CanvasLayer
 var _lobby: CanvasLayer
 var _custom: CanvasLayer
 var _foreground: Foreground
+var _dark: CanvasModulate
 var _backdrop: CanvasLayer
 var _volume := 0.8
 var score := RunScore.new()
@@ -96,6 +97,7 @@ func _start_round() -> void:
 	var w: Array = Weather.pick(map_type, theme_name, _rng)
 	Juice.wind = w[1]
 	Juice.weather.set_kind(w[0])
+	_night(map_type == "foret")
 	if _foreground:
 		_foreground.regenerate(seed_base * 1000 + round_no, map_type)
 	var b := _populate_survival() if game_mode == "survie" and not attract else _populate()
@@ -121,6 +123,16 @@ func _start_round() -> void:
 	var head := "MANCHE %d" % round_no if game_mode == "arcade" or attract else Modes.label(game_mode)
 	_hud.banner("%s  ·  %s" % [head, Maps.ALL[map_type].label])
 	Sfx.play_ui("round", -6.0)
+
+
+## Forêt de nuit : monde assombri et bleuté (les éclairs des tirs ressortent), ciel teinté.
+func _night(on: bool) -> void:
+	if not _dark:
+		_dark = CanvasModulate.new()
+		Juice.world.add_child(_dark)
+	_dark.color = Color(0.62, 0.66, 0.9) if on else Color.WHITE
+	if _backdrop and game_mode != "survie":
+		_backdrop.set_tint(Color(0.3, 0.36, 0.6) if on else Color.WHITE)
 
 
 func _clear_world() -> void:
