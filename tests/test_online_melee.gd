@@ -138,12 +138,14 @@ func test_online_throw_guest(t: Node) -> void:
 		me.global_position = b.global_position + Vector2(-16, 0)
 		me.velocity = Vector2.ZERO
 		brain.aim = b.global_position + Vector2(0, -20)
-		await t.frames(10)
-		if Grapple.target_for(me) == b:
+		await t.until(func() -> bool: return me.is_on_floor(), 60)
+		await t.frames(2)
+		if is_instance_valid(b) and Grapple.target_for(me) == b:
 			brain.press_grab()
 			await t.frames(3)
-			seized = true
-			break
+			if me.grapple._cd > 0.0:
+				seized = true
+				break
 	t.check(seized, "l'invité saisit le bot distant")
 	await t.frames(120)
 	_say(s, "bye")
