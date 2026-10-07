@@ -39,4 +39,4 @@ Chaque story : intention — VERIFY exécutable. Tests de jeu = `godot --headles
 ## E10 — Marge et variété (nuit)
 - [x] E10.S1 — marge perf : 1 % bas ≥ 70 en 1080p — VERIFY: `tools/perf.sh 20` (×2)
 - [x] E10.S2 — 3 thèmes d'arène (crépuscule, nuit d'acier, rouille) générés par Pigment, tirés par manche — VERIFY: `--tests=themes`
-- [ ] E10.S3 — meilleur score (éliminations d'une partie) persistant, affiché au titre et à la mort — VERIFY: `--tests=score`
+- [x] E10.S3 — meilleur score (éliminations d'une partie) persistant, affiché au titre et à la mort — VERIFY: `--tests=score`
