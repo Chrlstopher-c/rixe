@@ -26,6 +26,7 @@ var team_color := Color.WHITE
 var is_player := false
 var brain: RefCounted
 var gun: Gun
+var inventory: Inventory
 var rig: StickRig
 var hp := MAX_HP
 var alive := true
@@ -60,6 +61,7 @@ func setup(nm: String, color: Color, think: RefCounted, weapon_id: String, playe
 	brain = think
 	is_player = player
 	gun = Gun.new(self, weapon_id, mods)
+	inventory = Inventory.new(self, gun)
 
 
 func _ready() -> void:
@@ -100,7 +102,9 @@ func _physics_process(delta: float) -> void:
 	_throw_cd -= delta
 	if intent.get("throw", false):
 		throw_grenade()
-	gun.tick(delta, intent.fire and body.arms_left() > 0 and not melee.active(), intent.get("reload", false))
+	_inventory_input(delta)
+	var can_fire: bool = body.arms_left() > 0 and not melee.active() and inventory.switching <= 0.0
+	gun.tick(delta, intent.fire and can_fire, intent.get("reload", false))
 	_bleed_stumps(delta)
 
 
@@ -196,6 +200,17 @@ func _step_up() -> void:
 	var up := global_transform.translated(Vector2(0, -9))
 	if not test_move(up, Vector2(dir * 3.0, 0)) and not test_move(global_transform, Vector2(0, -9)):
 		position += Vector2(dir * 2.0, -9.0)
+
+
+func _inventory_input(delta: float) -> void:
+	inventory.tick(delta)
+	var sel: int = intent.get("select", -1)
+	if sel >= 0:
+		inventory.select(sel)
+	elif intent.get("cycle", false):
+		inventory.cycle()
+	if intent.get("heal", false):
+		inventory.use_medkit()
 
 
 func throw_grenade() -> void:
@@ -308,6 +323,10 @@ func _die(dir: Vector2, killer: Node2D, dmg: float) -> void:
 	Juice.shake(0.4, chest)
 	_kill_time_fx(killer, chest)
 	drop_weapon(Vector2(dir.x * 80.0, -200.0))
+	var spare := inventory.other()
+	if spare:
+		_drop_gun(spare, Vector2(-dir.x * 60.0, -180.0))
+	_drop_loot()
 	Juice.fighter_killed.emit(self, killer)
 	queue_free()
 
@@ -326,10 +345,35 @@ func _kill_time_fx(killer: Node2D, at: Vector2) -> void:
 
 
 func drop_weapon(v: Vector2) -> void:
+	_drop_gun(gun, v)
+
+
+func _drop_gun(g: Gun, v: Vector2) -> void:
 	var p := WeaponPickup.new()
 	Juice.world.add_child(p)
 	p.global_position = rig.to_global(rig.j.pivot)
-	p.setup(gun.id, v, self, gun.mag, gun.reserve, gun.attachments)
+	p.setup(g.id, v, self, g.mag, g.reserve, g.attachments)
+
+
+## Butin laissé à la mort : munitions souvent, soin et grenade parfois, plus les accessoires du sac.
+func _drop_loot() -> void:
+	var drops: Array[String] = []
+	if randf() < 0.65:
+		drops.append("ammo")
+	if randf() < 0.35 or inventory.medkits > 0:
+		drops.append("medkit")
+	if randf() < 0.3 or grenades > 0:
+		drops.append("grenade")
+	for k in drops:
+		var l := Loot.new()
+		Juice.world.add_child(l)
+		l.global_position = global_position + Vector2(0, -16)
+		l.setup(k, Vector2(randf_range(-110, 110), randf_range(-240, -140)))
+	for att in inventory.bag:
+		var a := AttachmentPickup.new()
+		Juice.world.add_child(a)
+		a.global_position = global_position + Vector2(0, -16)
+		a.setup(att, Vector2(randf_range(-90, 90), randf_range(-220, -140)), self)
 
 
 func _corpse_points() -> Dictionary:

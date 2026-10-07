@@ -72,3 +72,18 @@ Chaque story : intention — VERIFY exécutable. Tests de jeu = `godot --headles
 ## E16 — Personnalisation
 - [x] E16.S1 — accessoires (point rouge, lunette, chargeur étendu, canon long, crosse) trouvés dans l'arène, visibles sur l'arme — VERIFY: `--tests=attachments`
 - [x] E16.S2 — armurerie au titre : arme et accessoires de départ, accessoires débloqués en les ramassant une fois — VERIFY: `--tests=armory`
+
+# V1.3 — Butin et cartes
+
+## E17 — Butin et inventaire
+- [x] E17.S1 — butin à la mort (munitions, soin, grenade, accessoires du sac), ramassage, bots qui vont chercher soin/munitions — VERIFY: `--tests=loot`
+- [x] E17.S2 — inventaire : 2 armes (1/2, molette, temps pour dégainer), sac de 4 accessoires, trousses (H, soin progressif) — VERIFY: `--tests=inventory`
+- [x] E17.S3 — écran d'inventaire (Tab, jeu figé) : monter/ranger les accessoires à la souris — VERIFY: `--tests=inventory_screen` + capture relue
+
+## E18 — Cartes, météo, objets d'arène
+- [ ] E18.S1 — 3 types de cartes : Plateformes (actuelle), Toits (immeubles au-dessus du vide, chute mortelle), Mine (roche épaisse creusée de galeries, tout se creuse) — VERIFY: `--tests=maps`
+- [ ] E18.S2 — météo : pluie (Toits), neige (Acier), braises (Rouille) ; vent qui pousse fumée, écharpes et grenades — VERIFY: `--tests=weather`
+- [ ] E18.S3 — objets d'arène : barils explosifs, lampes suspendues qui tombent et éclairent — VERIFY: `--tests=props`
+
+## E19 — Effondrement
+- [ ] E19.S1 — les morceaux de décor qui ne tiennent plus à rien tombent, écrasent et blessent — VERIFY: `--tests=collapse`

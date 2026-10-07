@@ -26,10 +26,10 @@ func test_attachments(t: Node) -> void:
 	p2.global_position = f.global_position + Vector2(0, -20)
 	p2.setup("reddot", Vector2.ZERO)
 	await t.frames(20)
-	t.check(f.gun.attachments.optic == "reddot", "un autre viseur remplace le premier")
-	var left: Array = t.main.get_tree().get_nodes_in_group("attachments").filter(func(a: Node) -> bool:
-		return is_instance_valid(a) and a.att == "scope")
-	t.check(left.size() == 1, "l'ancienne lunette retombe au sol")
+	t.check(f.inventory.bag == ["reddot"], "viseur déjà pris : le point rouge va dans le sac")
+	t.check(f.inventory.mount(0, 0) and f.gun.attachments.optic == "reddot", "monté depuis le sac")
+	t.check(f.inventory.bag == ["scope"], "la lunette retourne au sac")
+	t.check(f.inventory.unmount(0, "optic") and not f.gun.attachments.has("optic"), "démontage vers le sac")
 	f.queue_free()
 	for a in t.main.get_tree().get_nodes_in_group("attachments"):
 		a.queue_free()

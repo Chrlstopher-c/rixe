@@ -18,6 +18,7 @@ var match_state := MatchState.new("arcade")
 ## Active les règles de partie pendant les tests (désactivées par défaut pour isoler les scénarios).
 var live_rules := false
 var _scoreboard: CanvasLayer
+var _inventory: CanvasLayer
 var _bot_kinds := {}
 var player: Fighter
 var _fighters: Node2D
@@ -135,6 +136,9 @@ func _build_screens() -> void:
 	add_child(_scoreboard)
 	_scoreboard.replay_requested.connect(func() -> void: _on_start(game_mode, game_option))
 	_scoreboard.menu_requested.connect(_to_title)
+	_inventory = preload("res://hud/inventory_screen.gd").new()
+	add_child(_inventory)
+	_inventory.close_requested.connect(_toggle_inventory)
 	_hud = preload("res://hud/hud.gd").new()
 	_hud.best = score.best
 	_hud.show_crosshair = not demo
@@ -151,7 +155,7 @@ func _start_round() -> void:
 	for c in _fighters.get_children():
 		c.queue_free()
 	for c in Juice.world.get_children():
-		if c is Ragdoll or c is WeaponPickup or c is AttachmentPickup or c is Grenade:
+		if c is Ragdoll or c is WeaponPickup or c is AttachmentPickup or c is Grenade or c is Loot:
 			c.queue_free()
 	Juice.fx.clear()
 	Juice.stains.clear()
@@ -187,7 +191,7 @@ func reset_for_test() -> void:
 	for c in _fighters.get_children():
 		c.free()
 	for c in Juice.world.get_children():
-		if c is Ragdoll or c is WeaponPickup or c is AttachmentPickup or c is Grenade:
+		if c is Ragdoll or c is WeaponPickup or c is AttachmentPickup or c is Grenade or c is Loot:
 			c.free()
 	Juice.fx.clear()
 	Juice.arena.generate_flat()
@@ -403,6 +407,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_ESCAPE:
 				if not attract and not demo:
 					_pause()
+			KEY_TAB:
+				if not attract and not demo and not _menu.visible and not _scoreboard.visible:
+					_toggle_inventory()
 
 
 func _on_start(mode: String, option: int) -> void:
@@ -437,6 +444,19 @@ func _to_title() -> void:
 	_menu.show_title()
 	_start_round()
 	_set_hd(Juice.hd)
+
+
+func _toggle_inventory() -> void:
+	if _inventory.visible:
+		_inventory.close()
+		_hud.visible = true
+		get_tree().paused = false
+		_set_hd(Juice.hd)
+	elif is_instance_valid(player) and player.alive:
+		_inventory.open(player)
+		_hud.visible = false
+		get_tree().paused = true
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
 func _pause() -> void:

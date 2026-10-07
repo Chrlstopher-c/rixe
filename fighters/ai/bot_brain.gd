@@ -55,6 +55,8 @@ func _ammo(f: Node2D, it: Dictionary) -> void:
 	var low: bool = g.mag < int(g.def.mag) * (0.25 + 0.4 * p.caution)
 	if g.mag == 0 or (low and _unseen > 0.3):
 		it.reload = true
+	if f.hp < 45.0 and f.inventory.medkits > 0 and (_unseen > 0.2 or f.hp < 25.0):
+		it.heal = true
 	if g.mag == 0 and g.reserve == 0 and not g.reloading():
 		state = State.LOOT if is_instance_valid(_loot) else State.RUSH
 
@@ -212,8 +214,11 @@ func _pick(f: Node2D) -> Node2D:
 	return best
 
 
-## Arme au sol plus forte que la sienne, à portée selon l'avidité du bot.
+## Objet au sol utile (arme plus forte, munitions si à court, soin si blessé), à portée selon l'avidité du bot.
 func _wanted_pickup(f: Node2D) -> Node2D:
+	var need := _wanted_loot(f)
+	if need:
+		return need
 	var mine: int = RANK.get(f.gun.id, 0)
 	var best: Node2D = null
 	for pk in f.get_tree().get_nodes_in_group("pickups"):
@@ -223,6 +228,23 @@ func _wanted_pickup(f: Node2D) -> Node2D:
 		var d: float = f.global_position.distance_to(pk.global_position)
 		if d < 120.0 + 260.0 * p.greed and (best == null or d < f.global_position.distance_to(best.global_position)):
 			best = pk
+	return best
+
+
+func _wanted_loot(f: Node2D) -> Node2D:
+	var want := ""
+	if f.hp < 55.0:
+		want = "medkit"
+	elif not f.gun.infinite() and f.gun.reserve < int(f.gun.def.mag):
+		want = "ammo"
+	if want == "":
+		return null
+	var best: Node2D = null
+	for l in f.get_tree().get_nodes_in_group("loot"):
+		var d: float = f.global_position.distance_to(l.global_position)
+		var closer: bool = best == null or d < f.global_position.distance_to(best.global_position)
+		if l.kind == want and d < 150.0 + 250.0 * p.greed and closer:
+			best = l
 	return best
 
 

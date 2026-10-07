@@ -35,7 +35,9 @@ func _physics_process(delta: float) -> void:
 
 func _try_grab() -> void:
 	for f in get_tree().get_nodes_in_group("fighters"):
-		if not f.alive or not Arsenal.accepts(f.gun.id) or (f == immune and immune_t > 0.0):
+		if not f.alive or (f == immune and immune_t > 0.0):
+			continue
+		if not Arsenal.accepts(f.gun.id) and f.inventory.bag.size() >= Inventory.BAG:
 			continue
 		if f.gun.attachments.values().has(att):
 			continue
@@ -45,7 +47,7 @@ func _try_grab() -> void:
 
 
 func _mount(f: Node2D) -> void:
-	var old: String = f.gun.equip(att)
+	var old: String = f.inventory.take_attachment(att)
 	if f.is_player and Unlocks.unlock("attachment", att):
 		Juice.notify("Débloqué : " + String(Arsenal.ATTACHMENTS[att].name))
 	Sfx.play("reload_in", global_position, -4.0, 0.1)

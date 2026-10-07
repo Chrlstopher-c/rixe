@@ -14,6 +14,9 @@ func think(f: Node2D, _delta: float) -> Dictionary:
 		"melee": Input.is_action_just_pressed("melee"),
 		"reload": Input.is_action_just_pressed("reload"),
 		"throw": Input.is_action_just_pressed("throw"),
+		"select": 0 if Input.is_action_just_pressed("weapon1") else (1 if Input.is_action_just_pressed("weapon2") else -1),
+		"cycle": Input.is_action_just_pressed("cycle"),
+		"heal": Input.is_action_just_pressed("heal"),
 		"aiming": Input.is_action_pressed("aim"),
 		"aim": f.get_global_mouse_position(),
 	}

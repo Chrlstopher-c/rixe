@@ -13,6 +13,12 @@ static func register() -> void:
 	_mouse("aim", MOUSE_BUTTON_RIGHT)
 	_keys("reload", [KEY_R])
 	_keys("throw", [KEY_G])
+	_keys("weapon1", [KEY_1])
+	_keys("weapon2", [KEY_2])
+	_mouse("cycle", MOUSE_BUTTON_WHEEL_UP)
+	_mouse("cycle", MOUSE_BUTTON_WHEEL_DOWN)
+	_keys("heal", [KEY_H])
+	_keys("inventory", [KEY_TAB])
 	_keys("melee", [KEY_E, KEY_F])
 	_mouse("melee", MOUSE_BUTTON_MIDDLE)
 

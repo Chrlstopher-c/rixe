@@ -49,6 +49,9 @@ func _try_grab() -> void:
 		if not f.alive or f.body.arms_left() == 0:
 			continue
 		var same: bool = f.gun.id == weapon_id
+		var held: Gun = f.inventory.other()
+		if held and held.id == weapon_id:
+			continue
 		if same and (f.gun.infinite() or f.gun.reserve >= int(f.gun.def.reserve) * 2 or mag + reserve <= 0):
 			continue
 		if f == immune and immune_t > 0.0:
@@ -62,14 +65,17 @@ func _try_grab() -> void:
 
 
 func _swap(f: Node2D) -> void:
-	var old: Gun = f.gun
-	f.gun = Gun.new(f, weapon_id, attachments)
-	f.gun.mag = mag
-	f.gun.reserve = reserve
+	var fresh := Gun.new(f, weapon_id, attachments)
+	fresh.mag = mag
+	fresh.reserve = reserve
+	var old: Gun = f.inventory.take(fresh)
 	if f.is_player and Unlocks.unlock("weapon", weapon_id):
 		Juice.notify("Débloqué : " + String(Arsenal.WEAPONS[weapon_id].name))
 	Sfx.play("pickup", global_position, -2.0, 0.05)
 	Juice.fx.emit(5, global_position, Vector2.ZERO, 0.25, 10.0, Color(2.0, 1.8, 1.4, 0.8))
+	if old == null:
+		queue_free()
+		return
 	setup(old.id, Vector2(-f.facing * 60.0, -160.0), f, old.mag, old.reserve, old.attachments)
 
 

@@ -1,5 +1,5 @@
 extends RefCounted
-## Test du ramassage : une arme au sol est échangée contre celle du combattant qui passe dessus.
+## Test du ramassage : deuxième emplacement d'arme, puis échange de l'arme en main ; arme lâchée à la mort.
 
 
 func names() -> Array[String]:
@@ -18,14 +18,20 @@ func test_pickup(t: Node) -> void:
 	var got: bool = await t.until(func() -> bool: return f.gun.id == "railgun", 240)
 	brain.move = 0.0
 	t.check(got, "le combattant ramasse le railgun en passant dessus")
-	t.check(is_instance_valid(p) and p.weapon_id == "rifle", "son ancien fusil reste au sol")
+	t.check(f.inventory.guns.size() == 2 and f.inventory.other().id == "rifle", "le fusil reste en second emplacement")
+	var q := WeaponPickup.new()
+	Juice.world.add_child(q)
+	q.global_position = f.global_position + Vector2(0, -20)
+	q.setup("shotgun", Vector2.ZERO)
+	await t.frames(20)
+	t.check(f.gun.id == "shotgun" and is_instance_valid(q) and q.weapon_id == "railgun", "inventaire plein : échange")
 	await t.frames(60)
-	t.check(f.gun.id == "railgun", "pas de ré-échange immédiat (immunité)")
+	t.check(f.gun.id == "shotgun", "pas de ré-échange immédiat (immunité)")
 	f.take_hit(999.0, Vector2.RIGHT, f.global_position + Vector2(0, -22), null, 0.0)
 	await t.frames(2)
 	var n := 0
 	for c in Juice.world.get_children():
-		if c is WeaponPickup and c.weapon_id == "railgun":
+		if c is WeaponPickup and c.weapon_id == "shotgun" and not c.is_queued_for_deletion():
 			n += 1
 	t.check(n == 1, "l'arme tombe à la mort")
 
