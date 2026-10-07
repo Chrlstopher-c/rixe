@@ -27,7 +27,7 @@ Les idées de Chris (07/10) sont marquées (Chris).
 ## 1.3 — Butin et cartes
 - ~~Les ennemis lâchent munitions, soins et pièces d'armes. (Chris)~~ (fait)
 - ~~Inventaire en grille, accessible avec Tab. (Chris)~~ (fait)
-- ~~★ Nouvelles cartes : toits de ville sous la pluie, usine (tapis roulants, presses), mine (lampes qui se balancent), forêt de nuit. (Chris : « cartes différentes »)~~ (fait) — reste : wagons dans la mine.
+- ~~★ Nouvelles cartes : toits de ville sous la pluie, usine (tapis roulants, presses), mine (lampes qui se balancent), forêt de nuit. (Chris : « cartes différentes »)~~ (fait), wagonnet dans la mine compris.
 - ~~Météo : pluie, neige, vent qui fait voler les écharpes et la fumée.~~ (fait), flaques qui reflètent comprises.
 - ~~Objets d'arène : barils explosifs, vitres qui se brisent, lampes qui tombent quand on tire dessus.~~ (fait)
 - ~~★ Décor qui s'effondre : une cellule sans appui tombe et écrase ce qui est dessous.~~ (fait)

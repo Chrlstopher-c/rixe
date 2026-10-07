@@ -194,7 +194,7 @@ static func _roofs(arena: Node2D, rng: RandomNumberGenerator) -> void:
 	arena.void_y = VOID_Y
 
 
-## Roche épaisse sous une croûte de terre, galeries et salles creusées, puits vers la surface.
+## Roche épaisse sous une croûte de terre, galeries et salles creusées, puits vers la surface, voie de wagonnet.
 static func _mine(arena: Node2D, rng: RandomNumberGenerator) -> void:
 	arena.add_bedrock()
 	var surface := -264.0
@@ -208,6 +208,21 @@ static func _mine(arena: Node2D, rng: RandomNumberGenerator) -> void:
 	for i in 5:
 		var x := snappedf(rng.randf_range(60, arena.W - 160), 8.0)
 		arena.terrain.carve(Rect2(x, -200, rng.randf_range(80, 140), 170))
+	_rails(arena, rng)
+
+
+## Voie de wagonnet sur une portion aplanie de la galerie du bas.
+static func _rails(arena: Node2D, rng: RandomNumberGenerator) -> void:
+	var length := snappedf(rng.randf_range(320, 440), 8.0)
+	var x := snappedf(rng.randf_range(80, arena.W - 80 - length), 8.0)
+	arena.terrain.carve(Rect2(x, -88, length, 48))
+	arena.terrain.fill(Rect2(x, -40, length, 16), Terrain.K.ROCK)
+	var phase := rng.randf()
+	if "props" in Juice.off:
+		return
+	var cart := Minecart.new()
+	cart.setup(x, x + length, -40.0, phase)
+	arena.add_child(cart)
 
 
 static func _tunnel(arena: Node2D, rng: RandomNumberGenerator, y: float) -> void:
