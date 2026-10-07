@@ -2,7 +2,7 @@
 
 ## En cours
 - Retour de Chris sur la nuit du 07/10 (saut, gore, ralenti, mêlée, sons).
-- CI : le dépôt n'est pas encore sur GitHub (création du dépôt = à décider par Chris) ; `.github/workflows/ci.yml` prêt.
+- Release v1.0.0 (GitHub) : après le test de Chris, depuis un commit à CI verte.
 
 ## Pistes V1 (arcade)
 
