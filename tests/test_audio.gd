@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["audio"]
+	return ["audio", "announcer"]
 
 
 func test_audio(t: Node) -> void:
@@ -36,3 +36,30 @@ func test_audio(t: Node) -> void:
 		Sfx._lowpass.cutoff_hz, Engine.time_scale])
 	Juice.reset()
 	Sfx.heat = 0.0
+
+
+func test_announcer(t: Node) -> void:
+	var a: Announcer = t.main.announcer
+	a.reset()
+	a.enabled = true
+	for k in Announcer.LINES:
+		t.check(a.streams.get(k) != null, "voix %s chargée" % k)
+	var me: Fighter = t.main.spawn_test_fighter(Vector2(300, -10), ScriptBrain.new(), "rifle", true)
+	var bot: Fighter = t.main.spawn_test_fighter(Vector2(500, -10), ScriptBrain.new(), "rifle", false)
+	await t.frames(5)
+	bot.death_cause = "decap"
+	a.last_said = ""
+	Juice.fighter_killed.emit(bot, me)
+	await t.frames(40)
+	t.check(a.last_said == "decap", "décapitation annoncée (%s)" % a.last_said)
+	bot.death_cause = "shot"
+	Juice.fighter_killed.emit(bot, me)
+	await t.frames(80)
+	t.check(a.last_said == "double", "deux éliminations rapprochées : doublé (%s)" % a.last_said)
+	a.last_said = ""
+	Juice.fighter_killed.emit(me, bot)
+	await t.frames(60)
+	t.check(a.last_said == "", "rien quand c'est un bot qui tue")
+	a.enabled = false
+	me.queue_free()
+	bot.queue_free()

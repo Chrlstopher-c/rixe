@@ -58,9 +58,12 @@ func _rounds_after_kill(victim: Node2D) -> void:
 			end_after_kill(victim)
 		return
 	m._hud.bots_left = alive_bots()
+	if m._hud.bots_left == 1:
+		_announce("last")
 	if m._hud.bots_left <= 0:
 		_kill_cam(victim)
 		_banner("MANCHE GAGNÉE")
+		_announce("round_won")
 		m.round_no += 1
 		m._restart_in = 3.0
 
@@ -104,6 +107,12 @@ func _kill_cam(victim: Node2D) -> void:
 	Juice.kill_cam(at)
 	if Juice.net:
 		Juice.net.send_event({"t": "killcam", "at": at})
+
+
+func _announce(key: String) -> void:
+	m.announcer.say(key, 0.5)
+	if Juice.net:
+		Juice.net.send_event({"t": "say", "k": key})
 
 
 func _banner(text: String) -> void:

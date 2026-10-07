@@ -65,7 +65,7 @@ Les idées de Chris (07/10) sont marquées (Chris).
 ## Audio
 - ~~★ Musique en couches qui suit l'action : calme, combat, ralenti, dernier survivant.~~ (fait, 3.1)
 - Une ambiance musicale par décor (crépuscule, acier, rouille, futures cartes).
-- Annonces vocales générées en local (Qwen3-TTS) : « Décapitation », « Doublé », « Dernier debout ».
+- ~~Annonces vocales générées en local (Qwen3-TTS) : « Décapitation », « Doublé », « Dernier debout ».~~ (fait, 3.1)
 - Réverbération selon le lieu (mine = écho, extérieur = sec).
 
 ## Textures et générateur (Pigment)

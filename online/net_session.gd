@@ -235,6 +235,8 @@ func _on_match_message(t: String, msg: Dictionary) -> void:
 			main.match_state.time_left = msg.time
 		"banner":
 			main._hud.banner(msg.text)
+		"say":
+			main.announcer.say(String(msg.k), 0.5)
 		"killcam":
 			Juice.kill_cam(msg.at)
 		"end":

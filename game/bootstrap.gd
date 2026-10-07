@@ -74,6 +74,8 @@ static func _screens(m: Node) -> void:
 	m.add_child(m._menu)
 	m._menu.best = m.score.best
 	m._menu.start_requested.connect(m._on_start)
+	m.announcer = Announcer.new()
+	m.add_child(m.announcer)
 	m._lobby = preload("res://online/lobby.gd").new()
 	m._lobby.main = m
 	m.add_child(m._lobby)

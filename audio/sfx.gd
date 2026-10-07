@@ -25,6 +25,7 @@ var _sync := AudioStreamSynchronized.new()
 var _layer_db: Array[float] = [0.0, MUTE_DB, MUTE_DB]
 var _lowpass := AudioEffectLowPassFilter.new()
 var _music_bus := -1
+var _voice_bus := ""
 var _next := 0
 
 
@@ -91,6 +92,29 @@ func play_ui(name: String, volume_db: float = 0.0) -> void:
 func start_music() -> void:
 	if not music.playing:
 		music.play()
+
+
+## Bus de l'annonceur : réverbération d'arène et compression, créé à la première demande.
+func voice_bus() -> String:
+	if _voice_bus != "":
+		return _voice_bus
+	AudioServer.add_bus()
+	var i := AudioServer.bus_count - 1
+	_voice_bus = "Voice"
+	AudioServer.set_bus_name(i, _voice_bus)
+	AudioServer.set_bus_send(i, "Master")
+	var comp := AudioEffectCompressor.new()
+	comp.threshold = -18.0
+	comp.ratio = 4.0
+	comp.gain = 4.0
+	AudioServer.add_bus_effect(i, comp)
+	var verb := AudioEffectReverb.new()
+	verb.room_size = 0.7
+	verb.damping = 0.4
+	verb.wet = 0.22
+	verb.dry = 0.9
+	AudioServer.add_bus_effect(i, verb)
+	return _voice_bus
 
 
 ## Chauffe la musique (tir à l'écran ≈ 0,06, coup reçu ≈ 0,25).

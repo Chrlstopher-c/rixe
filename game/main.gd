@@ -24,6 +24,7 @@ var _scoreboard: CanvasLayer
 var _inventory: CanvasLayer
 var spawner: Spawner
 var rules := RoundRules.new(self)
+var announcer: Announcer
 var director: SurvivalDirector
 var duo: Duo
 var _post: CanvasLayer
@@ -104,6 +105,9 @@ func _start_round() -> void:
 			match_state.register(f)
 	if Juice.net and not attract:
 		Juice.net.round_started()
+	announcer.reset()
+	announcer.enabled = not attract and (_tests == "" or live_rules)
+	announcer.say("fight", 1.4)
 	var head := "MANCHE %d" % round_no if game_mode == "arcade" or attract else Modes.label(game_mode)
 	_hud.banner("%s  ·  %s" % [head, Maps.ALL[map_type].label])
 	Sfx.play_ui("round", -6.0)
