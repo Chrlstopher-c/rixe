@@ -44,4 +44,4 @@ jobs:
       - run: cd relay && pnpm install --frozen-lockfile
       - run: timeout 180 godot --headless --path . --import > /dev/null 2>&1 || true
       - name: Partie en ligne (relais local + deux jeux)
-        run: tools/online_test.sh link && tools/online_test.sh match && tools/online_test.sh exec && tools/online_test.sh custom && RIXE_GUESTS=3 tools/online_test.sh quad
+        run: tools/online_test.sh link && tools/online_test.sh match && tools/online_test.sh exec && tools/online_test.sh custom && tools/online_test.sh throw && RIXE_GUESTS=3 tools/online_test.sh quad

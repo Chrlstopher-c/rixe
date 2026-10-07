@@ -2,13 +2,21 @@
 *Dernière mise à jour : 2026-10-07*
 
 ## Résumé de l'état actuel
-Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lien `~/projects/rixe`). Dernière version publiée : **v3.2.1** (v3.1.2 testée en ligne par Chris avec un ami, deux PC Arch Linux, « fluide »).
-- Dépôt public : github.com/Chrlstopher-c/rixe. CI verte (60 tests headless + relais + partie en ligne à deux jeux).
+Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lien `~/projects/rixe`). Dernière version publiée : **v3.3.0** (v3.1.2 testée en ligne par Chris avec un ami, deux PC Arch Linux, « fluide »).
+- Dépôt public : github.com/Chrlstopher-c/rixe. CI verte (63 tests headless + relais + partie en ligne à deux jeux).
 - Releases sur GitHub pour Linux (testée), Windows (testée sous Proton-GE, pas sur un vrai PC Windows) et macOS universel (compilée, jamais lancée sur un vrai Mac).
 - Modes : Arcade, Chrono, Objectif, Survie. Écran partagé à deux, manette, et partie à deux en ligne (code de 4 lettres).
 - En ligne : relais Cloudflare Worker déployé (wrangler connecté sur la tour, compte de Chris), aller-retour ~11 ms ; adresse dans `online/relay.cfg` (hors dépôt, embarquée dans les builds).
 - Perf 1080p sur la tour : 150 à 210 i/s en moyenne, 1 % bas entre 50 et 100 selon la carte et le nombre de combattants.
 - Textures générées par Pigment (`/mnt/projects/pigment`, dépôt privé, MCP `pigment`).
+
+## Ce qui a été fait — nuit du 07 au 08/10 (v3.3.0, demande de Chris)
+- Corps à corps poussé : combos (direct, crochet, coup de pied ; appuis mémorisés, fenêtre d'enchaînement 0,35 s,
+  les poings étourdissent), coup de pied sauté en l'air, parade sur tous les coups (`fighters/melee.gd`) ; projection V / R3
+  (`fighters/grapple.gd` : saisie, arc par-dessus la tête, jet derrière, étourdi ; distant = jet direct par le coup
+  relayé) ; saltos au double saut et au saut mural (`moves.flip_t`, drapeau réseau F_FLIP, coup en cours synchronisé).
+- Mode MAINS NUES (`Modes.apply` : arcade + armes « mains nues ») : arme `fists` (tirer = frapper, garde poings levés,
+  ni grenades ni armes au sol), bots au contact (sauts, projections), classement à part ; option d'armes en partie perso.
 
 ## Ce qui a été fait — nuit du 07 au 08/10 (v3.2.1)
 - Intro cinématique au lancement (demande de Chris) : logo Godot coupé (fond uni), combat chorégraphié de 4,5 s

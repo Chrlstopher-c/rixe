@@ -3,7 +3,7 @@ extends Node
 
 const SUITES := ["movement", "combat", "audio", "melee", "pickup", "menu", "themes", "score", "modes", "terrain",
 	"ai", "weapons", "arsenal", "armory", "loot", "maps", "props", "survival", "pad", "duo", "showcase",
-	"online"]
+	"online", "online_melee"]
 
 var main: Node
 var _failures: Array[String] = []

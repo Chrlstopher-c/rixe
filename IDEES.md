@@ -80,7 +80,8 @@ Les idées de Chris (07/10) sont marquées (Chris).
 - ~~Éditeur de cartes (les cellules du décor s'y prêtent bien).~~ (fait)
 
 ## Prochaines mécaniques (Chris, 08/10)
-- ★ Corps à corps poussé : enchaînements de coups (combos), saltos, prises (saisir, projeter, clé), contres ; lisible
-  et nerveux, avec ses propres animations et sons.
-- ★ Mode de jeu « mains nues » : tout au corps à corps, aucune arme au sol ni au départ.
-- Arcade : armes à feu ET ce corps à corps complet intégré (passer de l'un à l'autre sans menu).
+- ~~★ Corps à corps poussé : enchaînements de coups (combos), saltos, prises (saisir, projeter, clé), contres ; lisible
+  et nerveux, avec ses propres animations et sons.~~ (fait, 3.3 : direct/crochet/coup de pied, coup sauté, projection,
+  saltos, parade sur tous les coups ; reste : clés et contres dédiés)
+- ~~★ Mode de jeu « mains nues » : tout au corps à corps, aucune arme au sol ni au départ.~~ (fait, 3.3)
+- ~~Arcade : armes à feu ET ce corps à corps complet intégré (passer de l'un à l'autre sans menu).~~ (fait, 3.3)

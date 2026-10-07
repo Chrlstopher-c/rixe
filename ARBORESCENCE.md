@@ -42,6 +42,7 @@
 - fighters/boss.gd
 - fighters/execution.gd
 - fighters/fighter.gd
+- fighters/grapple.gd
 - fighters/inventory.gd
 - fighters/melee.gd
 - fighters/moves.gd
