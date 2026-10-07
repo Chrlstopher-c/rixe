@@ -61,13 +61,16 @@ func _ready() -> void:
 	if _tests != "":
 		add_child(preload("res://tests/test_runner.gd").new(self, _tests))
 		return
-	Sfx.start_music()
 	attract = not demo and not _skip_title
 	if attract:
 		_hud.visible = false
 		_menu.show_title()
-		if Settings.persist:
-			add_child(Intro.new())
+	if attract and Settings.persist:
+		var intro := Intro.new()
+		intro.finished.connect(Sfx.start_music)
+		add_child(intro)
+	else:
+		Sfx.start_music()
 	_start_round()
 
 

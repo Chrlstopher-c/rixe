@@ -3,7 +3,7 @@
 
 ## Résumé de l'état actuel
 Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lien `~/projects/rixe`). Dernière version publiée : **v3.2.1** (v3.1.2 testée en ligne par Chris avec un ami, deux PC Arch Linux, « fluide »).
-- Dépôt public : github.com/Chrlstopher-c/rixe. CI verte (59 tests headless + relais + partie en ligne à deux jeux).
+- Dépôt public : github.com/Chrlstopher-c/rixe. CI verte (60 tests headless + relais + partie en ligne à deux jeux).
 - Releases sur GitHub pour Linux (testée), Windows (testée sous Proton-GE, pas sur un vrai PC Windows) et macOS universel (compilée, jamais lancée sur un vrai Mac).
 - Modes : Arcade, Chrono, Objectif, Survie. Écran partagé à deux, manette, et partie à deux en ligne (code de 4 lettres).
 - En ligne : relais Cloudflare Worker déployé (wrangler connecté sur la tour, compte de Chris), aller-retour ~11 ms ; adresse dans `online/relay.cfg` (hors dépôt, embarquée dans les builds).
@@ -11,8 +11,10 @@ Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lie
 - Textures générées par Pigment (`/mnt/projects/pigment`, dépôt privé, MCP `pigment`).
 
 ## Ce qui a été fait — nuit du 07 au 08/10 (v3.2.1)
-- Intro animée au lancement (`hud/intro.gd`, demande de Chris) : logo Godot coupé (fond uni), tir à la tête, titre
-  qui s'abat et saigne, ~3,5 s, une touche la passe ; jamais en tests, démos ni captures.
+- Intro cinématique au lancement (demande de Chris) : logo Godot coupé (fond uni), combat chorégraphié de 4,5 s
+  (`hud/intro_choreo.gd` : poses clés interpolées, caméra, coups ; `hud/intro_fighter.gd` : visages expressifs),
+  sang et dents, salto, ralenti et décapitation, puis titre qui s'abat et saigne ; musique `tools/gen_intro_music.py`
+  calée dessus (150 BPM). 7,5 s, une touche la passe ; jamais en tests, démos ni captures.
 - Toutes les idées d'`IDEES.md` sont faites : normal maps sur les tuiles (relief sous les éclairs), flaques qui reflètent
   sous la pluie (shader d'écran), voie et wagonnet dans la mine, décors animés en planches de sprites
   (`tools/gen_sprites.py` : ventilateurs, torches, drapeaux).

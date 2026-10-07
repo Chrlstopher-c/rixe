@@ -82,6 +82,8 @@
 - .github/workflows/ci.yml
 - .gitignore
 - hud/intro.gd
+- hud/intro_choreo.gd
+- hud/intro_fighter.gd
 - hud/crosshair.gd
 - hud/crosshair_screen.gd
 - hud/custom_game.gd
@@ -150,6 +152,7 @@
 - tools/capture.sh
 - tools/check_voice.py
 - tools/gen_assets.py
+- tools/gen_intro_music.py
 - tools/gen_sprites.py
 - tools/gen_music.py
 - tools/gen_sfx.py
