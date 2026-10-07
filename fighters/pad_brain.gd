@@ -35,6 +35,7 @@ func think(f: Node2D, _delta: float) -> Dictionary:
 		"fire": Input.get_joy_axis(device, JOY_AXIS_TRIGGER_RIGHT) > 0.4,
 		"aiming": Input.get_joy_axis(device, JOY_AXIS_TRIGGER_LEFT) > 0.4,
 		"melee": _just(JOY_BUTTON_B),
+		"grab": _just(JOY_BUTTON_RIGHT_STICK),
 		"reload": _just(JOY_BUTTON_X),
 		"throw": _just(JOY_BUTTON_RIGHT_SHOULDER),
 		"cycle": _just(JOY_BUTTON_Y),

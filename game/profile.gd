@@ -63,6 +63,8 @@ func _on_feat(kind: String) -> void:
 			add("parries", 1, XP.parry)
 		"flawless":
 			add("flawless", 1, 30)
+		"throw":
+			add("throws", 1, 8)
 
 
 static func level_of(points: int) -> int:

@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["melee", "combo", "execution"]
+	return ["melee", "combo", "grab", "execution"]
 
 
 func test_melee(t: Node) -> void:
@@ -60,6 +60,32 @@ func test_combo(t: Node) -> void:
 	a.queue_free()
 	if is_instance_valid(b):
 		b.queue_free()
+
+
+func test_grab(t: Node) -> void:
+	var brain := ScriptBrain.new()
+	var a: Fighter = t.main.spawn_test_fighter(Vector2(600, -10), brain, "rifle", true)
+	var b: Fighter = t.main.spawn_test_fighter(Vector2(618, -10), ScriptBrain.new(), "rifle", false)
+	await t.until(func() -> bool: return a.is_on_floor() and b.is_on_floor(), 120)
+	await t.frames(10)
+	brain.aim = b.global_position + Vector2(0, -20)
+	await t.frames(2)
+	brain.press_grab()
+	await t.frames(12)
+	t.check(b.held and a.grapple.active(), "projection : l'adversaire est saisi")
+	var thrown: bool = await t.until(func() -> bool: return not b.held, 120)
+
+
+	await t.frames(8)
+	t.check(thrown and b.global_position.x < a.global_position.x, "il est jeté derrière (x=%.0f)" % b.global_position.x)
+	t.check(b.hp < Fighter.MAX_HP and b.moves.stunned(), "il est blessé et étourdi")
+	brain.aim = a.global_position + Vector2(100, -20)
+	await t.frames(90)
+	brain.press_grab()
+	await t.frames(4)
+	t.check(not a.grapple.active(), "personne à portée : rien n'est saisi")
+	a.queue_free()
+	b.queue_free()
 
 
 func test_execution(t: Node) -> void:

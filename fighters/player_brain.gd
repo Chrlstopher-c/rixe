@@ -35,6 +35,7 @@ func _keyboard(f: Node2D) -> Dictionary:
 		"dash": Input.is_action_just_pressed("dash"),
 		"fire": Input.is_action_pressed("fire") and not building,
 		"melee": Input.is_action_just_pressed("melee"),
+		"grab": Input.is_action_just_pressed("grab"),
 		"reload": Input.is_action_just_pressed("reload"),
 		"throw": Input.is_action_just_pressed("throw"),
 		"select": -1 if building else _selected(),

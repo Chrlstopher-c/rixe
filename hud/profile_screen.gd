@@ -7,7 +7,7 @@ signal back_requested
 const ACCENT := Color(0.3, 0.9, 1.0)
 const ROWS := ["hat", "mask", "cape", "color", "back"]
 const STATS := [["kills", "Éliminations"], ["heads", "Par la tête"], ["decaps", "Décapitations"],
-	["execs", "Exécutions"], ["parries", "Parades"], ["bosses", "Boss abattus"], ["rounds", "Manches gagnées"],
+	["execs", "Exécutions"], ["parries", "Parades"], ["throws", "Projections"], ["bosses", "Boss abattus"], ["rounds", "Manches gagnées"],
 	["best_round", "Meilleure manche"], ["matches", "Parties"]]
 ## Squelette de l'aperçu (debout, de profil, regard à droite).
 const POSE := {"head": Vector2(1, -31), "neck": Vector2(0.5, -27), "shoulder": Vector2(0, -25.5),

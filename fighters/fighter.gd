@@ -47,6 +47,7 @@ var _throw_cd := 0.0
 var aim_point := Vector2.ZERO
 var body := BodyParts.new()
 var melee := Melee.new(self)
+var grapple := Grapple.new(self)
 var moves := Moves.new(self)
 var _shape: CollisionShape2D
 var execution := Execution.new(self)
@@ -142,13 +143,15 @@ func _physics_process(delta: float) -> void:
 		_land(vy)
 	if intent.get("focus", false) and local_human(self) and Juice.use_focus():
 		Juice.notify("RALENTI")
-	if not _try_execute():
+	grapple.tick(delta, intent.get("grab", false))
+	if not _try_execute() and not grapple.active():
 		melee.tick(delta, intent.get("melee", false))
 	_throw_cd -= delta
 	if intent.get("throw", false):
 		throw_grenade()
 	_inventory_input(delta)
-	var can_fire: bool = body.arms_left() > 0 and not melee.active() and inventory.switching <= 0.0
+	var can_fire: bool = body.arms_left() > 0 and not melee.active() and not grapple.active() \
+		and inventory.switching <= 0.0
 	gun.tick(delta, intent.fire and can_fire, intent.get("reload", false))
 	if _debug_fire and is_player:
 		_trace_fire(delta, can_fire)
@@ -420,6 +423,7 @@ func _sever(part: String, dir: Vector2, dmg: float) -> void:
 
 
 func _die(dir: Vector2, killer: Variant, dmg: float) -> void:
+	grapple._release()
 	alive = false
 	if death_cause == "":
 		death_cause = "headshot" if last_zone == "head" else "shot"

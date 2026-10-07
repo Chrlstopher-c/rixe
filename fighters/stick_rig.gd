@@ -155,6 +155,8 @@ func _pose_arms() -> void:
 		var dip := sin(k * PI)
 		aim = aim.rotated(fighter.facing * 0.9 * dip)
 		pivot += Vector2(0, 2.0 * dip)
+	if fighter.grapple.active():
+		pivot = shoulder + Vector2(fighter.facing * 4.0, -4.0 - 8.0 * fighter.grapple.progress())
 	var punch := _punch()
 	if punch != Vector2.ZERO:
 		pivot += aim * punch.x
