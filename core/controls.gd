@@ -41,3 +41,27 @@ static func _mouse(action: String, button: MouseButton) -> void:
 	var e := InputEventMouseButton.new()
 	e.button_index = button
 	InputMap.action_add_event(action, e)
+
+
+## Bouton de manette traduit en touche pour les menus (croix, A = valider, B / Start = retour) ; 0 sinon.
+static func menu_key(event: InputEvent) -> int:
+	if event is InputEventKey:
+		return event.physical_keycode if event.pressed and not event.echo else 0
+	if not (event is InputEventJoypadButton) or not event.pressed:
+		return 0
+	match event.button_index:
+		JOY_BUTTON_DPAD_UP:
+			return KEY_UP
+		JOY_BUTTON_DPAD_DOWN:
+			return KEY_DOWN
+		JOY_BUTTON_DPAD_LEFT:
+			return KEY_LEFT
+		JOY_BUTTON_DPAD_RIGHT:
+			return KEY_RIGHT
+		JOY_BUTTON_A:
+			return KEY_ENTER
+		JOY_BUTTON_B, JOY_BUTTON_START:
+			return KEY_ESCAPE
+		JOY_BUTTON_BACK:
+			return KEY_TAB
+	return 0

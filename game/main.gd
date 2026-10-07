@@ -375,8 +375,11 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and not event.echo:
-		match event.physical_keycode:
+	var k := Controls.menu_key(event)
+	if event is InputEventJoypadButton and event.button_index == JOY_BUTTON_B:
+		k = 0
+	if k != 0:
+		match k:
 			KEY_F1:
 				_set_hd(not Juice.hd)
 			KEY_ESCAPE:
@@ -390,7 +393,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					director.state.eat()
 			KEY_1, KEY_2, KEY_3, KEY_4, KEY_5:
 				if is_instance_valid(director) and director.builder.active:
-					director.builder.select(event.physical_keycode - KEY_1)
+					director.builder.select(k - KEY_1)
 			KEY_TAB:
 				if not attract and not demo and not _menu.visible and not _scoreboard.visible:
 					_toggle_inventory()

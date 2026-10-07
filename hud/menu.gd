@@ -117,9 +117,9 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not visible or not (event is InputEventKey) or not event.pressed:
+	var k := Controls.menu_key(event)
+	if not visible or k == 0:
 		return
-	var k: int = event.physical_keycode
 	var n := _ids().size()
 	if k in [KEY_W, KEY_UP]:
 		_sel = posmod(_sel - 1, n)

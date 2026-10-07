@@ -49,11 +49,12 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not visible or not (event is InputEventKey) or not event.pressed or _t < 0.6:
+	var k := Controls.menu_key(event)
+	if not visible or k == 0 or _t < 0.6:
 		return
-	if event.physical_keycode in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:
+	if k in [KEY_ENTER, KEY_KP_ENTER, KEY_SPACE]:
 		replay_requested.emit()
-	elif event.physical_keycode == KEY_ESCAPE:
+	elif k == KEY_ESCAPE:
 		menu_requested.emit()
 	else:
 		return

@@ -40,9 +40,10 @@ func _process(_delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not visible or not (event is InputEventKey) or not event.pressed or event.echo:
+	var k := Controls.menu_key(event)
+	if not visible or k == 0:
 		return
-	match event.physical_keycode:
+	match k:
 		KEY_TAB, KEY_ESCAPE:
 			close_requested.emit()
 		KEY_1:

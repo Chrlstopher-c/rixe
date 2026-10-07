@@ -17,6 +17,8 @@ var arena: Node2D
 var world: Node2D
 var camera: Camera2D
 var hd := true
+## Tests : traite la manette n°0 comme branchée.
+var force_pad := false
 ## Vent de la manche (px/s, positif vers la droite) : pluie, neige, fumée, écharpes, grenades.
 var wind := 0.0
 var weather: Node2D
