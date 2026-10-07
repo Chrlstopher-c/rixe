@@ -225,6 +225,8 @@ func _draw() -> void:
 		draw_line(to_local(_kick_trail[i - 1]), to_local(_kick_trail[i]), Color(2.4, 2.2, 2.1, a * 0.8), 2.5 * a, Juice.hd)
 	if Execution.staggered(fighter):
 		_draw_stagger()
+	if fighter.is_player and not Fighter.local_human(fighter) and not fighter.brain is BotBrain:
+		_draw_name()
 	if fighter.shield > 0.0:
 		var a := 0.25 + 0.25 * sin(_t * 20.0)
 		draw_arc(Vector2(0, -15), 19.0, 0.0, TAU, 40, Color(fighter.team_color * 1.8, a), 1.2, Juice.hd)
@@ -241,6 +243,14 @@ func _draw_stagger() -> void:
 	draw_polyline(pts, col, 1.3, Juice.hd)
 	if can:
 		draw_arc(top + Vector2(0, -1.5) * s, 5.5 * s, 0.0, TAU, 24, Color(col, 0.35 * beat), 1.0, Juice.hd)
+
+
+## Pseudo au-dessus des autres joueurs humains (en ligne, écran partagé).
+func _draw_name() -> void:
+	var font: Font = ThemeDB.fallback_font
+	var top: Vector2 = (j.head if has("head") else j.shoulder) + Vector2(-40, -9)
+	draw_string(font, top, Names.label(fighter.display_name), HORIZONTAL_ALIGNMENT_CENTER, 80, 6,
+		Color(fighter.team_color * 1.6, 0.85))
 
 
 func _draw_laser() -> void:

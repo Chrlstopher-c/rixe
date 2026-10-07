@@ -33,11 +33,11 @@ func on_killed(victim: Node2D, killer: Node2D) -> void:
 
 func _feed(victim: Node2D, killer: Node2D) -> void:
 	if victim.death_cause == "fall" and not is_instance_valid(killer):
-		m._hud.feed("%s  tombe dans le vide" % victim.display_name, victim.team_color)
+		m._hud.feed("%s  tombe dans le vide" % Names.label(victim.display_name), victim.team_color)
 		return
-	var kname: String = killer.display_name if is_instance_valid(killer) else "?"
+	var kname: String = Names.label(killer.display_name) if is_instance_valid(killer) else "?"
 	var verb := "exécute" if victim.executed else "élimine"
-	m._hud.feed("%s  %s  %s" % [kname, verb, victim.display_name], victim.team_color)
+	m._hud.feed("%s  %s  %s" % [kname, verb, Names.label(victim.display_name)], victim.team_color)
 
 
 ## Mode arcade (et démo) : la manche se gagne quand plus aucun bot n'est en vie ; à plusieurs humains,
@@ -48,7 +48,8 @@ func _rounds_after_kill(victim: Node2D) -> void:
 	if victim.is_player:
 		var other := _other_human(victim)
 		if other and not m.attract:
-			Juice.notify("%s est tombé, %s continue" % [victim.display_name, other.display_name])
+			Juice.notify("%s est tombé, %s continue" % [Names.label(victim.display_name),
+				Names.label(other.display_name)])
 			return
 		if m.attract or m.demo:
 			m._hud.banner("ÉLIMINÉ")

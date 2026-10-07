@@ -155,20 +155,13 @@ func info_for(me: String) -> String:
 	for i in rows.size():
 		if rows[i].name == me:
 			place = i + 1
-	var lead: String = _seen_as(rows[0].name, me) if not rows.is_empty() else "-"
+	var lead: String = Names.label(rows[0].name) if not rows.is_empty() else "-"
 	var lead_k: int = rows[0].kills if not rows.is_empty() else 0
 	var mine := match_state.kills_of(me)
 	if mode == "objectif":
 		var goal := Modes.option_value(mode, match_state.option)
 		return "ÉLIMINATIONS %d / %d   ·   RANG %d   ·   EN TÊTE : %s (%d)" % [mine, goal, place, lead, lead_k]
 	return "ÉLIMINATIONS %d   ·   RANG %d / %d   ·   EN TÊTE : %s (%d)" % [mine, place, rows.size(), lead, lead_k]
-
-
-## Nom tel que le voit `me` (l'invité en ligne s'appelle « Toi » chez lui, l'hôte « Hôte »).
-static func _seen_as(name: String, me: String) -> String:
-	if me == "Toi":
-		return name
-	return "Toi" if name == me else ("Hôte" if name == "Toi" else name)
 
 
 func _draw_mode_center() -> void:

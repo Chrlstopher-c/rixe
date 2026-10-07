@@ -28,6 +28,9 @@ var _canvas := Control.new()
 var _font: Font = ThemeDB.fallback_font
 var _rects: Array[Rect2] = []
 var loadout := {"weapon": "rifle", "attachments": {}}
+## Saisie du pseudo en cours (lettres, chiffres, - et _ ; Entrée ou Échap pour valider).
+var editing_nick := false
+var _nick := ""
 
 
 func _ready() -> void:
@@ -75,7 +78,7 @@ func _ids() -> Array[String]:
 		if online:
 			return ["resume", "volume", "display", "title", "quit"]
 		return ["resume", "restart", "volume", "display", "title", "quit"]
-	var ids: Array[String] = ["mode"]
+	var ids: Array[String] = ["nick", "mode"]
 	if Modes.has_option(game_mode):
 		ids.append("option")
 	if game_mode != "survie":
@@ -86,6 +89,10 @@ func _ids() -> Array[String]:
 
 func _text(id: String) -> String:
 	match id:
+		"nick":
+			if editing_nick:
+				return "PSEUDO  %s%s" % [_nick, "_" if int(_t * 2.0) % 2 == 0 else " "]
+			return "PSEUDO  %s" % Names.load_nick()
 		"mode", "board_mode":
 			return "MODE  ‹ %s ›" % Modes.label(game_mode)
 		"option":
@@ -135,6 +142,10 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if visible and editing_nick and event is InputEventKey and event.pressed:
+		_type_nick(event)
+		get_viewport().set_input_as_handled()
+		return
 	var k := Controls.menu_key(event)
 	if not visible or k == 0:
 		return
@@ -152,6 +163,17 @@ func _unhandled_input(event: InputEvent) -> void:
 	else:
 		return
 	get_viewport().set_input_as_handled()
+
+
+func _type_nick(e: InputEventKey) -> void:
+	var kc := e.keycode if e.keycode != KEY_NONE else e.physical_keycode
+	if kc in [KEY_ENTER, KEY_KP_ENTER, KEY_ESCAPE]:
+		editing_nick = false
+		Names.save_nick(_nick)
+	elif kc == KEY_BACKSPACE:
+		_nick = _nick.left(maxi(_nick.length() - 1, 0))
+	elif e.unicode > 0:
+		_nick = Names.clean(_nick + char(e.unicode))
 
 
 func _back() -> void:
@@ -208,6 +230,9 @@ func activate(i: int) -> void:
 	_sel = i
 	var id: String = _ids()[i]
 	match id:
+		"nick":
+			editing_nick = true
+			_nick = Names.load_nick()
 		"play":
 			start_requested.emit(game_mode, options[game_mode])
 		"board":

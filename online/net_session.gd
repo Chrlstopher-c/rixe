@@ -230,7 +230,7 @@ func _on_joined(peer_here: bool) -> void:
 func _greet() -> void:
 	peer_ok = false
 	_hi_wait = HI_TIMEOUT
-	link.send({"t": "hi", "v": version, "p": PROTO})
+	link.send({"t": "hi", "v": version, "p": PROTO, "n": Names.load_nick()})
 
 
 func _on_hi(msg: Dictionary) -> void:
@@ -240,6 +240,8 @@ func _on_hi(msg: Dictionary) -> void:
 		return
 	peer_ok = true
 	_hi_wait = -1.0
+	Names.others[GUEST if is_host() else HOST_LABEL] = Names.clean(String(msg.get("n", ""))) if msg.get("n", "") != "" \
+		else (GUEST if is_host() else HOST_LABEL)
 
 
 func _refuse(reason: String) -> void:

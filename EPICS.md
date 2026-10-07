@@ -128,7 +128,7 @@ autoritaire sur son propre combattant ; « qui provoque l'effet calcule ses dég
 - [x] E27.S1 — l'invité exécute un bot de l'hôte (l'hôte l'immobilise, le coup de grâce arrive comme une touche) — VERIFY: `tools/online_test.sh exec`
 
 ## E28 — Pseudo
-- [ ] E28.S1 — pseudo par défaut « anon » + nombre, modifiable au menu, utilisé partout (fil, en ligne, fins de partie, classements) — VERIFY: tests menu + online match
+- [x] E28.S1 — pseudo par défaut « anon » + nombre, modifiable au menu, utilisé partout (fil, en ligne, fins de partie, classements) — VERIFY: tests menu + online match
 
 ## E29 — Classement mondial
 - [ ] E29.S1 — Worker : envoi et lecture des meilleurs scores par mode, validation, limitation — VERIFY: `cd relay && pnpm test`

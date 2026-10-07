@@ -90,7 +90,7 @@ func _draw_rows(box: Rect2, a: float) -> void:
 			_canvas.draw_rect(Rect2(x - 6, ry - 10, box.size.x + 12, 13), Color(ACCENT, 0.14 * k))
 		var col: Color = Color(r.color * (1.6 if r.player else 1.2), k)
 		_canvas.draw_string(_font, Vector2(x, ry), str(i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(1, 1, 1, k))
-		_canvas.draw_string(_font, Vector2(x + 24, ry), r.name, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, col)
+		_canvas.draw_string(_font, Vector2(x + 24, ry), Names.label(r.name), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, col)
 		_canvas.draw_string(_font, Vector2(x + 230, ry), str(r.kills), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(1, 1, 1, k))
 		_canvas.draw_string(_font, Vector2(x + 290, ry), str(r.deaths), HORIZONTAL_ALIGNMENT_LEFT, -1, 10,
 			Color(1, 1, 1, 0.7 * k))

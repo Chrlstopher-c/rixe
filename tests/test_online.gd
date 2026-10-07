@@ -110,6 +110,7 @@ func test_online_match_host(t: Node) -> void:
 	t.check(puppet_up, "le combattant de l'invité apparaît chez l'hôte")
 	var guest_hash: Variant = await _heard(t, box, "hash")
 	t.check(guest_hash == born_hash, "même décor des deux côtés")
+	t.check(String(Names.others.get("J2", "")).begins_with("anon"), "pseudo de l'invité reçu (%s)" % Names.others.get("J2"))
 	var items := get_items(main)
 	_say(s, "items", items)
 	var p2: Fighter = _fighters(main, true, true)[0] if puppet_up else null

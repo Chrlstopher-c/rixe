@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["menu", "lobby", "crosshair"]
+	return ["menu", "lobby", "crosshair", "nick"]
 
 
 func _key(code: Key) -> void:
@@ -115,3 +115,30 @@ func test_crosshair(t: Node) -> void:
 	await t.frames(3)
 	t.check(not sight.visible and main._menu.visible, "Échap : retour au menu")
 	main._hud.crosshair = {}
+
+
+func test_nick(t: Node) -> void:
+	var main: Node = t.main
+	var n0 := Names.load_nick()
+	t.check(n0.begins_with("anon") or n0 != "", "pseudo par défaut (%s)" % n0)
+	main.attract = true
+	main._menu.show_title()
+	await t.frames(3)
+	main._menu.activate(main._menu._ids().find("nick"))
+	for i in 20:
+		_type_key(KEY_BACKSPACE, 0)
+	_type("Zorg_42!")
+	_type_key(KEY_ENTER, 0)
+	await t.frames(3)
+	t.check(Names.nick == "Zorg_42" and not main._menu.editing_nick, "pseudo modifié, caractères interdits retirés (%s)" % Names.nick)
+	t.check(Names.label("Toi") == "Zorg_42", "le joueur s'affiche sous son pseudo")
+	Names.nick = n0
+
+
+func _type_key(code: Key, uni: int) -> void:
+	for pressed in [true, false]:
+		var e := InputEventKey.new()
+		e.keycode = code
+		e.unicode = uni
+		e.pressed = pressed
+		Input.parse_input_event(e)
