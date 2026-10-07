@@ -38,4 +38,5 @@ func _measure(real: float) -> void:
 	var cpu := RenderingServer.viewport_get_measured_render_time_cpu(rid)
 	print("PERF fps_moyen=%.1f fps_1pct_bas=%.1f rendu_gpu_ms=%.2f rendu_cpu_ms=%.2f combattants=%d frames=%d"
 		% [avg, low, gpu, cpu, fighters.call(), sorted.size()])
+	Prof.report(sorted.size())
 	get_tree().quit()

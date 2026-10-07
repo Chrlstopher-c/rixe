@@ -86,6 +86,11 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if not alive:
 		return
+	if global_position.y > Juice.arena.void_y:
+		death_cause = "fall"
+		hp = 0.0
+		_die(Vector2.DOWN, null, 0.0)
+		return
 	intent = brain.think(self, delta)
 	_aim()
 	_timers(delta)
@@ -263,7 +268,7 @@ func take_hit(dmg: float, dir: Vector2, at: Vector2, from: Node2D, knock: float)
 	velocity += dir * knock
 	hit_flash = 0.045
 	recent_hit = 0.6
-	Effects.blood(at, dir, int(3 + res.dmg * 0.4))
+	Effects.blood(at, dir, int(2 + res.dmg * 0.3))
 	Sfx.play("flesh", at, -3.0, 0.2)
 	_hit_feedback(from, res.dmg)
 	if res.broke:

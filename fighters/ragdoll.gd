@@ -43,7 +43,8 @@ func setup(pts: Dictionary, base_vel: Vector2, impulse: Vector2, bleed: Array, t
 
 func _physics_process(delta: float) -> void:
 	_age += delta
-	if _age > LIFE or ("ragdolls" in Juice.off and _age > 0.5):
+	var fell: bool = pos.has("hip") and (pos.hip as Vector2).y > Juice.arena.void_y + 200.0
+	if _age > LIFE or fell or ("ragdolls" in Juice.off and _age > 0.5):
 		queue_free()
 		return
 	var prev := pos.duplicate()
@@ -56,7 +57,8 @@ func _physics_process(delta: float) -> void:
 		_collide(k, prev[k], delta)
 	if _age < 2.5:
 		_bleed(delta)
-	queue_redraw()
+	if pos.has("hip") and Juice.on_screen(pos.hip, 80.0):
+		queue_redraw()
 
 
 func _solve_links() -> void:

@@ -15,6 +15,9 @@ var terrain := Terrain.new()
 var _tex := {}
 var theme := "crepuscule"
 var rim := Color(1.6, 0.75, 0.5)
+var map := "plateformes"
+## Hauteur sous laquelle on meurt (cartes sans sol) ; INF = pas de vide.
+var void_y := INF
 
 
 func _ready() -> void:
@@ -34,19 +37,20 @@ func set_theme(name: String) -> void:
 	queue_redraw()
 
 
-func generate(seed_value: int) -> void:
+func generate(seed_value: int, map_type: String = "plateformes") -> void:
 	_reset()
+	map = map_type
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
-	_gen_cover(rng)
-	for level in range(1, 4):
-		_gen_level(rng, -level * LEVEL_GAP)
+	Maps.build(self, map_type, rng)
 	terrain.flush()
 	queue_redraw()
 
 
 func generate_flat() -> void:
 	_reset()
+	add_bedrock()
+	terrain.fill(Rect2(0, 0, W, DIRT_DEPTH), Terrain.K.DIRT)
 	terrain.flush()
 	queue_redraw()
 
@@ -59,28 +63,19 @@ func _reset() -> void:
 	solids.clear()
 	solid_kinds.clear()
 	platforms.clear()
+	void_y = INF
+	map = "plateformes"
+	_add_solid(Rect2(-300, -700, 300, 1300), "wall")
+	_add_solid(Rect2(W, -700, 300, 1300), "wall")
+
+
+func add_bedrock() -> void:
 	_add_solid(Rect2(-300, DIRT_DEPTH, W + 600, 400), "bedrock")
-	_add_solid(Rect2(-300, -700, 300, 700 + DIRT_DEPTH), "wall")
-	_add_solid(Rect2(W, -700, 300, 700 + DIRT_DEPTH), "wall")
-	terrain.fill(Rect2(0, 0, W, DIRT_DEPTH), Terrain.K.DIRT)
 
 
-func _gen_cover(rng: RandomNumberGenerator) -> void:
-	for i in rng.randi_range(3, 5):
-		var w := 16.0 * rng.randi_range(2, 3)
-		var h := 16.0 * rng.randi_range(1, 2)
-		var x := snappedf(rng.randf_range(140, W - 180), 16.0)
-		terrain.fill(Rect2(x, -h, w, h), Terrain.K.CRATE)
-
-
-func _gen_level(rng: RandomNumberGenerator, y: float) -> void:
-	var x := snappedf(rng.randf_range(30, 160), 8.0)
-	while x < W - 120:
-		var w := snappedf(rng.randf_range(80, 200), 8.0)
-		var r := Rect2(x, y, minf(w, W - 20 - x), PLATFORM_H)
-		platforms.append(r)
-		terrain.fill(r, Terrain.K.PLAT)
-		x = snappedf(x + w + rng.randf_range(60, 190), 8.0)
+## Structure d'immeuble indestructible (toits).
+func add_building(r: Rect2) -> void:
+	_add_solid(r, "building")
 
 
 func _add_solid(r: Rect2, kind: String) -> void:
@@ -106,11 +101,17 @@ func damage(at: Vector2, dmg: float, radius: float) -> int:
 	return n
 
 
+## Décor indestructible seulement (roche, murs, immeubles) : sert d'appui au décor destructible.
+func rect_solid_at(p: Vector2) -> bool:
+	for r in solids:
+		if r.has_point(p):
+			return true
+	return false
+
+
 func solid_at(p: Vector2) -> bool:
 	if terrain.at(p) != Terrain.K.NONE:
 		return true
-	if p.y < DIRT_DEPTH and p.x >= 0.0 and p.x <= W:
-		return false
 	for r in solids:
 		if r.has_point(p):
 			return true
@@ -157,12 +158,35 @@ func _exit_rect(r: Rect2, p: Vector2) -> Vector2:
 func spawn_points(n: int, rng: RandomNumberGenerator) -> Array[Vector2]:
 	var out: Array[Vector2] = []
 	for i in n:
-		var x := lerpf(120.0, W - 120.0, (i + 0.5) / n) + rng.randf_range(-40, 40)
-		out.append(Vector2(x, -60.0))
+		for attempt in 12:
+			var x := lerpf(120.0, W - 120.0, (i + 0.5) / n) + rng.randf_range(-60, 60)
+			var spots := stand_spots(x)
+			if not spots.is_empty():
+				out.append(Vector2(x, spots[rng.randi_range(0, spots.size() - 1)] - 6.0))
+				break
+	return out
+
+
+## Surfaces où l'on peut se tenir dans une colonne : un sol plein sous au moins 40 px de vide.
+func stand_spots(x: float) -> Array[float]:
+	var out: Array[float] = []
+	var free := 0.0
+	var y := -320.0
+	while y < minf(void_y, 400.0):
+		if solid_at(Vector2(x, y)):
+			if free >= 40.0:
+				out.append(y)
+			free = 0.0
+		else:
+			free += 4.0
+		y += 4.0
 	return out
 
 
 func _draw() -> void:
+	if map == "mine":
+		draw_texture_rect(_tex.bricks, Rect2(0, -232, W, 272), true, Color(0.16, 0.13, 0.18))
+		draw_rect(Rect2(0, -232, W, 272), Color(0.0, 0.0, 0.02, 0.35))
 	for r in platforms:
 		_draw_strut(r)
 	for i in solids.size():
@@ -183,3 +207,9 @@ func _draw_solid(r: Rect2, kind: String) -> void:
 			draw_rect(r, Color(0.045, 0.03, 0.03))
 		"wall":
 			draw_texture_rect(_tex.bricks, r, true, Color(0.45, 0.4, 0.5))
+		"building":
+			draw_texture_rect(_tex.bricks, r, true, Color(0.32, 0.28, 0.36))
+			for wy in range(int(r.position.y) + 14, int(r.position.y) + 220, 26):
+				for wx in range(int(r.position.x) + 10, int(r.end.x) - 14, 22):
+					var lit := (wx * 7 + wy * 13) % 5 == 0
+					draw_rect(Rect2(wx, wy, 8, 10), Color(1.6, 1.2, 0.6, 0.8) if lit else Color(0.05, 0.05, 0.08))

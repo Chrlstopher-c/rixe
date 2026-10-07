@@ -34,7 +34,8 @@ func press_throw() -> void:
 
 func think(f: Node2D, _delta: float) -> Dictionary:
 	var it := {"move": move, "jump": _jump, "jump_held": jump_held, "drop": drop, "dash": _dash, "fire": fire,
-		"melee": _melee, "throw": _throw, "aiming": aiming, "reload": reload, "aim": aim if aim != Vector2.ZERO else f.global_position + Vector2(100, -20)}
+		"melee": _melee, "throw": _throw, "aiming": aiming, "reload": reload,
+		"aim": aim if aim != Vector2.ZERO else f.global_position + Vector2(100, -20)}
 	_jump = false
 	_dash = false
 	_melee = false

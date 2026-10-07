@@ -9,8 +9,8 @@ Les idées de Chris (07/10) sont marquées (Chris).
 |---|---|---|
 | ~~1.0~~ | Arcade | combat, démembrement, modes, classements |
 | ~~1.1~~ | Monde vivant | décor destructible, ricochets, IA à personnalités |
-| **1.2** | Armurerie | munitions et chargeurs, visée précise, nouvelles armes, grenades, personnalisation |
-| **1.3** | Butin et cartes | drops, inventaire, nouvelles cartes, météo |
+| ~~1.2~~ | Armurerie | munitions et chargeurs, visée précise, nouvelles armes, grenades, personnalisation |
+| ~~1.3~~ | Butin et cartes | drops, inventaire, nouvelles cartes, météo |
 | **2.0** | Survie | grande carte, construction, ressources, faim, vagues |
 | **3.0** | Ensemble | écran partagé, manette, multijoueur pair à pair |
 

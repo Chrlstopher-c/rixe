@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["terrain", "ricochet"]
+	return ["terrain", "ricochet", "collapse"]
 
 
 func test_terrain(t: Node) -> void:
@@ -60,3 +60,24 @@ func test_ricochet(t: Node) -> void:
 	before = Juice.fx.tracers.size()
 	straight._trace(Vector2(700, -40), Vector2.DOWN, 600.0, 9.0, 2, [shooter.get_rid()])
 	t.check(Juice.fx.tracers.size() == before + 1, "sans ricochet : un seul segment")
+
+
+func test_collapse(t: Node) -> void:
+	var arena: Node2D = Juice.arena
+	var r := Rect2(400, -74, 96, 8)
+	arena.terrain.fill(r, Terrain.K.PLAT)
+	Maps._struts(arena, r)
+	arena.terrain.flush()
+	var under: Fighter = t.main.spawn_test_fighter(Vector2(424, -10), ScriptBrain.new(), "rifle", false)
+	await t.until(func() -> bool: return under.is_on_floor(), 120)
+	arena.damage(Vector2(452, -70), 200.0, 3.0)
+	await t.frames(5)
+	var none: bool = t.main.get_tree().get_nodes_in_group("falling").is_empty()
+	t.check(none, "coupée au milieu, chaque moitié tient sur son montant")
+	arena.damage(Vector2(406, -70), 200.0, 3.0)
+	await t.frames(2)
+	t.check(not t.main.get_tree().get_nodes_in_group("falling").is_empty(), "montant détruit : la moitié gauche tombe")
+	var ref: WeakRef = weakref(under)
+	await t.frames(120)
+	t.check(ref.get_ref() == null or under.hp < Fighter.MAX_HP, "le morceau écrase le combattant dessous")
+	t.check(arena.solid_at(Vector2(430, -4)) or arena.solid_at(Vector2(430, -12)), "le morceau se repose au sol")

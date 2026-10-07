@@ -20,7 +20,7 @@ env -u DISPLAY XDG_RUNTIME_DIR="$RUN" WAYLAND_DISPLAY="$SOCK" timeout $((SECS + 
   godot --path . --display-driver wayland \
   --audio-driver Dummy --resolution 1920x1080 --disable-vsync -- --demo --round=4 --seed=3 --perf="$SECS" "$@" \
   > "$RUN/godot.log" 2>&1 || true
-grep -E "SPIKE|ROUND" "$RUN/godot.log" | head -40 || true
+grep -E "SPIKE|ROUND|PROF" "$RUN/godot.log" | head -40 || true
 LINE=$(grep PERF "$RUN/godot.log" || true)
 echo "$LINE"
 [ -n "$LINE" ] || { echo "PERF KO (pas de mesure)"; exit 1; }

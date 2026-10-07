@@ -6,6 +6,14 @@
 - arena/arena.gd.uid
 - arena/backdrop.gd
 - arena/backdrop.gd.uid
+- arena/falling_chunk.gd
+- arena/falling_chunk.gd.uid
+- arena/maps.gd
+- arena/maps.gd.uid
+- arena/props/barrel.gd
+- arena/props/barrel.gd.uid
+- arena/props/lamp.gd
+- arena/props/lamp.gd.uid
 - arena/terrain_chunk.gd
 - arena/terrain_chunk.gd.uid
 - arena/terrain.gd
@@ -23,6 +31,8 @@
 - core/juice.gd.uid
 - core/perf_probe.gd
 - core/perf_probe.gd.uid
+- core/prof.gd
+- core/prof.gd.uid
 - core/settings.gd
 - core/settings.gd.uid
 - .env.example
@@ -41,6 +51,8 @@
 - fighters/bot_brain.gd.uid
 - fighters/fighter.gd
 - fighters/fighter.gd.uid
+- fighters/inventory.gd
+- fighters/inventory.gd.uid
 - fighters/melee.gd
 - fighters/melee.gd.uid
 - fighters/player_brain.gd
@@ -59,6 +71,8 @@
 - fx/post.gd.uid
 - fx/stains.gd
 - fx/stains.gd.uid
+- fx/weather.gd
+- fx/weather.gd.uid
 - game/leaderboard.gd
 - game/leaderboard.gd.uid
 - game/main.gd
@@ -70,12 +84,16 @@
 - game/modes.gd.uid
 - game/run_score.gd
 - game/run_score.gd.uid
+- game/spawner.gd
+- game/spawner.gd.uid
 - game/unlocks.gd
 - game/unlocks.gd.uid
 - .github/workflows/ci.yml
 - .gitignore
 - hud/hud.gd
 - hud/hud.gd.uid
+- hud/inventory_screen.gd
+- hud/inventory_screen.gd.uid
 - hud/menu.gd
 - hud/menu.gd.uid
 - hud/scoreboard.gd
@@ -99,6 +117,10 @@
 - tests/test_audio.gd.uid
 - tests/test_combat.gd
 - tests/test_combat.gd.uid
+- tests/test_loot.gd
+- tests/test_loot.gd.uid
+- tests/test_maps.gd
+- tests/test_maps.gd.uid
 - tests/test_melee.gd
 - tests/test_melee.gd.uid
 - tests/test_menu.gd
@@ -109,6 +131,8 @@
 - tests/test_movement.gd.uid
 - tests/test_pickup.gd
 - tests/test_pickup.gd.uid
+- tests/test_props.gd
+- tests/test_props.gd.uid
 - tests/test_runner.gd
 - tests/test_runner.gd.uid
 - tests/test_score.gd
@@ -136,6 +160,8 @@
 - weapons/grenade.gd.uid
 - weapons/gun.gd
 - weapons/gun.gd.uid
+- weapons/loot.gd
+- weapons/loot.gd.uid
 - weapons/pickup.gd
 - weapons/pickup.gd.uid
 - assets/sfx/*.wav (27 sons générés)

@@ -241,7 +241,7 @@ func _draw_menu() -> void:
 		_canvas.draw_string(_font, Vector2(0, top + 20), hint, HORIZONTAL_ALIGNMENT_CENTER, size.x, 9,
 			Color(1, 0.9, 0.95, 0.6))
 	_draw_items(size.x * 0.5, size.y * (0.4 if mode == "title" else 0.36) + (150.0 if mode == "board" else 0.0))
-	var help := "ZQSD bouger · Espace sauter · clic tirer · clic droit viser · R recharger · G grenade · Maj dash · E pied"
+	var help := "ZQSD · Espace · clic tirer · clic droit viser · R recharger · G grenade · H soin · Tab sac · E pied"
 	_canvas.draw_string(_font, Vector2(0, size.y - 12), help, HORIZONTAL_ALIGNMENT_CENTER, size.x, 8,
 		Color(1, 0.9, 0.95, 0.55))
 

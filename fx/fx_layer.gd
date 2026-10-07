@@ -82,6 +82,8 @@ func _step(p: P, delta: float) -> bool:
 	if p.life <= 0.0:
 		return false
 	p.vel.y += p.grav * delta
+	if p.kind == Kind.SMOKE:
+		p.vel.x += Juice.wind * 0.8 * delta
 	p.vel /= 1.0 + p.drag * delta
 	p.rot += p.spin * delta
 	var next := p.pos + p.vel * delta
@@ -96,30 +98,54 @@ func _step(p: P, delta: float) -> bool:
 	return true
 
 
+## Étincelles, gouttes et douilles sont regroupées en deux tracés multiples (fins / épais) : un seul appel chacun.
 func _draw() -> void:
 	for t in tracers:
 		_draw_tracer(t)
+	var thin := PackedVector2Array()
+	var thin_c := PackedColorArray()
+	var thick := PackedVector2Array()
+	var thick_c := PackedColorArray()
+	var view := Rect2(-1e9, -1e9, 2e9, 2e9)
+	if Juice.camera:
+		var half: Vector2 = Juice.camera.get_viewport_rect().size * 0.5 / Juice.camera.zoom
+		view = Rect2(Juice.camera.get_screen_center_position() - half, half * 2.0).grow(40.0)
 	for p in parts:
+		if not view.has_point(p.pos):
+			continue
 		var k := p.life / p.max_life
 		match p.kind:
 			Kind.SPARK, Kind.BLOOD:
 				var c := p.color
 				c.a *= minf(k * 2.0, 1.0)
-				draw_line(p.pos - p.vel * 0.03, p.pos, c, p.size)
-			Kind.SMOKE:
-				var c := p.color
-				c.a *= k * k
-				draw_circle(p.pos, p.size * (1.0 + (1.0 - k) * 2.0), c)
-			Kind.FLASH:
-				_draw_flash(p, k)
+				var pts := thin if p.size < 1.3 else thick
+				var cols := thin_c if p.size < 1.3 else thick_c
+				pts.append_array([p.pos - p.vel * 0.03, p.pos])
+				cols.append(c)
 			Kind.SHELL:
-				draw_set_transform(p.pos, p.rot)
-				draw_rect(Rect2(-1.2, -0.6, 2.4, 1.2), p.color * Color(1, 1, 1, minf(k * 4.0, 1.0)))
-				draw_set_transform(Vector2.ZERO)
-			Kind.RING:
-				var c := p.color
-				c.a *= k
-				draw_arc(p.pos, p.size * (1.0 - k * k * k), 0.0, TAU, 32, c, 0.4 + 1.2 * k)
+				var d := Vector2(1.2, 0).rotated(p.rot)
+				thick.append_array([p.pos - d, p.pos + d])
+				thick_c.append(p.color * Color(1, 1, 1, minf(k * 4.0, 1.0)))
+			_:
+				_draw_shape(p, k)
+	if not thin.is_empty():
+		draw_multiline_colors(thin, thin_c, 1.0)
+	if not thick.is_empty():
+		draw_multiline_colors(thick, thick_c, 1.8)
+
+
+func _draw_shape(p: P, k: float) -> void:
+	match p.kind:
+		Kind.SMOKE:
+			var c := p.color
+			c.a *= k * k
+			draw_circle(p.pos, p.size * (1.0 + (1.0 - k) * 2.0), c)
+		Kind.FLASH:
+			_draw_flash(p, k)
+		Kind.RING:
+			var c := p.color
+			c.a *= k
+			draw_arc(p.pos, p.size * (1.0 - k * k * k), 0.0, TAU, 32, c, 0.4 + 1.2 * k)
 
 
 func _draw_tracer(t: Dictionary) -> void:

@@ -19,13 +19,13 @@ static func muzzle(pos: Vector2, dir: Vector2, color: Color, size: float) -> voi
 
 static func impact(pos: Vector2, normal: Vector2, color: Color) -> void:
 	var fx: Node2D = Juice.fx
-	for i in 7:
+	for i in 5:
 		var d := normal.rotated(randf_range(-1.1, 1.1))
 		var s = fx.emit(0, pos, d * randf_range(120, 380), randf_range(0.12, 0.3), 0.9, color)
 		s.grav = 500.0
 		s.drag = 2.0
-	for i in 2:
-		var sm = fx.emit(2, pos, normal * randf_range(10, 30), randf_range(0.4, 0.8), 1.8, Color(0.5, 0.4, 0.5, 0.3))
+	for i in 1:
+		var sm = fx.emit(2, pos, normal * randf_range(10, 30), randf_range(0.4, 0.8), 2.2, Color(0.5, 0.4, 0.5, 0.3))
 		sm.drag = 2.0
 	fx.emit(5, pos, Vector2.ZERO, 0.14, 5.0, Color(color, 0.6))
 

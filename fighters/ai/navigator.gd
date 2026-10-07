@@ -70,9 +70,28 @@ func _obstacles(f: Node2D, it: Dictionary) -> void:
 	var pos: Vector2 = f.global_position
 	var ahead := pos + Vector2(it.move * 12.0, 3.0)
 	var hole: bool = not Juice.arena.solid_at(ahead) and not Juice.arena.solid_at(ahead + Vector2(0, 10))
-	if f.is_on_wall() or (hole and pos.y < 1.0):
+	if f.is_on_wall():
 		it.jump = true
 		_hold = 0.25
+	elif hole and _deadly_below(ahead):
+		var across: bool = signf(_goal.x - pos.x) == signf(it.move) and absf(_goal.x - pos.x) > 40.0
+		if across:
+			it.jump = true
+			_hold = 0.45
+			it.dash = absf(f.velocity.x) > 150.0 and randf() < 0.3
+		else:
+			it.move = 0.0
+	elif hole and pos.y < 1.0:
+		it.jump = true
+		_hold = 0.25
+
+
+## Vide mortel ou chute de plus de 120 px devant soi.
+static func _deadly_below(p: Vector2) -> bool:
+	for dy in range(0, 140, 8):
+		if Juice.arena.solid_at(p + Vector2(0, dy)):
+			return false
+	return true
 
 
 func _unstick(f: Node2D, goal: Vector2, delta: float, it: Dictionary, mobility: float) -> void:

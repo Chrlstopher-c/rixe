@@ -32,6 +32,7 @@ func _physics_process(delta: float) -> void:
 	_armed -= delta
 	fuse -= delta
 	vel.y += gravity * delta
+	vel.x += Juice.wind * 0.25 * delta
 	_spin += vel.x * delta * 0.2
 	var next := global_position + vel * delta
 	if Juice.arena.solid_at(next):

@@ -77,13 +77,20 @@ func _draw_cell(c: Vector2i, k: int) -> void:
 	var mod := Color(1, 1, 1).darkened(wear * 0.45)
 	var open_top := not terrain.is_solid_cell(c + Vector2i.UP)
 	match k:
+		Terrain.K.ROCK, Terrain.K.BRICK:
+			var src := Rect2(fposmod(r.position.x, 32.0), fposmod(r.position.y, 32.0), 8, 8)
+			var tint := Color(0.42, 0.38, 0.45) if k == Terrain.K.ROCK else Color(0.75, 0.7, 0.75)
+			draw_texture_rect_region(terrain.tex.bricks, r, src, mod * tint)
+			if open_top:
+				draw_line(r.position, Vector2(r.end.x, r.position.y), terrain.rim * 0.6, 1.0)
 		Terrain.K.DIRT:
-			if c.y <= 3:
-				var src := Rect2(fposmod(r.position.x, 64.0), c.y * 8.0, 8, 8)
+			var depth: int = c.y - int(terrain.surface.get(c.x, c.y))
+			if depth <= 3:
+				var src := Rect2(fposmod(r.position.x, 64.0), depth * 8.0, 8, 8)
 				draw_texture_rect_region(terrain.tex.ground, r, src, mod)
 			else:
 				draw_rect(r, Color(0.06, 0.035, 0.03).darkened(wear * 0.3))
-			if open_top and c.y > 0:
+			if open_top and depth > 0:
 				draw_line(r.position, Vector2(r.end.x, r.position.y), Color(0, 0, 0, 0.35), 1.0)
 		_:
 			var src := Rect2(fposmod(r.position.x, 32.0), fposmod(r.position.y, 32.0), 8, 8)

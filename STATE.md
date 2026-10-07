@@ -43,3 +43,10 @@
   précision, lance-grenades à gravité réduite, katana = `kind: blade`), grenades à main (G, 2 par vie),
   accessoires (`Arsenal.ATTACHMENTS`, `Arsenal.compose`), déblocages persistants et armurerie au titre (`game/unlocks.gd`).
   Archétypes : Tireur → précision, Acrobate → mitraillette, Fou → lance-grenades.
+- V1.3 (07/10) : butin et inventaire (`fighters/inventory.gd`, `weapons/loot.gd`, `hud/inventory_screen.gd`),
+  3 cartes (`arena/maps.gd` : plateformes / toits au-dessus du vide (`void_y`, mort par chute) / mine en roche creusée),
+  nouveaux types de cellules ROCK/BRICK, surface par colonne pour l'herbe, météo (`fx/weather.gd`) + vent (`Juice.wind`),
+  objets d'arène (`arena/props/` : barils explosifs en chaîne, lampes suspendues), effondrement (`Terrain._settle`,
+  `arena/falling_chunk.gd` ; montants de plateformes = appuis). Apparitions dans `game/spawner.gd`.
+  Perf : dessins regroupés (multiline), fantômes allégés, rien n'est redessiné hors écran → 1080p ~195 i/s, 1 % bas 67-88.
+  Outil : `core/prof.gd` (RIXE_PROF=1) pour profiler une section (Prof.begin/end) avec tools/perf.sh.

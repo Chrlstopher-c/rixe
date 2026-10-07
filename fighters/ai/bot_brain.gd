@@ -151,6 +151,9 @@ func _combat(f: Node2D, delta: float, it: Dictionary) -> void:
 		return
 	var chest := _chest(target)
 	var tp := chest if randf() > p.accuracy * 0.25 else chest + Vector2(0, -7)
+	var boom := _barrel_near(f, target)
+	if boom != Vector2.INF:
+		tp = boom
 	aim.track(tp, target.velocity, delta)
 	var from_aim: Vector2 = f.global_position + Vector2(0, -27)
 	var comp: float = f.gun.climb * f.facing * p.accuracy
@@ -246,6 +249,24 @@ func _wanted_loot(f: Node2D) -> Node2D:
 		if l.kind == want and d < 150.0 + 250.0 * p.greed and closer:
 			best = l
 	return best
+
+
+## Baril à côté de la cible et visible : les bots agressifs le visent plutôt que la cible.
+func _barrel_near(f: Node2D, t: Node2D) -> Vector2:
+	if p.aggression < 0.5:
+		return Vector2.INF
+	for b in f.get_tree().get_nodes_in_group("barrels"):
+		var at: Vector2 = b.global_position + Vector2(0, -7)
+		if at.distance_to(t.global_position) < 45.0 and at.distance_to(f.global_position) > 90.0 and _sees_body(f, at, b):
+			return at
+	return Vector2.INF
+
+
+func _sees_body(f: Node2D, to: Vector2, body: Object) -> bool:
+	var space: PhysicsDirectSpaceState2D = f.get_world_2d().direct_space_state
+	var from: Vector2 = f.global_position + Vector2(0, -27)
+	var hit := space.intersect_ray(PhysicsRayQueryParameters2D.create(from, to, Juice.MASK_WORLD | Juice.MASK_PLATFORMS))
+	return hit.is_empty() or hit.collider == body
 
 
 func _sees(f: Node2D, to: Vector2) -> bool:

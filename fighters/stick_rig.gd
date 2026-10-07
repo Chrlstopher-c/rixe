@@ -10,6 +10,8 @@ const FORE := 5.5
 const SCARF_N := 7
 const SCARF_SEG := 2.6
 const GHOST_LIFE := 0.16
+const GHOST_PAIRS := [["hip", "shoulder"], ["hip", "knee0"], ["knee0", "foot0"], ["hip", "knee1"], ["knee1", "foot1"],
+	["shoulder", "elbow1"], ["elbow1", "hand1"]]
 
 var fighter: Fighter
 var j := {}
@@ -27,6 +29,7 @@ var _crouch_v := 0.0
 var _scarf: Array[Vector2] = []
 var _scarf_prev: Array[Vector2] = []
 var _ghosts: Array[Dictionary] = []
+var _ghost_tick := false
 
 
 static func ik(a: Vector2, b: Vector2, l1: float, l2: float, bend: float) -> Vector2:
@@ -58,7 +61,8 @@ func _process(delta: float) -> void:
 	_pose_arms()
 	_update_scarf(delta)
 	_update_ghosts(delta)
-	queue_redraw()
+	if Juice.on_screen(global_position, 80.0) or not Juice.camera:
+		queue_redraw()
 
 
 func _springs(delta: float) -> void:
@@ -170,7 +174,7 @@ func _update_scarf(delta: float) -> void:
 		var p := _scarf[i]
 		var vel := (p - _scarf_prev[i]) * 0.94
 		_scarf_prev[i] = p
-		var wind := Vector2(-fighter.facing * 60.0 + sin(_t * 14.0 + i) * 40.0, 140.0)
+		var wind := Vector2(-fighter.facing * 60.0 + Juice.wind * 1.5 + sin(_t * 14.0 + i) * 40.0, 140.0)
 		_scarf[i] = p + vel + wind * dt * dt
 	for it in 3:
 		for i in range(1, SCARF_N):
@@ -178,12 +182,18 @@ func _update_scarf(delta: float) -> void:
 			_scarf[i] = _scarf[i - 1] + d.limit_length(SCARF_SEG)
 
 
+## Traînée fantôme : une silhouette mémorisée toutes les 2 images (6 au plus), stockée en coordonnées du monde.
 func _update_ghosts(delta: float) -> void:
 	for g in _ghosts:
 		g.age += delta
 	_ghosts = _ghosts.filter(func(g: Dictionary) -> bool: return g.age < GHOST_LIFE)
-	if fighter.dash_t > 0.0 or fighter.velocity.length() > 320.0:
-		_ghosts.append({"pts": global_joints(), "age": 0.0})
+	_ghost_tick = not _ghost_tick
+	if _ghost_tick and _ghosts.size() < 6 and (fighter.dash_t > 0.0 or fighter.velocity.length() > 320.0):
+		var pts := PackedVector2Array()
+		for pair in GHOST_PAIRS:
+			pts.append(to_global(j[pair[0]]))
+			pts.append(to_global(j[pair[1]]))
+		_ghosts.append({"pts": pts, "head": to_global(j.head), "age": 0.0})
 
 
 func _draw() -> void:
@@ -197,7 +207,7 @@ func _draw() -> void:
 	var bf := 1 if fighter.facing > 0 else 0
 	_outline()
 	_part_limb("leg%d" % bf, back, 2.2)
-	_seg(j.hip, j.shoulder, c, 2.8)
+	draw_line(j.hip, j.shoulder, c, 2.8, Juice.hd)
 	_part_limb("arm0", back, 2.0)
 	if has("arm0") or has("arm1"):
 		_draw_gun()
@@ -249,21 +259,22 @@ func _draw_stumps() -> void:
 		draw_circle(root, 1.6, Effects.BLOOD * 1.3, true, -1.0, Juice.hd)
 
 
+## Contour de couleur : un seul tracé multiple (draw_multiline) pour tout le squelette.
 func _outline() -> void:
 	var o := Color(fighter.team_color * 0.7, 1.0)
-	draw_line(j.hip, j.shoulder, o, 3.3, Juice.hd)
+	var pts := PackedVector2Array([j.hip, j.shoulder])
 	for part in ["arm0", "arm1", "leg0", "leg1"]:
 		if has(part):
 			var js: Array = BodyParts.PARTS[part].joints
-			draw_line(j[js[0]], j[js[1]], o, 3.3, Juice.hd)
-			draw_line(j[js[1]], j[js[2]], o, 3.3, Juice.hd)
+			pts.append_array([j[js[0]], j[js[1]], j[js[1]], j[js[2]]])
+	draw_multiline(pts, o, 3.3, Juice.hd)
 	if has("head"):
 		draw_circle(j.head, 4.4, o, true, -1.0, Juice.hd)
 
 
 func _limb(a: Vector2, b: Vector2, c: Vector2, col: Color, w: float) -> void:
-	_seg(a, b, col, w)
-	_seg(b, c, col, w)
+	draw_polyline(PackedVector2Array([a, b, c]), col, w, Juice.hd)
+	draw_circle(b, w * 0.5, col, true, -1.0, Juice.hd)
 
 
 func _seg(a: Vector2, b: Vector2, col: Color, w: float) -> void:
@@ -340,17 +351,21 @@ func _draw_blade(d: Dictionary) -> void:
 
 func _draw_scarf() -> void:
 	var col := fighter.team_color * 1.25
-	for i in range(1, _scarf.size()):
-		var w := lerpf(2.4, 0.7, float(i) / SCARF_N)
-		draw_line(to_local(_scarf[i - 1]), to_local(_scarf[i]), col, w, Juice.hd)
+	var pts := PackedVector2Array()
+	for p in _scarf:
+		pts.append(to_local(p))
+	var half := pts.size() / 2 + 1
+	draw_polyline(pts.slice(0, half), col, 2.0, Juice.hd)
+	draw_polyline(pts.slice(half - 1), col, 1.1, Juice.hd)
 
 
 func _draw_ghosts() -> void:
+	if _ghosts.is_empty():
+		return
+	draw_set_transform_matrix(global_transform.affine_inverse())
 	for g in _ghosts:
 		var k: float = 1.0 - g.age / GHOST_LIFE
 		var col := Color(fighter.team_color * 2.0, k * 0.4)
-		var p: Dictionary = g.pts
-		for pair in [["hip", "shoulder"], ["hip", "knee0"], ["knee0", "foot0"], ["hip", "knee1"], ["knee1", "foot1"],
-				["shoulder", "elbow1"], ["elbow1", "hand1"]]:
-			draw_line(to_local(p[pair[0]]), to_local(p[pair[1]]), col, 2.0)
-		draw_circle(to_local(p.head), 3.4, col)
+		draw_multiline(g.pts, col, 2.0)
+		draw_circle(g.head, 3.4, col)
+	draw_set_transform(Vector2.ZERO)

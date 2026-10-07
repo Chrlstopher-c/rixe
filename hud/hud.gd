@@ -146,18 +146,7 @@ func _draw_ammo() -> void:
 	if not g.infinite():
 		_canvas.draw_string(_font, Vector2(x + 64, size.y - 16), "/ %d" % g.reserve, HORIZONTAL_ALIGNMENT_LEFT, -1, 11,
 			Color(1, 0.9, 0.95, 0.7))
-	for i in player.grenades:
-		_canvas.draw_circle(Vector2(x - 8 - i * 9, size.y - 22), 3.0, Color(0.5, 0.9, 0.4))
-	for i in player.inventory.medkits:
-		var c := Vector2(x - 12 - i * 11, size.y - 34)
-		_canvas.draw_rect(Rect2(c - Vector2(4, 4), Vector2(8, 8)), Color(0.9, 0.9, 0.9))
-		_canvas.draw_rect(Rect2(c - Vector2(0.8, 3), Vector2(1.6, 6)), Color(2.0, 0.3, 0.3))
-		_canvas.draw_rect(Rect2(c - Vector2(3, 0.8), Vector2(6, 1.6)), Color(2.0, 0.3, 0.3))
-	var spare: Gun = player.inventory.other()
-	if spare:
-		var line := "%d · %s" % [2 - player.inventory.active, String(spare.def.name).to_upper()]
-		_canvas.draw_string(_font, Vector2(x, size.y - 60), line, HORIZONTAL_ALIGNMENT_RIGHT, 124, 7,
-			Color(1, 0.9, 0.95, 0.45))
+	_draw_kit(x, size)
 	_canvas.draw_string(_font, Vector2(x, size.y - 40), String(g.def.name).to_upper(), HORIZONTAL_ALIGNMENT_RIGHT,
 		124, 8, Color(1, 0.9, 0.95, 0.6))
 	var names := g.attachments.values().map(func(a: String) -> String: return Arsenal.ATTACHMENTS[a].name)
@@ -172,6 +161,23 @@ func _draw_ammo() -> void:
 		var msg := "R : RECHARGER" if g.reserve > 0 else "PLUS DE MUNITIONS · E : COUP DE PIED"
 		_canvas.draw_string(_font, Vector2(0, size.y * 0.5 + 40), msg, HORIZONTAL_ALIGNMENT_CENTER, size.x, 10,
 			Color(2.0, 0.6, 0.6, 0.6 + 0.4 * sin(Time.get_ticks_msec() * 0.01)))
+
+
+## Grenades, trousses de soin et arme de rechange, à gauche du compteur de munitions.
+func _draw_kit(x: float, size: Vector2) -> void:
+	for i in player.grenades:
+		_canvas.draw_circle(Vector2(x - 8 - i * 9, size.y - 22), 3.0, Color(0.5, 0.9, 0.4))
+	for i in player.inventory.medkits:
+		var c := Vector2(x - 12 - i * 11, size.y - 34)
+		_canvas.draw_rect(Rect2(c - Vector2(4, 4), Vector2(8, 8)), Color(0.9, 0.9, 0.9))
+		_canvas.draw_rect(Rect2(c - Vector2(0.8, 3), Vector2(1.6, 6)), Color(2.0, 0.3, 0.3))
+		_canvas.draw_rect(Rect2(c - Vector2(3, 0.8), Vector2(6, 1.6)), Color(2.0, 0.3, 0.3))
+	var spare: Gun = player.inventory.other()
+	if spare:
+		var line := "%d · %s" % [2 - player.inventory.active, String(spare.def.name).to_upper()]
+		_canvas.draw_string(_font, Vector2(x, size.y - 60), line, HORIZONTAL_ALIGNMENT_RIGHT, 124, 7,
+			Color(1, 0.9, 0.95, 0.45))
+
 
 
 func _draw_toasts() -> void:

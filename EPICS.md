@@ -81,9 +81,9 @@ Chaque story : intention — VERIFY exécutable. Tests de jeu = `godot --headles
 - [x] E17.S3 — écran d'inventaire (Tab, jeu figé) : monter/ranger les accessoires à la souris — VERIFY: `--tests=inventory_screen` + capture relue
 
 ## E18 — Cartes, météo, objets d'arène
-- [ ] E18.S1 — 3 types de cartes : Plateformes (actuelle), Toits (immeubles au-dessus du vide, chute mortelle), Mine (roche épaisse creusée de galeries, tout se creuse) — VERIFY: `--tests=maps`
-- [ ] E18.S2 — météo : pluie (Toits), neige (Acier), braises (Rouille) ; vent qui pousse fumée, écharpes et grenades — VERIFY: `--tests=weather`
-- [ ] E18.S3 — objets d'arène : barils explosifs, lampes suspendues qui tombent et éclairent — VERIFY: `--tests=props`
+- [x] E18.S1 — 3 types de cartes : Plateformes (actuelle), Toits (immeubles au-dessus du vide, chute mortelle), Mine (roche épaisse creusée de galeries, tout se creuse) — VERIFY: `--tests=maps`
+- [x] E18.S2 — météo : pluie (Toits), neige (Acier), braises (Rouille) ; vent qui pousse fumée, écharpes et grenades — VERIFY: `--tests=weather`
+- [x] E18.S3 — objets d'arène : barils explosifs, lampes suspendues qui tombent et éclairent — VERIFY: `--tests=props`
 
 ## E19 — Effondrement
-- [ ] E19.S1 — les morceaux de décor qui ne tiennent plus à rien tombent, écrasent et blessent — VERIFY: `--tests=collapse`
+- [x] E19.S1 — les morceaux de décor qui ne tiennent plus à rien tombent, écrasent et blessent — VERIFY: `--tests=collapse`

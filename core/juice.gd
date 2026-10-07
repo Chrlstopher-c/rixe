@@ -15,6 +15,9 @@ var arena: Node2D
 var world: Node2D
 var camera: Camera2D
 var hd := true
+## Vent de la manche (px/s, positif vers la droite) : pluie, neige, fumée, écharpes, grenades.
+var wind := 0.0
+var weather: Node2D
 ## Interrupteurs de profilage (--off=…), jamais utilisés en jeu normal.
 var off: PackedStringArray = []
 var trauma := 0.0
@@ -77,11 +80,11 @@ func notify(text: String) -> void:
 	notified.emit(text)
 
 
-func on_screen(p: Vector2) -> bool:
+func on_screen(p: Vector2, margin: float = 0.0) -> bool:
 	if not camera:
 		return false
 	var half := camera.get_viewport_rect().size * 0.5 / camera.zoom
-	return Rect2(camera.get_screen_center_position() - half, half * 2.0).has_point(p)
+	return Rect2(camera.get_screen_center_position() - half, half * 2.0).grow(margin).has_point(p)
 
 
 func shockwave(pos: Vector2, strength: float = 1.0) -> void:
