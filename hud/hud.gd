@@ -150,6 +150,9 @@ func info_for(me: String) -> String:
 	if mode == "arcade" or match_state == null:
 		var k := kills if me == "Toi" or match_state == null else match_state.kills_of(me)
 		return "MANCHE %d   ·   BOTS %d   ·   ÉLIMINATIONS %d   ·   RECORD %d" % [round_no, bots_left, k, best]
+	if not match_state.team_totals().is_empty():
+		var t: String = match_state.stats.get(me, {}).get("team", "")
+		return "ÉQUIPE %s   ·   %s" % [t.to_upper(), match_state.teams_line()]
 	var rows := match_state.ranking()
 	var place := 1
 	for i in rows.size():

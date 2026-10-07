@@ -4,6 +4,8 @@ extends RefCounted
 ## reçoit interface, bannières, kill cam et écran de fin ; l'hôte envoie la fin de partie.
 
 var s: Node
+## Réglages de la partie en préparation, tels que l'hôte les a fixés (affichés dans le salon de chacun).
+var cfg := GameConfig.new()
 
 
 func _init(session: Node) -> void:
@@ -15,9 +17,12 @@ func on_round(msg: Dictionary) -> void:
 	s.guest_spot = msg.spots.get(s.my_id(), s.main.spawner.far_spawn()) if msg.has("spots") else Vector2(800, -60)
 	s.main.seed_base = int(msg.seed)
 	s.main.forced_map = String(msg.map)
+	var cfg := GameConfig.from_dict(msg.get("cfg", {}))
 	if not s.started or s.main.game_mode != msg.mode or int(msg.round) == 1:
-		s.main._on_start(String(msg.mode), int(msg.opt), int(msg.round))
+		s.main._on_start(String(msg.mode), int(msg.opt), int(msg.round), cfg)
 	else:
+		s.main.config = cfg
+		s.main.spawner.config = cfg
 		s.main.round_no = int(msg.round)
 		s.main._start_round()
 	check_map(int(msg.get("h", 0)))
@@ -35,8 +40,26 @@ func check_map(expected: int) -> void:
 	s.send_event({"t": "need_map"})
 
 
+## Hôte : nouveaux réglages, envoyés à tous les invités.
+func share(c: GameConfig) -> void:
+	cfg = c
+	s.send_event({"t": "cfg", "cfg": c.to_dict()})
+
+
+## Invité : demande à rejoindre une équipe (l'hôte tranche et renvoie les réglages).
+func ask_team(team: int) -> void:
+	cfg.team_of[s.my_id()] = team
+	s.send_event({"t": "team", "team": team})
+
+
 func on_message(t: String, msg: Dictionary) -> void:
 	match t:
+		"cfg":
+			cfg = GameConfig.from_dict(msg.cfg)
+		"team":
+			if s.is_host():
+				cfg.team_of[NetSession.slot_id(int(msg.get("_from", 1)))] = int(msg.team)
+				share(cfg)
 		"hud":
 			s.main._hud.remote_info = msg.info
 			s.main._hud.respawn_t = msg.respawn

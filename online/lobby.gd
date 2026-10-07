@@ -1,21 +1,21 @@
 extends CanvasLayer
-## Salon en ligne : héberger (code de 4 lettres à donner à l'autre joueur, choix du mode, lancer) ou rejoindre
-## (taper le code). Clavier (ZQSD/flèches, Entrée, lettres) ou souris, dans le style du menu principal.
+## Entrée du jeu en ligne : héberger (nombre de joueurs maximum, puis code de 4 lettres à donner aux autres) ou
+## rejoindre (taper le code). Une fois connecté, la partie se prépare dans l'écran de partie personnalisée.
 
 signal back_requested
 
 const ACCENT := Color(0.3, 0.9, 1.0)
 const ERROR := Color(2.0, 0.55, 0.5)
-const MODES := ["arcade", "chrono", "objectif"]
 
 var main: Node
+## Écran de partie personnalisée, ouvert dès que le salon est créé ou rejoint.
+var custom: CanvasLayer
+var max_players := 2
 var screen := "home"
 var code := ""
 var status := ""
 ## Le message d'état est une erreur (affiché en rouge).
 var failed := false
-var game_mode := "arcade"
-var options := {"arcade": 0, "chrono": Modes.default_option("chrono"), "objectif": Modes.default_option("objectif")}
 var _sel := 0
 var _t := 0.0
 var _canvas := Control.new()
@@ -52,31 +52,21 @@ func _go(s: String, msg: String = "", error: bool = false) -> void:
 
 func _ids() -> Array[String]:
 	match screen:
-		"host":
-			var ids: Array[String] = ["mode"]
-			if Modes.has_option(game_mode):
-				ids.append("option")
-			ids.append_array(["launch", "cancel"])
-			return ids
 		"join":
 			return ["code", "join", "back"]
 		"joined":
 			return ["cancel"]
-	return ["host", "join_screen", "back"]
+	return ["max", "host", "join_screen", "back"]
 
 
 func _text(id: String) -> String:
 	match id:
+		"max":
+			return "JOUEURS MAX  ‹ %d ›" % max_players
 		"host":
 			return "HÉBERGER UNE PARTIE"
 		"join_screen":
 			return "REJOINDRE AVEC UN CODE"
-		"mode":
-			return "MODE  ‹ %s ›" % Modes.label(game_mode)
-		"option":
-			return "‹ %s ›" % Modes.option_text(game_mode, options[game_mode])
-		"launch":
-			return "LANCER" if _session and _session.connected() else "LANCER  (en attente d'un joueur)"
 		"code":
 			var shown := PackedStringArray()
 			for i in 4:
@@ -93,6 +83,20 @@ func _process(delta: float) -> void:
 	_t += delta
 	if visible:
 		_canvas.queue_redraw()
+		if screen == "joined" and _session and is_instance_valid(_session) and _session.connected():
+			_to_room()
+
+
+## Salon créé ou rejoint : la préparation de la partie continue dans l'écran de partie personnalisée.
+func _to_room() -> void:
+	visible = false
+	custom.open_online(_session, code)
+
+
+## Retour depuis le salon (QUITTER LE SALON) : la session est déjà fermée.
+func back_from_room() -> void:
+	_leave()
+	open()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -138,12 +142,8 @@ func _type(e: InputEventKey) -> bool:
 
 
 func _adjust(id: String, step: int) -> void:
-	if id == "mode":
-		game_mode = MODES[posmod(MODES.find(game_mode) + step, MODES.size())]
-		_sel = mini(_sel, _ids().size() - 1)
-	elif id == "option":
-		var count: int = (Modes.ALL[game_mode].options as Array).size()
-		options[game_mode] = posmod(options[game_mode] + step, count)
+	if id == "max":
+		max_players = posmod(max_players - 2 + step, 3) + 2
 
 
 func activate(i: int) -> void:
@@ -154,9 +154,6 @@ func activate(i: int) -> void:
 		"join_screen":
 			code = ""
 			_go("join")
-		"launch":
-			if _session and _session.connected():
-				main._on_start(game_mode, options[game_mode])
 		"join", "code":
 			if code.length() == 4:
 				join(code)
@@ -172,8 +169,8 @@ func host() -> void:
 	code = ""
 	for i in 4:
 		code += char(65 + randi() % 26)
-	_start("host", "Donne ce code à l'autre joueur")
-	_go("host", "Donne ce code à l'autre joueur")
+	_start("host", "Donne ce code aux autres joueurs")
+	_to_room()
 
 
 func join(c: String) -> void:
@@ -185,22 +182,14 @@ func join(c: String) -> void:
 func _start(role: String, msg: String) -> void:
 	_leave()
 	status = msg
-	_session = NetSession.begin(main, role, code)
+	_session = NetSession.begin(main, role, code, max_players)
 	_session.link.joined.connect(_on_joined)
-	_session.link.peer_changed.connect(_on_peer)
 	_session.ended.connect(_on_ended)
 
 
-func _on_joined(peer_here: bool) -> void:
+func _on_joined(_peer_here: bool) -> void:
 	if screen == "joined":
-		status = "Connecté · l'hôte choisit le mode et lance la partie"
-	elif screen == "host" and peer_here:
-		status = "Un joueur est là : lance quand tu veux"
-
-
-func _on_peer(here: bool) -> void:
-	if screen == "host":
-		status = "Un joueur est là : lance quand tu veux" if here else "Le joueur est parti · en attente"
+		status = "Connecté · présentation à l'hôte…"
 
 
 ## Lien perdu (code inconnu, relais injoignable, autre joueur parti) : retour au salon ou au menu, avec la raison.
@@ -225,8 +214,7 @@ func _cancel() -> void:
 
 func _leave() -> void:
 	if _session and is_instance_valid(_session):
-		for c in [[_session.ended, _on_ended], [_session.link.joined, _on_joined],
-				[_session.link.peer_changed, _on_peer]]:
+		for c in [[_session.ended, _on_ended], [_session.link.joined, _on_joined]]:
 			if c[0].is_connected(c[1]):
 				c[0].disconnect(c[1])
 		_session.leave()

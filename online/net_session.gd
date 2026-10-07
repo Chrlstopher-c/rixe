@@ -199,7 +199,7 @@ func round_started() -> void:
 
 func _round_msg(h: int) -> Dictionary:
 	return {"t": "round", "seed": main.seed_base, "round": main.round_no, "mode": main.game_mode,
-		"opt": main.game_option, "map": main.forced_map, "spots": guest_spots, "h": h}
+		"opt": main.game_option, "map": main.forced_map, "spots": guest_spots, "h": h, "cfg": main.config.to_dict()}
 
 
 ## Hôte : places d'apparition des invités, prises après la sienne ; renvoie les index utilisés.
@@ -229,6 +229,7 @@ func respawn(entry: Dictionary, pos: Vector2) -> bool:
 func spawn_guest(pos: Vector2) -> Fighter:
 	var f: Fighter = main._spawn_player(pos, PlayerBrain.new())
 	f.net_id = my_id()
+	main.spawner.join_team(f, my_id(), link.slot)
 	if main.game_mode == "arcade":
 		f.team = "joueurs"
 	return f
@@ -324,6 +325,8 @@ func _on_hi(msg: Dictionary) -> void:
 		ok_slots.append(sl)
 		if is_host() and started:
 			_late_join(slot_id(sl))
+		elif is_host():
+			match_sync.share(match_sync.cfg)
 
 
 ## Hôte : un invité arrive en cours de partie ; il reçoit la manche, sa place et les objets au sol.

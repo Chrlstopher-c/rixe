@@ -139,5 +139,5 @@ autoritaire sur son propre combattant ; « qui provoque l'effet calcule ses dég
 - [x] E30.S2 — session à N invités (J2, J3, J4), marionnettes de chacun chez chacun — VERIFY: `tools/online_test.sh` à 3 et 4 jeux
 
 ## E31 — Parties personnalisées
-- [ ] E31.S1 — réglages de partie : mode, durée/objectif, carte, équipes, nombre et niveau des bots, armes, joueurs max — VERIFY: tests
-- [ ] E31.S2 — salon en ligne clair : joueurs (pseudos, équipes), réglages de l'hôte visibles, choix de son équipe — VERIFY: tests + capture
+- [x] E31.S1 — réglages de partie : mode, durée/objectif, carte, équipes, nombre et niveau des bots, armes, joueurs max — VERIFY: tests
+- [x] E31.S2 — salon en ligne clair : joueurs (pseudos, équipes), réglages de l'hôte visibles, choix de son équipe — VERIFY: tests + capture

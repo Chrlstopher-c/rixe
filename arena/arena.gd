@@ -160,11 +160,14 @@ func _exit_rect(r: Rect2, p: Vector2) -> Vector2:
 	return Vector2(r.end.x + 0.01, p.y)
 
 
+## n points d'apparition répartis sur la largeur ; une tranche sans sol se rabat sur n'importe où ailleurs.
 func spawn_points(n: int, rng: RandomNumberGenerator) -> Array[Vector2]:
 	var out: Array[Vector2] = []
 	for i in n:
-		for attempt in 12:
+		for attempt in 40:
 			var x := lerpf(120.0, W - 120.0, (i + 0.5) / n) + rng.randf_range(-60, 60)
+			if attempt >= 12:
+				x = rng.randf_range(80.0, W - 80.0)
 			var spots := stand_spots(x)
 			if not spots.is_empty():
 				out.append(Vector2(x, spots[rng.randi_range(0, spots.size() - 1)] - 6.0))

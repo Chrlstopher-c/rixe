@@ -10,6 +10,7 @@ var attract := false
 var _skip_title := false
 var _menu: CanvasLayer
 var _lobby: CanvasLayer
+var _custom: CanvasLayer
 var _backdrop: CanvasLayer
 var _volume := 0.8
 var score := RunScore.new()
@@ -20,6 +21,8 @@ var match_state := MatchState.new("arcade")
 var live_rules := false
 ## Carte imposée (tests, --map=…) ; vide = au hasard à chaque manche.
 var forced_map := ""
+## Réglages de la partie en cours (personnalisée ou non).
+var config := GameConfig.new()
 var _scoreboard: CanvasLayer
 var _inventory: CanvasLayer
 var spawner: Spawner
@@ -78,7 +81,9 @@ func _child(parent: Node, node: Node) -> Node:
 func _start_round() -> void:
 	_clear_world()
 	_rng.seed = seed_base * 1000 + round_no
-	var map_type: String = forced_map if forced_map != "" else Maps.pick(_rng)
+	var map_type: String = forced_map if forced_map != "" else config.forced_map()
+	if map_type == "":
+		map_type = Maps.pick(_rng)
 	if game_mode == "survie" and not attract:
 		map_type = "survie"
 	Juice.arena.generate(_rng.seed, map_type)
@@ -129,6 +134,8 @@ func _clear_world() -> void:
 ## Joueur et bots sur des points d'apparition distincts ; renvoie le nombre de bots.
 func _populate() -> int:
 	var n := mini(2 + round_no, 6) if game_mode == "arcade" or attract else 5
+	if config.bots >= 0 and not attract:
+		n = mini(config.bots + (round_no - 1 if game_mode == "arcade" else 0), 8)
 	var guests: int = Juice.net.guest_ids().size() if Juice.net and Juice.net.is_host() and not attract else 0
 	var spots: Array = Juice.arena.spawn_points(n + 1 + guests, _rng)
 	var mine := _rng.randi_range(0, spots.size() - 1)
@@ -212,6 +219,8 @@ func _spawn_player(pos: Vector2, brain: RefCounted) -> Fighter:
 
 func _spawn_bot(pos: Vector2, name: String) -> Fighter:
 	var level := clampf(0.25 + round_no * 0.08, 0.25, 0.8) if game_mode == "arcade" else 0.45
+	if config.custom:
+		level = config.level_value()
 	return spawner.spawn_bot(pos, name, level)
 
 
@@ -309,10 +318,21 @@ func _net_guest() -> bool:
 	return Juice.net != null and not Juice.net.is_host() and not attract
 
 
-func _on_start(mode: String, option: int, first_round: int = 1) -> void:
+## Partie personnalisée : mêmes étapes que JOUER, avec les réglages choisis.
+func start_custom(cfg: GameConfig) -> void:
+	_on_start(cfg.mode, cfg.option, 1, cfg)
+
+
+func _on_start(mode: String, option: int, first_round: int = 1, cfg: GameConfig = null) -> void:
+	config = cfg if cfg else GameConfig.new()
+	config.mode = mode
+	config.option = option
+	spawner.config = config
 	_leave_survival()
 	if _lobby:
 		_lobby.close()
+	if _custom:
+		_custom.close()
 	var two: bool = _menu.players == 2 and mode != "survie" and Juice.net == null
 	if two and duo == null:
 		duo = Duo.new(self)
@@ -358,6 +378,10 @@ func _leave_survival() -> void:
 func _to_title() -> void:
 	if Juice.net:
 		Juice.net.leave()
+	if _custom:
+		_custom.close()
+	config = GameConfig.new()
+	spawner.config = config
 	_leave_survival()
 	if duo:
 		duo.leave()
@@ -394,7 +418,7 @@ func _replay() -> void:
 	if _net_guest():
 		Juice.notify("L'hôte relance la partie")
 		return
-	_on_start(game_mode, game_option)
+	_on_start(game_mode, game_option, 1, config)
 
 
 func _pause() -> void:

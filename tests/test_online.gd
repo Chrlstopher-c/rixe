@@ -11,7 +11,7 @@ func names() -> Array[String]:
 	return ["online_link_host", "online_link_guest", "online_match_host", "online_match_guest", "online_show_host",
 		"online_show_guest", "online_checks_host", "online_checks_guest", "online_version_host", "online_version_guest",
 		"online_exec_host", "online_exec_guest", "online_board_host", "online_board_guest",
-		"online_quad_host", "online_quad_guest"]
+		"online_quad_host", "online_quad_guest", "online_custom_host", "online_custom_guest"]
 
 
 func _link(t: Node, role: String) -> NetLink:
@@ -470,5 +470,50 @@ func test_online_quad_guest(t: Node) -> void:
 	t.check(round2, "invité %s : manche 2, de nouveau en jeu" % n)
 	await t.frames(60)
 	_say(s, "bye" + n)
+	await t.frames(30)
+	s.leave()
+
+
+# Partie personnalisée en ligne : réglages de l'hôte vus par l'invité, équipe choisie par l'invité, lancement.
+
+func test_online_custom_host(t: Node) -> void:
+	var main: Node = t.main
+	main.live_rules = true
+	var s := NetSession.begin(main, "host", OS.get_environment("RIXE_ROOM"))
+	var box := _inbox(s)
+	t.check(await t.until(func() -> bool: return s.connected(), 7200), "l'invité a rejoint")
+	var room: CanvasLayer = main._custom
+	room.open_online(s, "TEST")
+	room.adjust("mode", 1)
+	room.adjust("teams", 1)
+	room.adjust("bots", 3)
+	room.adjust("arms", 2)
+	await _heard(t, box, "team_asked", 1800)
+	var asked: bool = await t.until(func() -> bool: return int(room.cfg.team_of.get("J2", 0)) == 1, 600)
+	t.check(asked, "l'invité a choisi l'équipe rouge (%s)" % [room.cfg.team_of])
+	room.activate(room._ids().find("launch"))
+	var up: bool = await t.until(func() -> bool: return not _fighters(main, true, true).is_empty(), 1200)
+	t.check(up and _fighters(main, true, true)[0].team == "rouge", "l'invité joue dans l'équipe rouge")
+	t.check(main.config.mode == "chrono" and main.config.bots == 2, "partie lancée avec les réglages")
+	await _heard(t, box, "bye", 1200)
+	s.leave()
+
+
+func test_online_custom_guest(t: Node) -> void:
+	var main: Node = t.main
+	main.live_rules = true
+	var s := await _join(t, main)
+	var box := _inbox(s)
+	var got: bool = await t.until(func() -> bool: return s.match_sync.cfg.teams == 2 and s.match_sync.cfg.bots == 2, 1800)
+	t.check(got, "réglages de l'hôte reçus (%s)" % [s.match_sync.cfg.to_dict()])
+	t.check(s.match_sync.cfg.arms == "automatiques", "armes choisies par l'hôte visibles")
+	s.match_sync.ask_team(1)
+	_say(s, "team_asked")
+	var in_game: bool = await t.until(func() -> bool: return is_instance_valid(main.player) and s.started, 2400)
+	t.check(in_game and main.player.team == "rouge", "invité en jeu, équipe rouge (%s)" % [
+		main.player.team if in_game else "-"])
+	t.check(in_game and main.player.gun.id in ["rifle", "smg"], "arme autorisée par l'hôte")
+	await t.frames(60)
+	_say(s, "bye")
 	await t.frames(30)
 	s.leave()

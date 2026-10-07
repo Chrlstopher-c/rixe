@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["menu", "lobby", "crosshair", "nick"]
+	return ["menu", "lobby", "crosshair", "nick", "custom"]
 
 
 func _key(code: Key) -> void:
@@ -58,11 +58,12 @@ func test_lobby(t: Node) -> void:
 	t.check(lobby.visible and not main._menu.visible, "EN LIGNE ouvre le salon")
 	lobby.activate(lobby._ids().find("host"))
 	await t.frames(3)
-	t.check(lobby.screen == "host" and lobby.code.length() == 4 and Juice.net != null, "héberger : code de 4 lettres")
-	t.check(lobby._text("launch").contains("attente"), "lancer attend un 2e joueur")
+	var room: CanvasLayer = main._custom
+	t.check(room.visible and room.code.length() == 4 and Juice.net != null, "héberger : salon ouvert, code de 4 lettres")
+	t.check(room._text("launch").contains("attente"), "lancer attend un 2e joueur")
 	_key(KEY_ESCAPE)
 	await t.frames(3)
-	t.check(lobby.screen == "home" and Juice.net == null, "annuler ferme la partie en ligne")
+	t.check(lobby.visible and lobby.screen == "home" and Juice.net == null, "quitter le salon ferme la partie en ligne")
 	lobby.activate(lobby._ids().find("join_screen"))
 	_type("abz")
 	await t.frames(3)
@@ -144,3 +145,35 @@ func _type_key(code: Key, uni: int) -> void:
 		e.unicode = uni
 		e.pressed = pressed
 		Input.parse_input_event(e)
+
+
+func test_custom(t: Node) -> void:
+	var main: Node = t.main
+	main.attract = true
+	main._menu.show_title()
+	await t.frames(3)
+	main._menu.activate(main._menu._ids().find("custom"))
+	await t.frames(3)
+	var c: CanvasLayer = main._custom
+	t.check(c.visible and c.session == null, "PARTIE PERSONNALISÉE ouvre les réglages (local)")
+	c.adjust("mode", 1)
+	c.adjust("teams", 1)
+	c.adjust("bots", 3)
+	c.adjust("level", 2)
+	c.adjust("arms", 1)
+	c.adjust("map", 1)
+	t.check(c.cfg.mode == "chrono" and c.cfg.teams == 2 and c.cfg.bots == 2 and c.cfg.level == "expert",
+		"réglages modifiés (%s)" % [c.cfg.to_dict()])
+	t.check("my_team" in c._ids(), "en équipes : choix de son équipe")
+	c.adjust("my_team", 1)
+	c.activate(c._ids().find("launch"))
+	await t.frames(10)
+	var bots: Array = main._fighters.get_children().filter(func(f: Node) -> bool: return f is Fighter and not f.is_player)
+	t.check(main.config.custom and bots.size() == 2, "partie lancée avec 2 bots (%d)" % bots.size())
+	t.check(main.player.team == "bleu", "le joueur est dans l'équipe choisie (%s)" % main.player.team)
+	t.check(bots.all(func(b: Fighter) -> bool: return b.gun.id == "pistol" or b.gun.id == "pickaxe"),
+		"armes limitées aux pistolets")
+	t.check(main.player.gun.id == "pistol", "le joueur aussi (%s)" % main.player.gun.id)
+	t.check(Juice.arena.map == "plateformes", "carte choisie (%s)" % Juice.arena.map)
+	main._to_title()
+	main.attract = true

@@ -82,6 +82,16 @@ static func _screens(m: Node) -> void:
 	m._lobby.main = m
 	m.add_child(m._lobby)
 	m._menu.online_requested.connect(m._lobby.open)
+	m._custom = preload("res://hud/custom_game.gd").new()
+	m._custom.main = m
+	m.add_child(m._custom)
+	m._lobby.custom = m._custom
+	m._custom.back_requested.connect(func() -> void:
+		if m._custom.code != "":
+			m._lobby.back_from_room()
+		else:
+			m._menu.show_title())
+	m._menu.custom_requested.connect(m._custom.open_local)
 	m._lobby.back_requested.connect(m._menu.show_title)
 	var sight: CanvasLayer = preload("res://hud/crosshair_screen.gd").new()
 	m.add_child(sight)
@@ -90,7 +100,7 @@ static func _screens(m: Node) -> void:
 	sight.changed.connect(func(c: Dictionary) -> void: m._hud.crosshair = c)
 	m._menu.resume_requested.connect(m._resume)
 	m._menu.title_requested.connect(m._to_title)
-	m._menu.restart_requested.connect(func() -> void: m._on_start(m.game_mode, m.game_option))
+	m._menu.restart_requested.connect(m._replay)
 	m._menu.quit_requested.connect(func() -> void: m.get_tree().quit())
 	m._menu.hd_changed.connect(m._set_hd)
 	m._menu.volume_changed.connect(m._on_volume)

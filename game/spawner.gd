@@ -7,7 +7,11 @@ const PLAYER_COLOR := Color(0.3, 0.9, 1.0)
 
 var fighters: Node2D
 var rng: RandomNumberGenerator
+var config := GameConfig.new()
 var _bot_kinds := {}
+## Équipe de chaque bot (par nom), gardée d'une réapparition à l'autre.
+var _bot_teams := {}
+var _team_turn := 0
 
 
 func _init(root: Node2D, random: RandomNumberGenerator) -> void:
@@ -17,6 +21,8 @@ func _init(root: Node2D, random: RandomNumberGenerator) -> void:
 
 func clear_names() -> void:
 	_bot_kinds.clear()
+	_bot_teams.clear()
+	_team_turn = 0
 
 
 func spawn(nm: String, pos: Vector2, color: Color, brain: RefCounted, weapon: String, is_player: bool,
@@ -30,10 +36,23 @@ func spawn(nm: String, pos: Vector2, color: Color, brain: RefCounted, weapon: St
 
 ## Le joueur humain part avec l'équipement choisi à l'armurerie ; la démo garde le fusil.
 func spawn_player(pos: Vector2, brain: RefCounted) -> Fighter:
+	var f: Fighter
 	if brain is PlayerBrain:
 		var l := Unlocks.loadout()
-		return spawn("Toi", pos, PLAYER_COLOR, brain, l.weapon, true, l.attachments)
-	return spawn("Toi", pos, PLAYER_COLOR, brain, "rifle", true)
+		var w := config.pick_weapon(l.weapon, rng)
+		f = spawn("Toi", pos, PLAYER_COLOR, brain, w, true, l.attachments if w == l.weapon else {})
+	else:
+		f = spawn("Toi", pos, PLAYER_COLOR, brain, config.pick_weapon("rifle", rng), true)
+	join_team(f, "Toi", 0)
+	return f
+
+
+## Équipe d'un joueur humain selon les réglages (couleur d'équipe comprise) ; rien en chacun pour soi.
+func join_team(f: Fighter, id: String, order: int) -> void:
+	var t := config.team_index(id, order)
+	if t > 0:
+		f.team = GameConfig.team_name(t)
+		f.team_color = GameConfig.TEAM_COLORS[t]
 
 
 ## Bot d'un archétype (nom vide = au hasard) ; même nom et même caractère à chaque réapparition.
@@ -45,7 +64,15 @@ func spawn_bot(pos: Vector2, name: String, level: float) -> Fighter:
 		name = _unique_name(brain.p.label)
 		_bot_kinds[name] = kind
 	var w: String = brain.p.weapon if rng.randf() < 0.6 else Arsenal.ids()[rng.randi_range(0, Arsenal.ids().size() - 1)]
-	return spawn(name, pos, Personality.ARCHETYPES[kind].color, brain, w, false)
+	var f := spawn(name, pos, Personality.ARCHETYPES[kind].color, brain, config.pick_weapon(w, rng), false)
+	if config.teams > 0 and config.mode != "arcade":
+		if not _bot_teams.has(name):
+			_bot_teams[name] = _team_turn % config.teams + 1
+			_team_turn += 1
+		var t: int = _bot_teams[name]
+		f.team = GameConfig.team_name(t)
+		f.team_color = GameConfig.TEAM_COLORS[t]
+	return f
 
 
 func _unique_name(label: String) -> String:
@@ -67,7 +94,8 @@ func spawn_pickups() -> void:
 		var p := WeaponPickup.new()
 		Juice.world.add_child(p)
 		p.global_position = Vector2(r.get_center().x, r.position.y - 20.0)
-		p.setup(Arsenal.ids()[rng.randi_range(0, Arsenal.ids().size() - 1)], Vector2.ZERO)
+		var ids: Array = Arsenal.ids().filter(func(w: String) -> bool: return config.allows(w))
+		p.setup(ids[rng.randi_range(0, ids.size() - 1)], Vector2.ZERO)
 	var atts := Arsenal.ATTACHMENTS.keys()
 	for i in rng.randi_range(1, 2):
 		var r: Rect2 = plats[rng.randi_range(0, plats.size() - 1)]

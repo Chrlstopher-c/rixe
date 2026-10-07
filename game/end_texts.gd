@@ -8,6 +8,9 @@ static func make(mode: String, rows: Array, state: MatchState, round_no: int, ni
 		if rows[i].name == "Toi":
 			place = i + 1
 	var mine := state.kills_of("Toi")
+	if not state.team_totals().is_empty():
+		var title := "%s GAGNE" % state.winner if state.winner != "" else "FIN DE PARTIE"
+		return [title, state.teams_line()]
 	match mode:
 		"survie":
 			var label := Leaderboard.format_score("survie", nights)

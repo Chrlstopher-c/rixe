@@ -5,7 +5,7 @@ extends RefCounted
 func names() -> Array[String]:
 	return ["showcase", "showcase_end", "showcase_armory", "showcase_inventory", "showcase_survival", "showcase_duo",
 		"showcase_killcam", "showcase_execution",
-		"showcase_crosshair"]
+		"showcase_crosshair", "showcase_custom"]
 
 
 func _fire_at(t: Node, brain: ScriptBrain, target: Variant, joint: String, frames: int) -> void:
@@ -183,4 +183,24 @@ func test_showcase_crosshair(t: Node) -> void:
 		await t.frames(50)
 		sight.adjust(id, 1)
 	await t.frames(80)
+	t.check(true, "vitrine")
+
+
+func test_showcase_custom(t: Node) -> void:
+	var main: Node = t.main
+	main.attract = true
+	main._menu.show_title()
+	await t.frames(40)
+	main._menu.activate(main._menu._ids().find("custom"))
+	var c: CanvasLayer = main._custom
+	for id in ["mode", "teams", "my_team", "bots", "bots", "level", "arms", "map"]:
+		await t.frames(45)
+		c.adjust(id, 1)
+	await t.frames(60)
+	c.activate(c._ids().size() - 1)
+	await t.frames(20)
+	var s := NetSession.begin(main, "host", "SHOW", 4)
+	c.open_online(s, "KZRP")
+	await t.frames(240)
+	s.leave()
 	t.check(true, "vitrine")

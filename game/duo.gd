@@ -22,6 +22,7 @@ func populate(spots: Array, mine: int) -> int:
 	main.player = main._spawn_player(spots[mine], kb)
 	var other := (mine + 1) % spots.size()
 	player2 = main._spawn(P2_NAME, spots[other], P2_COLOR, PadBrain.new(0), "rifle", true)
+	main.spawner.join_team(player2, P2_NAME, 1)
 	if main.game_mode == "arcade":
 		main.player.team = "joueurs"
 		player2.team = "joueurs"

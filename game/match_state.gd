@@ -22,7 +22,8 @@ func _init(m: String = "arcade", opt: int = 0) -> void:
 
 func register(f: Node2D) -> void:
 	if not stats.has(f.display_name):
-		stats[f.display_name] = {"kills": 0, "deaths": 0, "color": f.team_color, "player": f.is_player}
+		stats[f.display_name] = {"kills": 0, "deaths": 0, "color": f.team_color, "player": f.is_player,
+			"team": f.team if f.team != "joueurs" else ""}
 
 
 ## Compte une mort ; met en file la réapparition si le mode en a.
@@ -31,11 +32,15 @@ func record_kill(victim: Node2D, killer: Node2D) -> void:
 		return
 	register(victim)
 	stats[victim.display_name].deaths += 1
-	if is_instance_valid(killer) and killer != victim:
+	var friendly: bool = is_instance_valid(killer) and killer.team != "" and killer.team == victim.team
+	if is_instance_valid(killer) and killer != victim and not friendly:
 		register(killer)
 		stats[killer.display_name].kills += 1
 		var target := Modes.option_value(mode, option)
-		if mode == "objectif" and stats[killer.display_name].kills >= target:
+		var team: String = stats[killer.display_name].get("team", "")
+		if mode == "objectif" and team != "" and team_kills(team) >= target:
+			_finish("ÉQUIPE " + team.to_upper())
+		elif mode == "objectif" and team == "" and stats[killer.display_name].kills >= target:
 			_finish(killer.display_name)
 	if Modes.respawns(mode) and not over:
 		_respawns.append({"name": victim.display_name, "color": victim.team_color, "player": victim.is_player,
@@ -76,6 +81,28 @@ func _finish(who: String) -> void:
 	over = true
 	winner = who
 	_respawns.clear()
+
+
+## Partie en équipes : éliminations cumulées par équipe (vide en chacun pour soi).
+func team_totals() -> Dictionary:
+	var out := {}
+	for n in stats:
+		var t: String = stats[n].get("team", "")
+		if t != "":
+			out[t] = int(out.get(t, 0)) + int(stats[n].kills)
+	return out
+
+
+func team_kills(team: String) -> int:
+	return int(team_totals().get(team, 0))
+
+
+## Ligne « ROUGE 12 · BLEU 9 », équipe en tête d'abord.
+func teams_line() -> String:
+	var tot := team_totals()
+	var names := tot.keys()
+	names.sort_custom(func(a: String, b: String) -> bool: return tot[a] > tot[b])
+	return "   ·   ".join(names.map(func(t: String) -> String: return "%s %d" % [t.to_upper(), tot[t]]))
 
 
 func kills_of(name: String) -> int:
