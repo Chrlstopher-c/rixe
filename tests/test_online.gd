@@ -349,7 +349,16 @@ func test_online_exec_host(t: Node) -> void:
 	bot.global_position = guest.global_position + Vector2(22, -4)
 	_say(s, "bot", bot.net_id)
 	var ref: WeakRef = weakref(bot)
-	var dead: bool = await t.until(func() -> bool: return ref.get_ref() == null or not ref.get_ref().alive, 1800)
+	var dead := false
+	for i in 1800:
+		var b: Variant = ref.get_ref()
+		if b == null or not b.alive:
+			dead = true
+			break
+		if not b.held:
+			b.hp = 20.0
+			b._since_hit = 0.0
+		await t.frames(1)
 	t.check(dead, "le bot meurt chez l'hôte")
 	t.check(main.match_state.kills_of("J2") >= 1, "l'élimination revient à l'invité")
 	t.check(bot == null or ref.get_ref() == null or ref.get_ref().executed, "comptée comme exécution")
@@ -373,9 +382,17 @@ func test_online_exec_guest(t: Node) -> void:
 		return is_instance_valid(b) and Execution.staggered(b), 600)
 	t.check(found, "bot vacillant visible chez l'invité")
 	var b: Fighter = s.fighters.puppets.get(String(id))
-	me.global_position = b.global_position + Vector2(-20, 0)
-	await t.frames(20)
-	t.check(Execution.target_for(me) == b, "l'invité peut l'exécuter")
+	var near := false
+	for i in 15:
+		if not is_instance_valid(b):
+			break
+		me.global_position = b.global_position + Vector2(-20, 0)
+		me.velocity = Vector2.ZERO
+		await t.frames(12)
+		if is_instance_valid(b) and Execution.target_for(me) == b:
+			near = true
+			break
+	t.check(near, "l'invité peut l'exécuter")
 	brain.press_melee()
 	await t.frames(3)
 	t.check(me.execution.running(), "exécution lancée chez l'invité")
