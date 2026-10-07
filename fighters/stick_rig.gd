@@ -182,7 +182,7 @@ func _draw() -> void:
 	_draw_ghosts()
 	if has("head"):
 		_draw_scarf()
-	var c := BODY if fighter.hit_flash <= 0.0 else Color(2.4, 2.4, 2.4)
+	var c := BODY if fighter.hit_flash <= 0.0 else BODY.lerp(Color(2.2, 2.0, 2.0), 0.55)
 	var back := c.lerp(Color(0.2, 0.13, 0.25), 0.35)
 	var bf := 1 if fighter.facing > 0 else 0
 	_outline()

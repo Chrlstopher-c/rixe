@@ -28,4 +28,4 @@ Chaque story : intention — VERIFY exécutable. Tests de jeu = `godot --headles
 - [x] E7.S1 — serveur MCP stdio (textures pixel/low poly/ciel/normal map → fichier PNG), test client de bout en bout, enregistré au niveau utilisateur — VERIFY: `pigment/tests/e2e_mcp.py` OK, chaque outil < 2 s
 
 ## E8 — Performance
-- [ ] E8.S1 — 60 i/s stables en 1080p à 6 combattants sur la tour — VERIFY: `tools/perf.sh` (moyenne ≥ 60, 1 % bas ≥ 50)
+- [x] E8.S1 — 60 i/s stables en 1080p à 6 combattants sur la tour — VERIFY: `tools/perf.sh` (moyenne ≥ 60, 1 % bas ≥ 50)

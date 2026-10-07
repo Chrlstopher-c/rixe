@@ -87,7 +87,7 @@ func _step(p: P, delta: float) -> bool:
 	var next := p.pos + p.vel * delta
 	if (p.kind == Kind.BLOOD or p.kind == Kind.SHELL) and Juice.arena.solid_at(next):
 		if p.kind == Kind.BLOOD:
-			Juice.stains.add(p.pos, p.size * randf_range(0.9, 1.8), p.color)
+			Juice.stains.add(p.pos, p.size * randf_range(0.6, 1.2), p.color)
 			return false
 		p.vel = Vector2(p.vel.x * 0.5, -absf(p.vel.y) * 0.35)
 		p.spin *= 0.5

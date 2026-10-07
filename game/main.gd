@@ -25,10 +25,10 @@ func _ready() -> void:
 	_parse_args()
 	_build()
 	Juice.fighter_killed.connect(_on_killed)
+	_set_hd(Juice.hd)
 	if _tests != "":
 		add_child(preload("res://tests/test_runner.gd").new(self, _tests))
 		return
-	_set_hd(Juice.hd)
 	_start_round()
 
 
@@ -141,6 +141,12 @@ func reset_for_test() -> void:
 			c.free()
 	Juice.fx.clear()
 	Juice.arena.generate_flat()
+
+
+func follow(f: Fighter) -> void:
+	_camera.target = f
+	_camera.snap_to(f.global_position + Vector2(0, -34))
+	_hud.player = f
 
 
 func spawn_test_fighter(pos: Vector2, brain: RefCounted, weapon: String = "rifle", is_player: bool = true) -> Fighter:

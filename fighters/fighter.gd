@@ -211,7 +211,7 @@ func take_hit(dmg: float, dir: Vector2, at: Vector2, from: Node2D, knock: float)
 	_since_hit = 0.0
 	hp -= res.dmg
 	velocity += dir * knock
-	hit_flash = 0.07
+	hit_flash = 0.045
 	recent_hit = 0.6
 	Effects.blood(at, dir, int(3 + res.dmg * 0.4))
 	Sfx.play("flesh", at, -3.0, 0.2)
