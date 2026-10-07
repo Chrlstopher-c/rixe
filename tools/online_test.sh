@@ -17,6 +17,7 @@ if [ -z "${RIXE_RELAY:-}" ]; then
   for _ in $(seq 1 120); do grep -q "Ready on" "$LOGS/relay.log" && break; sleep 0.5; done
   export RIXE_RELAY="ws://127.0.0.1:$PORT"
 fi
+timeout 180 godot --headless --path . --import > "$LOGS/import.log" 2>&1
 export RIXE_ROOM="$(tr -dc 'A-Z' < /dev/urandom | head -c 4)"
 export RIXE_REALTIME=1
 HOST_CMD=${RIXE_HOST_CMD:-godot --headless --path .}

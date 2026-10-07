@@ -25,6 +25,7 @@ var _inventory: CanvasLayer
 var spawner: Spawner
 var rules := RoundRules.new(self)
 var announcer: Announcer
+var world_board := WorldBoard.new()
 var director: SurvivalDirector
 var duo: Duo
 var _post: CanvasLayer

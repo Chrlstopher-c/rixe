@@ -149,7 +149,8 @@ func _trace_fire(delta: float, can_fire: bool) -> void:
 		return
 	_debug_t = 0.5
 	var pads := Input.get_connected_joypads().map(func(d: int) -> String: return Input.get_joy_name(d))
-	print("[tir] cerveau=%s detente=%s arme=%s chargeur=%d/%d cd=%.2f recharge=%.2f bras=%d pied=%s changement=%.2f manettes=%s" % [
+	var fmt := "[tir] cerveau=%s detente=%s arme=%s chargeur=%d/%d cd=%.2f recharge=%.2f bras=%d pied=%s"
+	print((fmt + " changement=%.2f manettes=%s") % [
 		brain.get_script().resource_path.get_file(), intent.fire, gun.id, gun.mag, gun.reserve, gun.cd, gun.reload_t,
 		body.arms_left(), melee.active(), inventory.switching, pads])
 

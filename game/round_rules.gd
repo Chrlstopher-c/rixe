@@ -135,6 +135,8 @@ func end_match() -> void:
 		value = float(director.state.nights_survived) if is_instance_valid(director) else 0.0
 	var counts: bool = not lower or m.match_state.winner == "Toi"
 	var rank := Leaderboard.submit(key, value, lower) if counts and (lower or value > 0.0) else -1
+	if counts and value > 0.0:
+		m.world_board.submit(key, value)
 	m.score.end_run(m.game_mode == "arcade")
 	m.score.reset()
 	m._hud.best = m.score.best

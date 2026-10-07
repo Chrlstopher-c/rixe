@@ -30,6 +30,9 @@ var _rects: Array[Rect2] = []
 var loadout := {"weapon": "rifle", "attachments": {}}
 ## Saisie du pseudo en cours (lettres, chiffres, - et _ ; Entrée ou Échap pour valider).
 var editing_nick := false
+var world_board: WorldBoard
+## Onglet du classement : local (cette machine) ou mondial (Worker).
+var world := false
 var _nick := ""
 
 
@@ -66,7 +69,7 @@ func _open(m: String) -> void:
 ## Identifiants des lignes du menu courant.
 func _ids() -> Array[String]:
 	if mode == "board":
-		return ["board_mode", "back"]
+		return ["board_mode", "board_scope", "back"]
 	if mode == "armory":
 		var ids: Array[String] = ["weapon"]
 		if Arsenal.accepts(loadout.weapon):
@@ -89,6 +92,8 @@ func _ids() -> Array[String]:
 
 func _text(id: String) -> String:
 	match id:
+		"board_scope":
+			return "TABLEAU  ‹ %s ›" % ("MONDIAL" if world else "LOCAL")
 		"nick":
 			if editing_nick:
 				return "PSEUDO  %s%s" % [_nick, "_" if int(_t * 2.0) % 2 == 0 else " "]
@@ -192,6 +197,10 @@ func _adjust(id: String, step: int) -> void:
 			var i := Modes.ORDER.find(game_mode)
 			game_mode = Modes.ORDER[posmod(i + step, Modes.ORDER.size())]
 			_sel = mini(_sel, _ids().size() - 1)
+			_refresh_world()
+		"board_scope":
+			world = not world
+			_refresh_world()
 		"option":
 			var count: int = (Modes.ALL[game_mode].options as Array).size()
 			options[game_mode] = posmod(options[game_mode] + step, count)
@@ -297,8 +306,16 @@ func _draw_menu() -> void:
 		Color(1, 0.9, 0.95, 0.55))
 
 
+func _refresh_world() -> void:
+	if world and world_board:
+		world_board.fetch(Modes.board_key(game_mode, options[game_mode]))
+
+
 func _draw_board(cx: float, y0: float) -> void:
 	var key := Modes.board_key(game_mode, options[game_mode])
+	if world:
+		_draw_world(key, y0)
+		return
 	var list := Leaderboard.entries(key)
 	var sub := Modes.option_text(game_mode, options[game_mode]) if Modes.has_option(game_mode) else "une seule vie"
 	_canvas.draw_string(_font, Vector2(0, y0), sub, HORIZONTAL_ALIGNMENT_CENTER, _canvas.size.x, 10,
@@ -311,6 +328,29 @@ func _draw_board(cx: float, y0: float) -> void:
 		var line := "%d.   %s   ·   %s" % [i + 1, Leaderboard.format_score(game_mode, e.score), e.date]
 		_canvas.draw_string(_font, Vector2(0, y0 + 24 + i * 16), line, HORIZONTAL_ALIGNMENT_CENTER, _canvas.size.x,
 			11, Color(ACCENT * 1.5) if i == 0 else Color(1, 0.92, 0.95, 0.8))
+
+
+## Top 10 mondial (pseudo, score, date) ; état de chargement ou d'erreur sinon.
+func _draw_world(key: String, y0: float) -> void:
+	var w := _canvas.size.x
+	var dim := Color(1, 0.9, 0.95, 0.5)
+	if world_board == null or not world_board.cache.has(key):
+		_canvas.draw_string(_font, Vector2(0, y0 + 26), "Chargement…", HORIZONTAL_ALIGNMENT_CENTER, w, 10, dim)
+		return
+	var list: Variant = world_board.cache[key]
+	if list == null:
+		_canvas.draw_string(_font, Vector2(0, y0 + 26), "Classement mondial injoignable", HORIZONTAL_ALIGNMENT_CENTER,
+			w, 10, Color(2.0, 0.55, 0.5))
+		return
+	if list.is_empty():
+		_canvas.draw_string(_font, Vector2(0, y0 + 26), "Aucun score mondial pour l'instant", HORIZONTAL_ALIGNMENT_CENTER,
+			w, 10, dim)
+	for i in mini(list.size(), 10):
+		var e: Dictionary = list[i]
+		var me: bool = e.name == Names.load_nick()
+		var line := "%d.   %s   ·   %s   ·   %s" % [i + 1, e.name, Leaderboard.format_score(game_mode, e.score), e.at]
+		_canvas.draw_string(_font, Vector2(0, y0 + 10 + i * 13), line, HORIZONTAL_ALIGNMENT_CENTER, w, 10,
+			Color(ACCENT * 1.8) if me else (Color(ACCENT * 1.4) if i == 0 else Color(1, 0.92, 0.95, 0.8)))
 
 
 func _draw_items(cx: float, y0: float) -> void:

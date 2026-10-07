@@ -10,7 +10,7 @@ var _round_hashes := []
 func names() -> Array[String]:
 	return ["online_link_host", "online_link_guest", "online_match_host", "online_match_guest", "online_show_host",
 		"online_show_guest", "online_checks_host", "online_checks_guest", "online_version_host", "online_version_guest",
-		"online_exec_host", "online_exec_guest"]
+		"online_exec_host", "online_exec_guest", "online_board_host", "online_board_guest"]
 
 
 func _link(t: Node, role: String) -> NetLink:
@@ -110,7 +110,8 @@ func test_online_match_host(t: Node) -> void:
 	t.check(puppet_up, "le combattant de l'invité apparaît chez l'hôte")
 	var guest_hash: Variant = await _heard(t, box, "hash")
 	t.check(guest_hash == born_hash, "même décor des deux côtés")
-	t.check(String(Names.others.get("J2", "")).begins_with("anon"), "pseudo de l'invité reçu (%s)" % Names.others.get("J2"))
+	t.check(String(Names.others.get("J2", "")).begins_with("anon"),
+		"pseudo de l'invité reçu (%s)" % Names.others.get("J2"))
 	var items := get_items(main)
 	_say(s, "items", items)
 	var p2: Fighter = _fighters(main, true, true)[0] if puppet_up else null
@@ -383,3 +384,27 @@ func test_online_exec_guest(t: Node) -> void:
 	_say(s, "bye")
 	await t.frames(30)
 	s.leave()
+
+
+# Classement mondial (Worker) : envoi d'un score sous le pseudo, relecture du top.
+
+func test_online_board_host(t: Node) -> void:
+	var wb: WorldBoard = t.main.world_board
+	wb.enabled = true
+	var board := "chrono_%d" % randi_range(100000, 999999)
+	wb.submit(board, 7.0)
+	var got: bool = await t.until(func() -> bool: return wb.cache.has(board), 1200)
+	var list: Variant = wb.cache.get(board)
+	t.check(got and list is Array and not list.is_empty(), "score envoyé puis relu (%s)" % [list])
+	t.check(got and list is Array and not list.is_empty() and list[0].name == Names.load_nick() and list[0].score == 7.0,
+		"en tête sous mon pseudo")
+	t.main._menu.world = true
+	t.main._menu.show_title()
+	t.main._menu._open("board")
+	await t.frames(5)
+	wb.enabled = false
+
+
+func test_online_board_guest(t: Node) -> void:
+	await t.frames(5)
+	t.check(true, "rien à faire côté invité")

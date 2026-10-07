@@ -131,8 +131,8 @@ autoritaire sur son propre combattant ; « qui provoque l'effet calcule ses dég
 - [x] E28.S1 — pseudo par défaut « anon » + nombre, modifiable au menu, utilisé partout (fil, en ligne, fins de partie, classements) — VERIFY: tests menu + online match
 
 ## E29 — Classement mondial
-- [ ] E29.S1 — Worker : envoi et lecture des meilleurs scores par mode, validation, limitation — VERIFY: `cd relay && pnpm test`
-- [ ] E29.S2 — jeu : envoi en fin de partie, onglet MONDIAL au classement — VERIFY: test contre relais local
+- [x] E29.S1 — Worker : envoi et lecture des meilleurs scores par mode, validation, limitation — VERIFY: `cd relay && pnpm test`
+- [x] E29.S2 — jeu : envoi en fin de partie, onglet MONDIAL au classement — VERIFY: test contre relais local
 
 ## E30 — En ligne à 4
 - [ ] E30.S1 — relais : salon jusqu'à 4 places (hôte + 3 invités), messages diffusés avec l'expéditeur — VERIFY: `cd relay && pnpm test`

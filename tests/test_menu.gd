@@ -105,7 +105,8 @@ func test_crosshair(t: Node) -> void:
 	t.check(sight.cfg.preset == "précis" and main._hud.crosshair.preset == "précis", "modèle suivant appliqué au jeu")
 	sight.adjust("length", 1)
 	var c := Crosshair.resolve(sight.cfg)
-	t.check(sight.cfg.preset == "perso" and c.length == 4.0 and c.color == "vert", "réglage touché : viseur perso (%s)" % [c])
+	t.check(sight.cfg.preset == "perso" and c.length == 4.0 and c.color == "vert",
+		"réglage touché : viseur perso (%s)" % [c])
 	sight.adjust("shape", 1)
 	sight.adjust("color", 1)
 	sight.adjust("dot", 1)
@@ -130,7 +131,8 @@ func test_nick(t: Node) -> void:
 	_type("Zorg_42!")
 	_type_key(KEY_ENTER, 0)
 	await t.frames(3)
-	t.check(Names.nick == "Zorg_42" and not main._menu.editing_nick, "pseudo modifié, caractères interdits retirés (%s)" % Names.nick)
+	t.check(Names.nick == "Zorg_42" and not main._menu.editing_nick,
+		"pseudo modifié, caractères interdits retirés (%s)" % Names.nick)
 	t.check(Names.label("Toi") == "Zorg_42", "le joueur s'affiche sous son pseudo")
 	Names.nick = n0
 

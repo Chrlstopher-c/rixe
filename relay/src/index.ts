@@ -1,11 +1,15 @@
 // Relais Rixe : un salon (Durable Object) par code de 4 lettres, deux places (hôte, invité).
 // Les messages binaires d'un joueur partent tels quels chez l'autre ; le relais ne lit jamais le jeu.
 import { DurableObject } from "cloudflare:workers";
+import { Scores } from "./scores";
+
+export { Scores };
 
 type Role = "host" | "guest";
 
 interface Env {
   ROOMS: DurableObjectNamespace<Room>;
+  SCORES: DurableObjectNamespace<Scores>;
 }
 
 const CODE = /^[A-Z]{4}$/;
@@ -89,9 +93,36 @@ function send(ws: WebSocket, msg: Record<string, unknown>): void {
   }
 }
 
+const CORS = { "Access-Control-Allow-Origin": "*", "Content-Type": "application/json" };
+
+function json(data: unknown, status = 200): Response {
+  return new Response(JSON.stringify(data), { status, headers: CORS });
+}
+
+// Classement mondial : GET /scores?board=… (top 20), POST /scores {board, name, score}.
+async function scores(request: Request, env: Env, url: URL): Promise<Response> {
+  const board = env.SCORES.get(env.SCORES.idFromName("global"));
+  if (request.method === "GET") {
+    const name = url.searchParams.get("board") ?? "";
+    return json({ board: name, top: await board.top(name) });
+  }
+  if (request.method !== "POST") return json({ error: "méthode" }, 405);
+  let body: { board?: unknown; name?: unknown; score?: unknown };
+  try {
+    body = await request.json();
+  } catch (err) {
+    console.log("score illisible", err);
+    return json({ error: "json attendu" }, 400);
+  }
+  const ip = request.headers.get("CF-Connecting-IP") ?? "local";
+  const res = await board.submit(ip, String(body.board ?? ""), String(body.name ?? ""), Number(body.score));
+  return json(res, res.ok ? 200 : 400);
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    if (url.pathname === "/scores") return scores(request, env, url);
     const match = url.pathname.match(/^\/room\/([A-Za-z]{4})$/);
     if (!match) return new Response("rixe relay", { status: url.pathname === "/" ? 200 : 404 });
     const code = match[1].toUpperCase();

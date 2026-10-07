@@ -83,9 +83,37 @@ async function run() {
   host.ws.close();
 }
 
+const HTTP = BASE.replace(/^ws/, "http");
+
+async function post(board, name, score) {
+  const r = await fetch(`${HTTP}/scores`, { method: "POST", body: JSON.stringify({ board, name, score }) });
+  return { status: r.status, body: await r.json() };
+}
+
+async function top(board) {
+  return (await (await fetch(`${HTTP}/scores?board=${board}`)).json()).top;
+}
+
+async function runScores() {
+  const b = "test" + Math.floor(Math.random() * 1e6);
+  check((await post(b, "anon1", 5)).status === 200, "score enregistré");
+  await post(b, "anon2", 9);
+  await post(b, "anon1", 3);
+  let t = await top(b);
+  check(t.length === 2 && t[0].name === "anon2" && t[1].score === 5, "meilleur score gardé par pseudo, tri décroissant");
+  check((await post(b, "<script>", 4)).status === 400, "pseudo invalide refusé");
+  check((await post(b, "anon3", -2)).status === 400, "score invalide refusé");
+  const o = "objectif_t" + Math.floor(Math.random() * 1e6);
+  await post(o, "lent", 90);
+  await post(o, "rapide", 40);
+  t = await top(o);
+  check(t[0].name === "rapide", "objectif : le plus rapide en tête");
+}
+
 const server = await startServer();
 try {
   await run();
+  await runScores();
 } catch (err) {
   console.log("erreur", err);
   failures++;
