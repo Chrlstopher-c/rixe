@@ -2,7 +2,8 @@ extends Node
 ## Banc de tests headless : lance les scénarios demandés (--tests=a,b ou all), affiche PASS/FAIL, quitte avec un code.
 
 const SUITES := ["movement", "combat", "audio", "melee", "pickup", "menu", "themes", "score", "modes", "terrain",
-	"ai", "weapons", "arsenal", "armory", "loot", "maps", "props", "survival", "pad", "duo", "showcase"]
+	"ai", "weapons", "arsenal", "armory", "loot", "maps", "props", "survival", "pad", "duo", "showcase",
+	"online"]
 
 var main: Node
 var _failures: Array[String] = []
@@ -22,13 +23,13 @@ func _init(game: Node, names: String) -> void:
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	Engine.time_scale = 1.0
-	if DisplayServer.get_name() == "headless":
+	if DisplayServer.get_name() == "headless" and OS.get_environment("RIXE_REALTIME") == "":
 		Juice.fixed_step = 1.0 / 120.0
 	await get_tree().process_frame
 	var ran := 0
 	for suite in _suites:
 		for name: String in suite.names():
-			if _current == "all" and name.begins_with("showcase"):
+			if _current == "all" and (name.begins_with("showcase") or name.begins_with("online")):
 				continue
 			if _current != "all" and not (name in _current.split(",")):
 				continue

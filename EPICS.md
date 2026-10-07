@@ -118,7 +118,7 @@ Choix : relais WebSocket par Durable Object (pas de WebRTC) — marche derrière
 sans binaire natif à embarquer ; +10-30 ms de latence. Hôte autoritaire (bots, objets, manches), chaque joueur
 autoritaire sur son propre combattant ; « qui provoque l'effet calcule ses dégâts ».
 - [x] E26.S1 — relais : salon à code de 4 lettres, 2 places, messages binaires relayés — VERIFY: `cd relay && pnpm test`
-- [ ] E26.S2 — lien réseau Godot (WebSocketPeer, rôles hôte/invité, reconnexion propre) — VERIFY: `tools/online_test.sh link`
+- [x] E26.S2 — lien réseau Godot (WebSocketPeer, rôles hôte/invité, reconnexion propre) — VERIFY: `tools/online_test.sh link`
 - [ ] E26.S3 — partie synchronisée : même carte, marionnettes interpolées, tirs, dégâts, morts, réapparitions,
   objets — VERIFY: `tools/online_test.sh match`
 - [ ] E26.S4 — menu En ligne (héberger / rejoindre par code), HUD et fin de partie de l'invité — VERIFY: tests menu + capture
