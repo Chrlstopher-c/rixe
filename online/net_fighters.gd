@@ -62,7 +62,8 @@ func snapshot() -> Dictionary:
 		flags |= (F_ROLL if f.moves.roll_t > 0.0 else 0) | (F_SLIDE if f.moves.slide_t > 0.0 else 0)
 		flags |= (F_STUN if f.moves.stunned() else 0) | (F_BOSS if f.boss else 0)
 		rows.append([f.net_id, f.net_life, f.global_position, f.velocity, f.aim_dir, f.hp, f.gun.id,
-			f.gun.attachments, f.body.missing.duplicate(), f.team, f.team_color, flags, f.melee.t, f.dash_t, f.outfit])
+			f.gun.attachments, f.body.missing.duplicate(), f.team, f.team_color, flags, f.melee.t, f.dash_t, f.outfit,
+			f.melee.step])
 	return {"t": "s", "f": rows}
 
 
@@ -119,6 +120,7 @@ func drive(f: Fighter, _delta: float) -> void:
 	f.hp = row[5]
 	f.aiming = (int(row[11]) & F_AIMING) != 0
 	f.melee.t = row[12]
+	f.melee.step = int(row[15]) if row.size() > 15 else 2
 	f.dash_t = row[13]
 	_sync_moves(f, int(row[11]))
 	if f.gun.id != row[6] or f.gun.attachments != row[7]:

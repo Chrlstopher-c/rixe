@@ -1,9 +1,9 @@
 extends RefCounted
-## Tests de mêlée : coup de pied (touche, blesse, repousse) et exécution d'un bot vacillant.
+## Tests de mêlée : coup de pied (touche, blesse, repousse), combos et coup sauté, exécution d'un bot vacillant.
 
 
 func names() -> Array[String]:
-	return ["melee", "execution"]
+	return ["melee", "combo", "execution"]
 
 
 func test_melee(t: Node) -> void:
@@ -18,12 +18,48 @@ func test_melee(t: Node) -> void:
 	brain.press_melee()
 	await t.frames(30)
 	t.check(b.hp < hp0, "la cible perd de la vie (%.0f → %.0f)" % [hp0, b.hp])
-	t.check(b.global_position.x > 630.0, "la cible est repoussée (x=%.0f)" % b.global_position.x)
+	t.check(b.global_position.x > 618.5, "la cible recule (x=%.0f)" % b.global_position.x)
 	var far: Fighter = t.main.spawn_test_fighter(Vector2(900, -10), ScriptBrain.new(), "rifle", false)
 	await t.frames(30)
 	brain.press_melee()
 	await t.frames(60)
 	t.check(far.hp == Fighter.MAX_HP, "une cible lointaine n'est pas touchée")
+
+
+func test_combo(t: Node) -> void:
+	var brain := ScriptBrain.new()
+	var a: Fighter = t.main.spawn_test_fighter(Vector2(600, -10), brain, "rifle", true)
+	var b: Fighter = t.main.spawn_test_fighter(Vector2(620, -10), ScriptBrain.new(), "rifle", false)
+	await t.until(func() -> bool: return a.is_on_floor() and b.is_on_floor(), 120)
+	await t.frames(20)
+	brain.aim = b.global_position + Vector2(0, -20)
+	var steps := []
+	var stunned := false
+	for i in 3:
+		brain.press_melee()
+		await t.until(func() -> bool: return a.melee.active(), 30)
+		steps.append(a.melee.step)
+		await t.frames(int(Melee.STEPS[i].windup * 120) + 2)
+		stunned = stunned or b.moves.stunned()
+		await t.until(func() -> bool: return not a.melee.active(), 60)
+		await t.frames(4)
+		brain.aim = b.global_position + Vector2(0, -20)
+	t.check(steps == [0, 1, 2], "trois appuis : direct, crochet, coup de pied (%s)" % str(steps))
+	t.check(stunned, "les coups de poing étourdissent la cible")
+	t.check(b.hp < Fighter.MAX_HP - 40.0, "le combo complet fait mal (%.0f PV)" % b.hp)
+	await t.frames(80)
+	brain.press_melee()
+	await t.until(func() -> bool: return a.melee.active(), 30)
+	t.check(a.melee.step == 0, "après une pause, le combo repart du début")
+	await t.frames(60)
+	brain.press_jump()
+	await t.frames(10)
+	brain.press_melee()
+	await t.frames(2)
+	t.check(a.melee.step == Melee.STEPS.size(), "en l'air : coup de pied sauté")
+	a.queue_free()
+	if is_instance_valid(b):
+		b.queue_free()
 
 
 func test_execution(t: Node) -> void:

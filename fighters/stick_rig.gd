@@ -130,7 +130,7 @@ func _pose_legs(delta: float) -> void:
 
 
 func _pose_kick() -> void:
-	if not fighter.melee.active():
+	if not fighter.melee.kicking():
 		_kick_trail.clear()
 		return
 	var ext := sin(fighter.melee.progress() * PI)
@@ -155,6 +155,10 @@ func _pose_arms() -> void:
 		var dip := sin(k * PI)
 		aim = aim.rotated(fighter.facing * 0.9 * dip)
 		pivot += Vector2(0, 2.0 * dip)
+	var punch := _punch()
+	if punch != Vector2.ZERO:
+		pivot += aim * punch.x
+		j.shoulder = j.shoulder + aim * punch.y
 	gun_dir = aim
 	j.hand0 = pivot
 	j.hand1 = pivot + aim * 4.5
@@ -164,6 +168,15 @@ func _pose_arms() -> void:
 	j.elbow1 = ik(shoulder, j.hand1, UPPER, FORE, -fighter.facing)
 	j.pivot = pivot
 	muzzle_local = pivot + aim * float(fighter.gun.def.length)
+
+
+## Coup de poing en cours : [allonge du poing, avancée de l'épaule] ; zéro hors des coups de poing.
+func _punch() -> Vector2:
+	var m: Melee = fighter.melee
+	if not m.active() or m.kicking():
+		return Vector2.ZERO
+	var ext := sin(m.progress() * PI)
+	return Vector2(7.0 if m.step == 0 else 9.5, 0.8 if m.step == 0 else 2.0) * ext
 
 
 func muzzle_global() -> Vector2:
