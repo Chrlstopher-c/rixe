@@ -1,6 +1,7 @@
 class_name Weather
 extends Node2D
-## Météo autour de la caméra : pluie (gouttes inclinées par le vent, éclaboussures), neige (flocons qui dérivent).
+## Météo autour de la caméra : pluie (gouttes inclinées par le vent, éclaboussures, flaques), neige (flocons qui
+## dérivent).
 
 const RAIN := 220
 const SNOW := 160
@@ -8,10 +9,12 @@ const SNOW := 160
 var kind := ""
 var _drops: Array[Vector4] = []
 var _t := 0.0
+var puddles := Puddles.new()
 
 
 func _ready() -> void:
 	z_index = 25
+	add_child(puddles)
 
 
 ## Météo d'une manche : pluie sur les toits (et parfois ailleurs), neige sur l'acier, rien sous terre ; [type, vent].
@@ -29,6 +32,7 @@ static func pick(map_type: String, theme_name: String, rng: RandomNumberGenerato
 func set_kind(k: String) -> void:
 	kind = k
 	_drops.clear()
+	puddles.build(k == "rain")
 	var n := RAIN if k == "rain" else (SNOW if k == "snow" else 0)
 	for i in n:
 		_drops.append(Vector4(randf() * 760.0, randf() * 460.0, randf_range(0.6, 1.0), randf() * TAU))

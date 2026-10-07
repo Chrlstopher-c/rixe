@@ -41,7 +41,15 @@ func test_weather(t: Node) -> void:
 	var smoke = Juice.fx.emit(2, Vector2(400, -100), Vector2.ZERO, 2.0, 2.0, Color.WHITE)
 	await t.frames(60)
 	t.check(smoke.pos.x > 400.0, "le vent pousse la fumée (x=%.1f)" % smoke.pos.x)
+	var pd: Puddles = w.puddles
+	print("flaques : %d (suites %d)" % [pd.spots.size(), Puddles.flat_runs(Juice.arena.terrain).size()])
+	t.check(not pd.spots.is_empty(), "pluie : des flaques sur les sols plats")
+	var s: Vector3i = pd.spots[0] if not pd.spots.is_empty() else Vector3i.ZERO
+	Juice.arena.terrain.remove(Vector2i(s.y + 1, s.x))
+	await t.frames(45)
+	t.check(not s in pd.spots, "une flaque dont le sol est détruit disparaît")
 	w.set_kind("snow")
+	t.check(pd.spots.is_empty(), "pas de flaques sous la neige")
 	t.check(w._drops.size() == 160, "neige : 160 flocons")
 	w.set_kind("")
 	Juice.wind = 0.0

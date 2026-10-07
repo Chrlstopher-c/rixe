@@ -28,7 +28,7 @@ Les idées de Chris (07/10) sont marquées (Chris).
 - ~~Les ennemis lâchent munitions, soins et pièces d'armes. (Chris)~~ (fait)
 - ~~Inventaire en grille, accessible avec Tab. (Chris)~~ (fait)
 - ~~★ Nouvelles cartes : toits de ville sous la pluie, usine (tapis roulants, presses), mine (lampes qui se balancent), forêt de nuit. (Chris : « cartes différentes »)~~ (fait) — reste : wagons dans la mine.
-- ~~Météo : pluie, neige, vent qui fait voler les écharpes et la fumée.~~ (fait) — reste : flaques qui reflètent.
+- ~~Météo : pluie, neige, vent qui fait voler les écharpes et la fumée.~~ (fait), flaques qui reflètent comprises.
 - ~~Objets d'arène : barils explosifs, vitres qui se brisent, lampes qui tombent quand on tire dessus.~~ (fait)
 - ~~★ Décor qui s'effondre : une cellule sans appui tombe et écrase ce qui est dessous.~~ (fait)
 
@@ -59,7 +59,7 @@ Les idées de Chris (07/10) sont marquées (Chris).
 
 ## Visuel
 - ~~★ Éclairage 2D avec ombres portées par le décor (les tirs éclairent la scène).~~ (fait)
-- Normal maps sur les tuiles (Pigment sait déjà les générer) pour un relief au passage des éclairs.
+- ~~Normal maps sur les tuiles (Pigment sait déjà les générer) pour un relief au passage des éclairs.~~ (fait)
 - ~~Impacts persistants sur le décor, fumée qui reste en nappe après une grosse fusillade.~~ (fait)
 - ~~Néons et panneaux animés dans les ambiances urbaines.~~ (fait)
 
