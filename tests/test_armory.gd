@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["attachments", "armory"]
+	return ["attachments", "armory", "loadout_fires", "loadout_mouse"]
 
 
 func test_attachments(t: Node) -> void:
@@ -46,3 +46,49 @@ func test_armory(t: Node) -> void:
 	me.queue_free()
 	Unlocks.save_loadout({"weapon": "rifle", "attachments": {}})
 	await t.frames(2)
+
+
+func test_loadout_fires(t: Node) -> void:
+	for w in Arsenal.ids():
+		Unlocks.unlock("weapon", w)
+		Unlocks.save_loadout({"weapon": w, "attachments": {}})
+		var f: Fighter = t.main.spawner.spawn_player(Vector2(400, -10), PlayerBrain.new())
+		f.shield = 0.0
+		var brain := ScriptBrain.new()
+		f.brain = brain
+		await t.until(func() -> bool: return f.is_on_floor(), 120)
+		var mag0: int = f.gun.mag
+		brain.aim = f.global_position + Vector2(200, -20)
+		brain.fire = true
+		await t.frames(60)
+		brain.fire = false
+		var fired: bool = f.gun.mag < mag0 or f.gun.infinite()
+		t.check(f.gun.id == w and fired, "%s choisi à l'armurerie : tire (chargeur %d → %d)" % [w, mag0, f.gun.mag])
+		f.queue_free()
+		await t.frames(2)
+	Unlocks.save_loadout({"weapon": "rifle", "attachments": {}})
+
+
+## Comme un vrai joueur : cerveau clavier/souris, clic gauche maintenu.
+func test_loadout_mouse(t: Node) -> void:
+	for w in ["rifle", "smg", "pistol", "shotgun"]:
+		Unlocks.unlock("weapon", w)
+		Unlocks.save_loadout({"weapon": w, "attachments": {}})
+		var f: Fighter = t.main.spawner.spawn_player(Vector2(400, -10), PlayerBrain.new())
+		f.shield = 0.0
+		t.main.follow(f)
+		await t.until(func() -> bool: return f.is_on_floor(), 120)
+		var mag0: int = f.gun.mag
+		var press := InputEventMouseButton.new()
+		press.button_index = MOUSE_BUTTON_LEFT
+		press.pressed = true
+		Input.parse_input_event(press)
+		await t.frames(60)
+		var release := InputEventMouseButton.new()
+		release.button_index = MOUSE_BUTTON_LEFT
+		Input.parse_input_event(release)
+		await t.frames(2)
+		t.check(f.gun.mag < mag0, "%s au clic : tire (chargeur %d → %d)" % [w, mag0, f.gun.mag])
+		f.queue_free()
+		await t.frames(2)
+	Unlocks.save_loadout({"weapon": "rifle", "attachments": {}})
