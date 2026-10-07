@@ -22,6 +22,7 @@ var forced_map := ""
 var _scoreboard: CanvasLayer
 var _inventory: CanvasLayer
 var spawner: Spawner
+var rules := RoundRules.new(self)
 var director: SurvivalDirector
 var duo: Duo
 var _post: CanvasLayer
@@ -45,7 +46,7 @@ func _ready() -> void:
 	Settings.apply_volume(_volume)
 	Bootstrap.parse_args(self)
 	Bootstrap.build(self)
-	Juice.fighter_killed.connect(_on_killed)
+	Juice.fighter_killed.connect(rules.on_killed)
 	_set_hd(Juice.hd)
 	if _tests != "":
 		add_child(preload("res://tests/test_runner.gd").new(self, _tests))
@@ -216,105 +217,6 @@ func _respawn(entry: Dictionary) -> void:
 	Juice.fx.emit(5, pos + Vector2(0, -20), Vector2.ZERO, 0.4, 24.0, Color(entry.color * 1.8, 0.8))
 
 
-func _on_killed(victim: Node2D, killer: Node2D) -> void:
-	if _tests != "" and not live_rules:
-		return
-	if victim.death_cause == "fall" and not is_instance_valid(killer):
-		_hud.feed("%s  tombe dans le vide" % victim.display_name, victim.team_color)
-	else:
-		var kname: String = killer.display_name if is_instance_valid(killer) else "?"
-		var verb := "exécute" if victim.executed else "élimine"
-		_hud.feed("%s  %s  %s" % [kname, verb, victim.display_name], victim.team_color)
-	match_state.record_kill(victim, killer)
-	if game_mode == "survie" and not attract:
-		if victim == player and not _scoreboard.visible:
-			match_state.finish_arcade()
-			_end_after_kill(victim)
-		return
-	if is_instance_valid(killer) and killer == player:
-		score.add_kill()
-		_hud.kills = score.kills
-	if attract or demo or not Modes.respawns(game_mode):
-		_rounds_after_kill(victim)
-	elif match_state.over:
-		_end_after_kill(victim)
-
-
-## Mode arcade (et démo) : la manche se gagne quand plus aucun bot n'est en vie.
-func _rounds_after_kill(victim: Node2D) -> void:
-	if _restart_in >= 0.0:
-		return
-	var human: bool = victim == player or (duo and victim == duo.player2)
-	if human and duo and not attract and duo.survivor_left(victim):
-		return
-	if human:
-		if attract or demo:
-			_hud.banner("ÉLIMINÉ")
-			_restart_in = 3.0
-		else:
-			match_state.finish_arcade()
-			_end_after_kill(victim)
-		return
-	_hud.bots_left = _alive_bots()
-	if _hud.bots_left <= 0:
-		Juice.kill_cam(victim.global_position + Vector2(0, -26))
-		_hud.banner("MANCHE GAGNÉE")
-		round_no += 1
-		_restart_in = 3.0
-
-
-## Couche musicale de tension : dernier bot de la manche, vie basse, fin de chrono.
-func _last_stand() -> bool:
-	if _scoreboard.visible or not is_instance_valid(player) or not player.alive:
-		return false
-	if player.hp < 30.0:
-		return true
-	if game_mode == "chrono" and match_state:
-		return match_state.time_left < 15.0
-	return game_mode == "arcade" and _hud.bots_left == 1
-
-
-func _alive_bots() -> int:
-	var n := 0
-	for f in _fighters.get_children():
-		if f is Fighter and f.alive and not f.is_player:
-			n += 1
-	return n
-
-
-## La dernière élimination se rejoue au ralenti avant l'écran de fin.
-func _end_after_kill(victim: Node2D) -> void:
-	if _end_in >= 0.0 or _scoreboard.visible:
-		return
-	Juice.kill_cam(victim.global_position + Vector2(0, -26))
-	_end_in = 1.6
-
-
-## Fin de partie : classement des combattants, score du joueur soumis au tableau du mode, jeu figé.
-func _end_match() -> void:
-	_end_in = -1.0
-	var rows := match_state.ranking()
-	var key := Modes.board_key(game_mode, game_option)
-	var lower := Modes.lower_is_better(game_mode)
-	var mine := match_state.kills_of("Toi")
-	var value: float = match_state.elapsed if lower else float(mine)
-	if game_mode == "survie":
-		value = float(director.state.nights_survived) if is_instance_valid(director) else 0.0
-	var counts := not lower or match_state.winner == "Toi"
-	var rank := Leaderboard.submit(key, value, lower) if counts and (lower or value > 0.0) else -1
-	score.end_run(game_mode == "arcade")
-	score.reset()
-	_hud.best = score.best
-	_menu.best = score.best
-	var nights: int = director.state.nights_survived if is_instance_valid(director) else 0
-	var texts := EndTexts.make(game_mode, rows, match_state, round_no, nights)
-	_hud.visible = false
-	_scoreboard.open(texts[0], texts[1], rows, game_mode, Leaderboard.entries(key), rank)
-	get_tree().paused = true
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	Sfx.play_ui("round", -4.0)
-
-
 func _process(delta: float) -> void:
 	var real: float = Juice.real_delta(delta)
 	if _restart_in >= 0.0:
@@ -324,17 +226,17 @@ func _process(delta: float) -> void:
 	if _end_in >= 0.0:
 		_end_in -= real
 		if _end_in < 0.0:
-			_end_match()
+			rules.end_match()
 		return
 	if _tests == "" or live_rules:
-		Sfx.tension = _last_stand()
+		Sfx.tension = rules.last_stand()
 	if attract or demo or match_state == null or not Modes.respawns(game_mode) or _scoreboard.visible:
 		return
 	for entry in match_state.tick(real):
 		_respawn(entry)
 	_hud.respawn_t = match_state.respawn_in("Toi")
 	if match_state.over:
-		_end_match()
+		rules.end_match()
 
 
 func _unhandled_input(event: InputEvent) -> void:

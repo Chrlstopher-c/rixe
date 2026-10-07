@@ -51,15 +51,6 @@ func bind() -> void:
 	split.bind([main.player, player2], Juice.arena.W, main.game_mode, main.match_state)
 
 
-## Un humain tombe en arcade : la partie continue tant que l'autre est debout.
-func survivor_left(victim: Node2D) -> bool:
-	var other: Variant = player2 if victim == main.player else main.player
-	if is_instance_valid(other) and other.alive:
-		Juice.notify("%s est tombé, %s continue" % [victim.display_name, other.display_name])
-		return true
-	return false
-
-
 func respawn(entry: Dictionary, pos: Vector2) -> bool:
 	if entry.name != P2_NAME:
 		return false
