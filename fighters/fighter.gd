@@ -88,6 +88,7 @@ func _physics_process(delta: float) -> void:
 	var was_floor := is_on_floor()
 	var vy := velocity.y
 	move_and_slide()
+	_step_up()
 	if not was_floor and is_on_floor():
 		_land(vy)
 	melee.tick(delta, intent.get("melee", false))
@@ -175,6 +176,16 @@ func _dash() -> void:
 	Sfx.play("dash", global_position, -4.0)
 	if is_player:
 		Juice.shake(0.12)
+
+
+## Monte seul une marche d'une cellule de décor (bords de cratères, caisses entamées).
+func _step_up() -> void:
+	if not (is_on_floor() and is_on_wall()) or absf(intent.move) < 0.1:
+		return
+	var dir := signf(intent.move)
+	var up := global_transform.translated(Vector2(0, -9))
+	if not test_move(up, Vector2(dir * 3.0, 0)) and not test_move(global_transform, Vector2(0, -9)):
+		position += Vector2(dir * 2.0, -9.0)
 
 
 func leg_factor() -> float:

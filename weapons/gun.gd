@@ -43,28 +43,49 @@ func _fire() -> void:
 
 
 func _pellet(from: Vector2, dir: Vector2) -> void:
+	_trace(from, dir, def.range, def.dmg, int(def.bounces), [owner.get_rid()])
+
+
+## Un segment de trajectoire : touche, perce (railgun) ou ricoche sur le décor selon l'angle d'incidence.
+func _trace(from: Vector2, dir: Vector2, reach: float, dmg: float, bounces: int, exclude: Array[RID]) -> void:
 	var space: PhysicsDirectSpaceState2D = owner.get_world_2d().direct_space_state
-	var to: Vector2 = from + dir * def.range
-	var exclude: Array[RID] = [owner.get_rid()]
+	var to: Vector2 = from + dir * reach
 	var mask := Juice.MASK_WORLD | Juice.MASK_FIGHTERS | Juice.MASK_PLATFORMS
 	var end := to
+	var hit := {}
 	for hop in (6 if def.pierce else 1):
-		var hit := space.intersect_ray(PhysicsRayQueryParameters2D.create(from, to, mask, exclude))
+		hit = space.intersect_ray(PhysicsRayQueryParameters2D.create(from, to, mask, exclude))
 		if hit.is_empty():
 			break
 		end = hit.position
-		var target: Object = hit.collider
-		if target.has_method("take_hit"):
-			target.take_hit(def.dmg, dir, end, owner, def.knock)
-			exclude.append(target.get_rid())
+		if hit.collider.has_method("take_hit"):
+			hit.collider.take_hit(dmg, dir, end, owner, def.knock)
+			exclude.append(hit.collider.get_rid())
 			if def.pierce:
 				end = to
+				hit = {}
 				continue
-		elif not _graze_legs(end, dir, exclude):
-			Effects.impact(end, hit.normal, def.tracer)
-			Sfx.play("impact", end, -8.0, 0.25)
+		elif _graze_legs(end, dir, exclude):
+			hit = {}
 		break
 	Effects.tracer(from, end, def.tracer, def.width, 0.16 if def.pierce else 0.08)
+	if hit.is_empty() or hit.collider.has_method("take_hit"):
+		return
+	_hit_world(end, dir, hit.normal, dmg, bounces, reach - from.distance_to(end))
+
+
+func _hit_world(at: Vector2, dir: Vector2, normal: Vector2, dmg: float, bounces: int, left: float) -> void:
+	Juice.arena.damage(at - normal * 2.0, def.terrain_dmg * dmg / def.dmg, def.terrain_radius)
+	var graze := 1.0 - absf(dir.dot(normal))
+	if bounces > 0 and left > 30.0 and randf() < float(def.ricochet) * (0.25 + graze):
+		var jitter: float = def.get("ricochet_spread", 0.12)
+		var out := dir.bounce(normal).rotated(randf_range(-jitter, jitter))
+		Effects.impact(at, normal, def.tracer * 1.3)
+		Sfx.play("ricochet", at, -6.0, 0.2)
+		_trace(at + normal * 0.6, out, left * 0.75, dmg * 0.65, bounces - 1, [])
+		return
+	Effects.impact(at, normal, def.tracer)
+	Sfx.play("impact", at, -8.0, 0.25)
 
 
 ## Un tir arrêté par le sol au ras d'un pied touche quand même la jambe (sinon viser les pieds est impossible).

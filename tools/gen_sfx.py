@@ -149,6 +149,12 @@ def pickup() -> np.ndarray:
     return mix(env(sweep(0.08, 900, 1400), 0.001, 0.03), env(np.sin(2 * np.pi * 1800 * t(0.15)), 0.001, 0.05) * 0.5)
 
 
+def ricochet() -> np.ndarray:
+    whine = env(sweep(0.35, 3400, 1500, 0.6), 0.001, 0.12) * (1 + 0.3 * np.sin(2 * np.pi * 45 * t(0.35)))
+    click = env(hp(noise(0.03), 4000), 0.0002, 0.004)
+    return lp(mix(click * 0.6, whine * 0.5), 7000)
+
+
 def round_start() -> np.ndarray:
     tt = t(0.9)
     chord = sum(np.sin(2 * np.pi * f * tt) for f in [110, 165, 220, 330])
@@ -158,7 +164,7 @@ def round_start() -> np.ndarray:
 SOUNDS = {
     "rifle": rifle, "shotgun": shotgun, "railgun": railgun, "impact": impact, "flesh": flesh, "gore": gore,
     "jump": jump, "air_jump": air_jump, "land": land, "dash": dash, "shell": shell, "swing": swing,
-    "punch": punch, "slowmo": slowmo, "pickup": pickup, "round": round_start,
+    "punch": punch, "slowmo": slowmo, "pickup": pickup, "round": round_start, "ricochet": ricochet,
 }
 
 

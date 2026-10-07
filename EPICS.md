@@ -45,3 +45,15 @@ Chaque story : intention — VERIFY exécutable. Tests de jeu = `godot --headles
 - [x] E11.S1 — bug : la manche arcade se terminait avec un bot encore en vie (victime décomptée deux fois) — VERIFY: `--tests=arcade_last_bot`
 - [x] E11.S2 — sélecteur de mode au titre : Arcade (une vie), Chrono (1/2/3/5/10 min, réapparitions), Objectif (5/10/20/30 élim.) — VERIFY: `--tests=chrono,objectif`
 - [x] E11.S3 — écran de fin (classement des combattants, élim./morts) et top 5 persistant par mode et réglage, vue « Classement » au titre — VERIFY: `--tests=leaderboard` + capture relue
+
+# V1.1 — Monde vivant (demande de Chris, 07/10)
+
+## E12 — Destruction et ricochets
+- [x] E12.S1 — décor destructible en cellules de 8 px (sol sur 40 px au-dessus de la roche, caisses, plateformes) : vie par cellule, débris, poussière, collisions reconstruites par tronçon — VERIFY: `--tests=terrain`
+- [x] E12.S2 — ricochets selon l'angle d'incidence (fusil 2 rebonds, pompe 1, railgun 1), son dédié, dégâts réduits, peut toucher le tireur — VERIFY: `--tests=ricochet`
+
+## E13 — IA à personnalités
+- [ ] E13.S1 — 5 archétypes (Brute, Tireur, Acrobate, Renard, Fou) : agressivité, distance, mobilité, précision, seuil de fuite — VERIFY: `--tests=personalities`
+- [ ] E13.S2 — comportements : engager, foncer, fuir et se soigner, esquiver quand on est visé, flanquer, chercher une arme, se mettre à couvert — VERIFY: `--tests=behaviours`
+- [ ] E13.S3 — humanisation : temps de réaction, visée qui suit avec dépassement, rafales, mémoire de la dernière position vue, déblocage — VERIFY: `--tests=humanize` + capture relue
+- [ ] E13.S4 — navigation : monter vers une plateforme accessible, descendre, sauter les trous creusés — VERIFY: `--tests=navigation`
