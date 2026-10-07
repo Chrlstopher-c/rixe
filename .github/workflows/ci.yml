@@ -11,3 +11,19 @@ jobs:
           unzip -q g.zip && sudo mv Godot_v4.7.2-stable_linux.x86_64 /usr/local/bin/godot
       - name: Import + tests headless
         run: tools/verify.sh
+  relay:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: relay
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test

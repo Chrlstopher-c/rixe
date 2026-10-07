@@ -113,5 +113,13 @@ Chaque story : intention — VERIFY exécutable. Tests de jeu = `godot --headles
 ## E25 — Écran partagé
 - [x] E25.S1 — deux joueurs (J1 clavier/souris, J2 manette), écran coupé en deux rendus pleine définition, coopération en arcade, chacun pour soi en chrono/objectif — VERIFY: `--tests=duo` + capture relue
 
-## E26 — En ligne (en attente de décision de Chris)
-- [!] E26.S1 — multijoueur pair à pair sans ouvrir de ports : nécessite un serveur de mise en relation (signalisation WebRTC + relais TURN de secours) hébergé quelque part → décision d'infrastructure à prendre par Chris
+## E26 — En ligne (relais Cloudflare Worker, adresse fixe)
+Choix : relais WebSocket par Durable Object (pas de WebRTC) — marche derrière toutes les box, sans port ouvert,
+sans binaire natif à embarquer ; +10-30 ms de latence. Hôte autoritaire (bots, objets, manches), chaque joueur
+autoritaire sur son propre combattant ; « qui provoque l'effet calcule ses dégâts ».
+- [x] E26.S1 — relais : salon à code de 4 lettres, 2 places, messages binaires relayés — VERIFY: `cd relay && pnpm test`
+- [ ] E26.S2 — lien réseau Godot (WebSocketPeer, rôles hôte/invité, reconnexion propre) — VERIFY: `tools/online_test.sh link`
+- [ ] E26.S3 — partie synchronisée : même carte, marionnettes interpolées, tirs, dégâts, morts, réapparitions,
+  objets — VERIFY: `tools/online_test.sh match`
+- [ ] E26.S4 — menu En ligne (héberger / rejoindre par code), HUD et fin de partie de l'invité — VERIFY: tests menu + capture
+- [ ] E26.S5 — déploiement du Worker (adresse workers.dev fixe, hors dépôt) + release — VERIFY: `tools/online_test.sh match` contre le Worker déployé
