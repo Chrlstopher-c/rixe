@@ -14,6 +14,13 @@ const SURVIVAL_W := 6000.0
 const VOID_Y := 240.0
 
 
+## Nom affiché d'une carte (cartes perso : leur nom).
+static func label(map: String) -> String:
+	if map.begins_with(MapStore.PREFIX):
+		return map.trim_prefix(MapStore.PREFIX).to_upper()
+	return String(ALL.get(map, ALL.plateformes).label)
+
+
 static func pick(rng: RandomNumberGenerator) -> String:
 	var total := 0
 	for k in ALL:
@@ -27,6 +34,10 @@ static func pick(rng: RandomNumberGenerator) -> String:
 
 
 static func build(arena: Node2D, map: String, rng: RandomNumberGenerator) -> void:
+	if map.begins_with(MapStore.PREFIX):
+		MapStore.build(arena, map.trim_prefix(MapStore.PREFIX))
+		arena.terrain.flush()
+		return
 	match map:
 		"toits":
 			_roofs(arena, rng)

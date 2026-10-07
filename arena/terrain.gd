@@ -116,6 +116,16 @@ func is_solid_cell(c: Vector2i) -> bool:
 
 
 ## Vide une zone (galeries de la mine) sans débris.
+## Retire une cellule sans débris (éditeur de cartes).
+func remove(c: Vector2i) -> void:
+	if kind.has(c):
+		kind.erase(c)
+		hp.erase(c)
+		anchors.erase(c)
+		_chunk_cells(c.x).erase(c)
+		_dirty(c.x)
+
+
 func carve(r: Rect2) -> void:
 	var a := cell_of(r.position)
 	var b := cell_of(r.end - Vector2(0.01, 0.01))
@@ -160,9 +170,12 @@ func damage(center: Vector2, dmg: float, radius: float, by: Variant = null) -> i
 
 
 ## Remet une cellule (morceau retombé) sans déclencher de débris.
-func place(c: Vector2i, k: int) -> void:
+## Pose une cellule : construite en survie (solidité réduite) ou d'origine (`full`, éditeur de cartes).
+func place(c: Vector2i, k: int, full: bool = false) -> void:
 	kind[c] = k
-	hp[c] = HP[k] * 0.6
+	hp[c] = HP[k] * (1.0 if full else 0.6)
+	if k == K.DIRT and c.y < surface.get(c.x, 9999):
+		surface[c.x] = c.y
 	_chunk_cells(c.x)[c] = true
 	_dirty(c.x)
 

@@ -8,6 +8,7 @@ signal custom_requested
 signal profile_requested
 signal replay_requested
 signal photo_requested
+signal editor_requested
 signal resume_requested
 signal title_requested
 signal restart_requested
@@ -90,8 +91,8 @@ func _ids() -> Array[String]:
 		ids.append("option")
 	if game_mode != "survie":
 		ids.append("players")
-	ids.append_array(["play", "custom", "online", "profile", "armory", "crosshair", "board", "volume", "display",
-		"shadows", "numbers", "quit"])
+	ids.append_array(["play", "custom", "online", "profile", "armory", "crosshair", "editor", "board", "volume",
+		"display", "shadows", "numbers", "quit"])
 	return ids
 
 
@@ -127,6 +128,8 @@ func _text(id: String) -> String:
 			return "PROFIL ET TENUE"
 		"replay":
 			return "REVOIR LES 15 DERNIÈRES SECONDES"
+		"editor":
+			return "ÉDITEUR DE CARTES"
 		"photo":
 			return "MODE PHOTO"
 		"armory":
@@ -282,6 +285,9 @@ func activate(i: int) -> void:
 			profile_requested.emit()
 		"replay":
 			replay_requested.emit()
+		"editor":
+			close()
+			editor_requested.emit()
 		"photo":
 			photo_requested.emit()
 		"armory":

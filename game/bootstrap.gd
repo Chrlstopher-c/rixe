@@ -104,6 +104,11 @@ static func _screens(m: Node) -> void:
 	m.add_child(m.photo)
 	m.photo.setup(m)
 	m.photo.finished.connect(m._pause)
+	var editor: CanvasLayer = preload("res://hud/map_editor.gd").new()
+	editor.main = m
+	m.add_child(editor)
+	m._menu.editor_requested.connect(func() -> void: editor.open(""))
+	editor.back_requested.connect(m._to_title)
 	m._menu.replay_requested.connect(func() -> void:
 		m._menu.close()
 		Juice.replay.play())

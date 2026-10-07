@@ -124,7 +124,7 @@ func _start_round() -> void:
 	announcer.enabled = not attract and (_tests == "" or live_rules)
 	announcer.say("boss" if boss_round() else "fight", 1.4)
 	var head := "MANCHE %d" % round_no if game_mode == "arcade" or attract else Modes.label(game_mode)
-	_hud.banner("%s  ·  %s" % [head, Maps.ALL[map_type].label])
+	_hud.banner("%s  ·  %s" % [head, Maps.label(map_type)])
 	Sfx.play_ui("round", -6.0)
 
 

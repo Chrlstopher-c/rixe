@@ -92,7 +92,7 @@ func _text(id: String) -> String:
 		"option":
 			return "‹ %s ›" % Modes.option_text(c.mode, c.option)
 		"map":
-			return "CARTE  ‹ %s ›" % ("AU HASARD" if c.map == "hasard" else Maps.ALL[c.map].label)
+			return "CARTE  ‹ %s ›" % ("AU HASARD" if c.map == "hasard" else Maps.label(c.map))
 		"teams":
 			return "ÉQUIPES  ‹ %s ›" % ("CHACUN POUR SOI" if c.teams == 0 else "%d ÉQUIPES" % c.teams)
 		"my_team":
@@ -139,7 +139,9 @@ func adjust(id: String, step: int) -> void:
 		"option":
 			cfg.option = posmod(cfg.option + step, (Modes.ALL[cfg.mode].options as Array).size())
 		"map":
-			cfg.map = _cycle(GameConfig.MAPS, cfg.map, step)
+			var maps: Array = GameConfig.MAPS + MapStore.names().map(func(n: String) -> String:
+				return MapStore.PREFIX + n)
+			cfg.map = _cycle(maps, cfg.map, step)
 		"teams":
 			cfg.teams = [0, 2, 3, 4][posmod([0, 2, 3, 4].find(cfg.teams) + step, 4)]
 		"bots":

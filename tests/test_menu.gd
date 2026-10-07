@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["menu", "lobby", "crosshair", "nick", "custom", "replay_photo"]
+	return ["menu", "lobby", "crosshair", "nick", "custom", "replay_photo", "editor"]
 
 
 func _key(code: Key) -> void:
@@ -208,3 +208,36 @@ func test_replay_photo(t: Node) -> void:
 	t.check(not main.photo.active and main._menu.mode == "pause", "retour à la pause")
 	main._resume()
 	me.queue_free()
+
+
+func test_editor(t: Node) -> void:
+	var main: Node = t.main
+	main.attract = true
+	main._menu.show_title()
+	await t.frames(3)
+	main._menu.activate(main._menu._ids().find("editor"))
+	await t.frames(3)
+	var ed: CanvasLayer = null
+	for c in main.get_children():
+		if c is CanvasLayer and c.has_method("paint"):
+			ed = c
+	t.check(ed != null and ed.active, "ÉDITEUR DE CARTES ouvert")
+	ed.map_name = "zz-test-editeur"
+	ed.material = 1
+	ed.brush = 2
+	for i in 10:
+		ed.paint(Vector2(400 + i * 16, -60), false)
+	ed.material = 6
+	ed.paint(Vector2(800, -120), false)
+	ed.paint(Vector2(200, 8), true)
+	t.check(Juice.arena.terrain.kind.get(Terrain.cell_of(Vector2(400, -60))) == Terrain.K.CONCRETE, "béton peint")
+	t.check(not Juice.arena.terrain.kind.has(Terrain.cell_of(Vector2(200, 8))), "cellule effacée")
+	t.check(ed.save() and "zz-test-editeur" in MapStore.names(), "carte enregistrée")
+	ed.try_map()
+	await t.frames(10)
+	t.check(Juice.arena.map == "perso:zz-test-editeur", "partie lancée sur la carte (%s)" % Juice.arena.map)
+	var painted: int = Juice.arena.terrain.kind.get(Terrain.cell_of(Vector2(400, -60)), 0)
+	t.check(painted == Terrain.K.CONCRETE, "le décor peint est là")
+	DirAccess.remove_absolute("user://cartes/zz-test-editeur.json")
+	main._to_title()
+	main.attract = true

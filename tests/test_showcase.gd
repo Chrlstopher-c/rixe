@@ -5,7 +5,8 @@ extends RefCounted
 func names() -> Array[String]:
 	return ["showcase", "showcase_end", "showcase_armory", "showcase_inventory", "showcase_survival", "showcase_duo",
 		"showcase_killcam", "showcase_execution",
-		"showcase_crosshair", "showcase_custom", "showcase_profile", "showcase_replay"]
+		"showcase_crosshair", "showcase_custom", "showcase_profile", "showcase_replay",
+		"showcase_editor"]
 
 
 func _fire_at(t: Node, brain: ScriptBrain, target: Variant, joint: String, frames: int) -> void:
@@ -243,4 +244,25 @@ func test_showcase_replay(t: Node) -> void:
 	main._pause()
 	main._menu.activate(main._menu._ids().find("replay"))
 	await t.frames(120 * 6)
+	t.check(true, "vitrine")
+
+
+func test_showcase_editor(t: Node) -> void:
+	var main: Node = t.main
+	main.attract = true
+	main._menu.show_title()
+	await t.frames(30)
+	main._menu.activate(main._menu._ids().find("editor"))
+	var ed: CanvasLayer = null
+	for c in main.get_children():
+		if c is CanvasLayer and c.has_method("paint"):
+			ed = c
+	ed.map_name = "démo"
+	ed.brush = 2
+	for step in 4:
+		ed.material = [1, 2, 5, 6][step]
+		for i in 14:
+			ed.paint(Vector2(640 + i * 16, -40 - step * 30), false)
+			await t.frames(6)
+	await t.frames(240)
 	t.check(true, "vitrine")
