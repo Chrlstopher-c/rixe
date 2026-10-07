@@ -4,7 +4,7 @@ extends RefCounted
 
 func names() -> Array[String]:
 	return ["showcase", "showcase_end", "showcase_armory", "showcase_inventory", "showcase_survival", "showcase_duo",
-		"showcase_killcam"]
+		"showcase_killcam", "showcase_execution"]
 
 
 func _fire_at(t: Node, brain: ScriptBrain, target: Variant, joint: String, frames: int) -> void:
@@ -142,3 +142,24 @@ func test_showcase_killcam(t: Node) -> void:
 	await t.frames(360)
 	t.check(main.round_no == 2, "manche gagnée")
 	main.live_rules = false
+
+
+func test_showcase_execution(t: Node) -> void:
+	var main: Node = t.main
+	var brain := ScriptBrain.new()
+	var me: Fighter = main.spawn_test_fighter(Vector2(500, -10), brain, "rifle", true)
+	main.follow(me)
+	for i in 3:
+		var foe: Fighter = main.spawn_test_fighter(me.global_position + Vector2(90, -10), ScriptBrain.new(), "rifle", false)
+		foe.team_color = [Color(1.0, 0.25, 0.3), Color(1.0, 0.7, 0.2), Color(0.7, 0.4, 1.0)][i]
+		foe.execution.finisher = ""
+		await t.frames(60)
+		foe.hp = 20.0
+		foe._since_hit = 0.0
+		brain.move = 1.0
+		await t.until(func() -> bool: return Execution.target_for(me) != null, 240)
+		brain.move = 0.0
+		await t.frames(50)
+		brain.press_melee()
+		await t.frames(420)
+	t.check(true, "vitrine")

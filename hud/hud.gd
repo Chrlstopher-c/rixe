@@ -17,11 +17,13 @@ var _feed: Array[Dictionary] = []
 var _font: Font = ThemeDB.fallback_font
 var _hp_shown := 100.0
 var _toasts: Array[Dictionary] = []
+var _exec_t := 99.0
 
 
 func _ready() -> void:
 	layer = 20
 	Juice.notified.connect(func(text: String) -> void: _toasts.append({"text": text, "t": 0.0}))
+	Juice.executed.connect(func(_v: Node2D, _k: Node2D) -> void: _exec_t = 0.0)
 	_canvas.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_canvas.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_canvas.draw.connect(_draw_hud)
@@ -42,6 +44,7 @@ func feed(text: String, color: Color) -> void:
 func _process(delta: float) -> void:
 	var real: float = Juice.real_delta(delta)
 	_banner_t += real
+	_exec_t += real
 	for f in _feed:
 		f.t += real
 	_feed = _feed.filter(func(f: Dictionary) -> bool: return f.t < 4.0)
@@ -64,6 +67,7 @@ func _draw_hud() -> void:
 		_canvas.draw_string(_font, Vector2(400, 18 + i * 11), f.text, HORIZONTAL_ALIGNMENT_RIGHT, 228, 8,
 			Color(f.color, a))
 	_draw_banner()
+	_draw_execution()
 	_draw_mode_center()
 	_draw_ammo()
 	_draw_toasts()
@@ -101,6 +105,21 @@ func _draw_banner() -> void:
 	var y := 150.0
 	_canvas.draw_rect(Rect2(0, y - 26, 640, 38), Color(0, 0, 0, 0.45 * a))
 	_canvas.draw_string(_font, Vector2(0, y), _banner, HORIZONTAL_ALIGNMENT_CENTER, 640, s, Color(1.8, 1.6, 1.5, a))
+
+
+## Titre « EXÉCUTION » qui claque pendant la kill cam, et l'invite quand un bot vacillant est à portée.
+func _draw_execution() -> void:
+	var w := _canvas.size.x
+	if _exec_t < 1.6:
+		var a := clampf(_exec_t * 8.0, 0.0, 1.0) * clampf((1.6 - _exec_t) * 3.0, 0.0, 1.0)
+		var size := int(lerpf(46.0, 30.0, clampf(_exec_t * 6.0, 0.0, 1.0)))
+		_canvas.draw_string(_font, Vector2(2, 74), "EXÉCUTION", HORIZONTAL_ALIGNMENT_CENTER, w, size, Color(0, 0, 0, a))
+		_canvas.draw_string(_font, Vector2(0, 72), "EXÉCUTION", HORIZONTAL_ALIGNMENT_CENTER, w, size, Color(2.4, 0.2, 0.2, a))
+		return
+	if is_instance_valid(player) and player.alive and Execution.target_for(player):
+		var pulse := 0.6 + 0.4 * sin(Time.get_ticks_msec() * 0.012)
+		_canvas.draw_string(_font, Vector2(0, _canvas.size.y * 0.5 + 56), "E / B : EXÉCUTION",
+			HORIZONTAL_ALIGNMENT_CENTER, w, 11, Color(2.2, 0.4, 0.35, pulse))
 
 
 func _draw_crosshair(m: Vector2) -> void:

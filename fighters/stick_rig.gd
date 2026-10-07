@@ -223,9 +223,24 @@ func _draw() -> void:
 	for i in range(1, _kick_trail.size()):
 		var a := float(i) / _kick_trail.size()
 		draw_line(to_local(_kick_trail[i - 1]), to_local(_kick_trail[i]), Color(2.4, 2.2, 2.1, a * 0.8), 2.5 * a, Juice.hd)
+	if Execution.staggered(fighter):
+		_draw_stagger()
 	if fighter.shield > 0.0:
 		var a := 0.25 + 0.25 * sin(_t * 20.0)
 		draw_arc(Vector2(0, -15), 19.0, 0.0, TAU, 40, Color(fighter.team_color * 1.8, a), 1.2, Juice.hd)
+
+
+## Vacillant : chevron rouge qui bat au-dessus de la tête ; plus gros et blanc-rouge quand un joueur peut l'achever.
+func _draw_stagger() -> void:
+	var can := fighter.mark_t > 0.0
+	var beat := 0.5 + 0.5 * sin(_t * (14.0 if can else 7.0))
+	var s := (1.6 if can else 1.0) * (1.0 + 0.15 * beat)
+	var top: Vector2 = (j.head if has("head") else j.shoulder) + Vector2(0, -8.0 - 2.0 * beat)
+	var col := Color(2.6, 0.5, 0.45, 0.95) if can else Color(1.8, 0.15, 0.2, 0.55 + 0.35 * beat)
+	var pts := PackedVector2Array([top + Vector2(-3, -3) * s, top, top + Vector2(3, -3) * s])
+	draw_polyline(pts, col, 1.3, Juice.hd)
+	if can:
+		draw_arc(top + Vector2(0, -1.5) * s, 5.5 * s, 0.0, TAU, 24, Color(col, 0.35 * beat), 1.0, Juice.hd)
 
 
 func _draw_laser() -> void:

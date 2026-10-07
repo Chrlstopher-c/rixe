@@ -47,6 +47,12 @@ var _throw_cd := 0.0
 var aim_point := Vector2.ZERO
 var body := BodyParts.new()
 var melee := Melee.new(self)
+var execution := Execution.new(self)
+## Tenu pendant qu'on l'exécute : ne bouge plus, ne pense plus.
+var held := false
+var executed := false
+## > 0 : un joueur peut l'exécuter maintenant (repère au-dessus de la tête).
+var mark_t := 0.0
 var last_zone := ""
 var death_cause := ""
 var _spurt := {}
@@ -93,6 +99,14 @@ func _physics_process(delta: float) -> void:
 		hp = 0.0
 		_die(Vector2.DOWN, null, 0.0)
 		return
+	mark_t -= delta
+	if held:
+		velocity = Vector2.ZERO
+		return
+	if execution.running():
+		execution.tick(delta)
+		move_and_slide()
+		return
 	intent = brain.think(self, delta)
 	_aim()
 	_timers(delta)
@@ -105,7 +119,8 @@ func _physics_process(delta: float) -> void:
 	_step_up()
 	if not was_floor and is_on_floor():
 		_land(vy)
-	melee.tick(delta, intent.get("melee", false))
+	if not _try_execute():
+		melee.tick(delta, intent.get("melee", false))
 	_throw_cd -= delta
 	if intent.get("throw", false):
 		throw_grenade()
@@ -113,6 +128,20 @@ func _physics_process(delta: float) -> void:
 	var can_fire: bool = body.arms_left() > 0 and not melee.active() and inventory.switching <= 0.0
 	gun.tick(delta, intent.fire and can_fire, intent.get("reload", false))
 	_bleed_stumps(delta)
+
+
+## Joueur : repère le bot vacillant à portée et l'achève au lieu du coup de pied.
+func _try_execute() -> bool:
+	if not is_player:
+		return false
+	var target := Execution.target_for(self)
+	if target == null:
+		return false
+	target.mark_t = 0.1
+	if not intent.get("melee", false) or melee.active():
+		return false
+	execution.start(target)
+	return true
 
 
 func _aim() -> void:
@@ -153,6 +182,8 @@ func _move(delta: float) -> void:
 			Effects.dust(global_position + Vector2(0, -2), 1, 0.3)
 		return
 	var goal: float = intent.move * RUN * leg_factor() * (0.6 if aiming else 1.0)
+	if Execution.staggered(self):
+		goal *= 0.55
 	var accel := ACCEL_GROUND if is_on_floor() else ACCEL_AIR
 	velocity.x = move_toward(velocity.x, goal, accel * delta)
 	var g := GRAVITY
@@ -256,7 +287,8 @@ func _on_platform() -> bool:
 	return false
 
 
-func take_hit(dmg: float, dir: Vector2, at: Vector2, from: Node2D, knock: float) -> void:
+## `part` force la zone touchée (exécutions) ; vide = calculée depuis la ligne de tir.
+func take_hit(dmg: float, dir: Vector2, at: Vector2, from: Node2D, knock: float, part: String = "") -> void:
 	if not alive:
 		return
 	if shield > 0.0:
@@ -264,7 +296,7 @@ func take_hit(dmg: float, dir: Vector2, at: Vector2, from: Node2D, knock: float)
 		return
 	if is_player:
 		dmg *= PLAYER_DAMAGE_TAKEN
-	last_zone = body.zone(rig.global_joints(), at, dir)
+	last_zone = part if part != "" else body.zone(rig.global_joints(), at, dir)
 	var res := body.damage(last_zone, dmg)
 	_since_hit = 0.0
 	hp -= res.dmg

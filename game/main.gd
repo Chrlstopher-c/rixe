@@ -223,7 +223,8 @@ func _on_killed(victim: Node2D, killer: Node2D) -> void:
 		_hud.feed("%s  tombe dans le vide" % victim.display_name, victim.team_color)
 	else:
 		var kname: String = killer.display_name if is_instance_valid(killer) else "?"
-		_hud.feed("%s  élimine  %s" % [kname, victim.display_name], victim.team_color)
+		var verb := "exécute" if victim.executed else "élimine"
+		_hud.feed("%s  %s  %s" % [kname, verb, victim.display_name], victim.team_color)
 	match_state.record_kill(victim, killer)
 	if game_mode == "survie" and not attract:
 		if victim == player and not _scoreboard.visible:

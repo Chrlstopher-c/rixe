@@ -4,6 +4,8 @@ extends Node
 signal fighter_killed(victim: Node2D, killer: Node2D)
 ## Message court pour le joueur (déblocage, etc.), affiché par l'interface.
 signal notified(text: String)
+## Exécution lancée (victime tenue, kill cam) : l'interface affiche le titre.
+signal executed(victim: Node2D, killer: Node2D)
 
 const MASK_WORLD := 1
 const MASK_FIGHTERS := 2
