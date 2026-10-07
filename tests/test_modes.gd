@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["arcade_last_bot", "chrono", "objectif", "leaderboard", "boss"]
+	return ["arcade_last_bot", "chrono", "objectif", "leaderboard", "boss", "bare_hands"]
 
 
 func _kill(victim: Fighter, killer: Fighter) -> void:
@@ -129,4 +129,29 @@ func test_boss(t: Node) -> void:
 	brain.fire = false
 	b.take_hit(50.0, Vector2.RIGHT, b.global_position + Vector2(0, -30), main.player, 300.0)
 	t.check(absf(b.velocity.x) < 120.0, "peu sensible au recul")
+	_cleanup(main)
+
+
+func test_bare_hands(t: Node) -> void:
+	var main: Node = t.main
+	main.live_rules = true
+	main._on_start("mainsnues", 0, 1)
+	await t.frames(5)
+	t.check(main.game_mode == "arcade" and main.config.arms == "mains nues", "mains nues : règles de l'arcade, sans armes")
+	var armed: Array = main._fighters.get_children().filter(func(f: Node) -> bool:
+		return f is Fighter and f.gun.kind() != "fists")
+	t.check(armed.is_empty(), "tout le monde est aux poings (%d armés)" % armed.size())
+	var guns: Array = Juice.world.get_children().filter(func(n: Node) -> bool: return n is WeaponPickup)
+	t.check(guns.is_empty(), "aucune arme au sol")
+	t.check(main.player.grenades == 0, "pas de grenades")
+	var fought := [false]
+	for i in 900:
+		for f in _bots(main):
+			fought[0] = fought[0] or f.melee.active() or f.grapple.active()
+		if fought[0]:
+			break
+		await t.frames(1)
+	t.check(fought[0], "les bots vont au contact et frappent")
+	main.config = GameConfig.new()
+	main.spawner.config = main.config
 	_cleanup(main)

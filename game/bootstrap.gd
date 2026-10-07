@@ -30,6 +30,8 @@ static func parse_args(m: Node) -> void:
 			Settings.persist = false
 			probe.fighters = func() -> int: return m._fighters.get_child_count()
 			m.add_child(probe)
+		elif a.begins_with("--arms="):
+			m.config.arms = a.get_slice("=", 1).replace("_", " ")
 		elif a.begins_with("--seed="):
 			m.seed_base = int(a.get_slice("=", 1))
 
@@ -45,6 +47,7 @@ static func build(m: Node) -> void:
 	Juice.stains = m._child(Juice.world, preload("res://fx/stains.gd").new())
 	m._fighters = m._child(Juice.world, Node2D.new())
 	m.spawner = Spawner.new(m._fighters, m._rng)
+	m.spawner.config = m.config
 	Juice.fx = m._child(Juice.world, preload("res://fx/fx_layer.gd").new())
 	Juice.weather = m._child(Juice.world, preload("res://fx/weather.gd").new())
 	if not ("foreground" in m._off):

@@ -58,6 +58,13 @@ const WEAPONS := {
 		"thick": 0.9, "terrain_dmg": 18.0, "terrain_radius": 6.0,
 		"ricochet": 0.0, "bounces": 0, "mag": 0, "reserve": 0, "reload": 0.1, "climb": 0.0, "look": "blade",
 	},
+	"fists": {
+		"name": "Poings", "kind": "fists", "rate": 0.2, "dmg": 0.0, "pellets": 1, "spread": 0.0, "range": 26.0,
+		"knock": 0.0, "kick": 0.0, "recoil": 0.0, "shake": 0.0, "tracer": Color(2.0, 2.0, 2.0),
+		"width": 0.0, "length": 0.0, "pierce": false, "shell": false, "flash": 0.0, "ideal": 14.0,
+		"thick": 0.0, "terrain_dmg": 0.0, "terrain_radius": 0.0, "tool": true,
+		"ricochet": 0.0, "bounces": 0, "mag": 0, "reserve": 0, "reload": 0.1, "climb": 0.0, "look": "fists",
+	},
 	"pickaxe": {
 		"name": "Pioche", "kind": "blade", "rate": 0.42, "dmg": 18.0, "pellets": 1, "spread": 0.0, "range": 30.0,
 		"knock": 90.0, "kick": -60.0, "recoil": 0.0, "shake": 0.08, "tracer": Color(2.4, 2.2, 2.0),
@@ -93,7 +100,7 @@ static func compose(id: String, attachments: Dictionary) -> Dictionary:
 
 
 static func accepts(id: String) -> bool:
-	return WEAPONS[id].get("kind", "hitscan") != "blade"
+	return not WEAPONS[id].get("kind", "hitscan") in ["blade", "fists"]
 
 
 ## Grenades à main par vie, puissance et retard.

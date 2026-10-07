@@ -1,9 +1,11 @@
 class_name Modes
 ## Modes de jeu : règles affichées au menu, option réglable (durée ou objectif), clé de classement.
 
-const ORDER := ["arcade", "chrono", "objectif", "survie"]
+const ORDER := ["arcade", "mainsnues", "chrono", "objectif", "survie"]
 const ALL := {
 	"arcade": {"label": "ARCADE", "desc": "Manches de plus en plus dures · une seule vie", "options": []},
+	"mainsnues": {"label": "MAINS NUES", "desc": "Arcade sans armes : poings, pieds, combos et projections",
+		"options": [], "base": "arcade", "arms": "mains nues"},
 	"chrono": {"label": "CHRONO", "desc": "Un max d'éliminations avant la fin du temps · réapparitions",
 		"options": [60, 120, 180, 300, 600], "default": 2},
 	"objectif": {"label": "OBJECTIF", "desc": "Le premier à N éliminations gagne · réapparitions",
@@ -11,6 +13,14 @@ const ALL := {
 	"survie": {"label": "SURVIE", "desc": "Récolte, construis, mange et tiens la nuit face aux pillards",
 		"options": []},
 }
+
+
+## Variante d'un autre mode (mains nues = arcade sans armes) : règle la partie, renvoie le mode de base.
+static func apply(mode: String, cfg: GameConfig) -> String:
+	var m: Dictionary = ALL.get(mode, {})
+	if m.has("arms"):
+		cfg.arms = m.arms
+	return m.get("base", mode)
 
 
 static func label(mode: String) -> String:

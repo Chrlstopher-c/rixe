@@ -14,8 +14,10 @@ const ARMS := {
 	"précision": ["sniper", "railgun"],
 	"lames": ["katana"],
 	"explosifs": ["launcher"],
+	"mains nues": ["fists"],
 }
-const ARMS_ORDER := ["toutes", "pistolets", "automatiques", "fusils à pompe", "précision", "lames", "explosifs"]
+const ARMS_ORDER := ["toutes", "pistolets", "automatiques", "fusils à pompe", "précision", "lames", "explosifs",
+	"mains nues"]
 ## Couleurs d'équipe (index 1 à 4) ; 0 = chacun pour soi.
 const TEAMS := ["", "rouge", "bleu", "vert", "jaune"]
 const TEAM_COLORS := [Color.WHITE, Color(1.0, 0.3, 0.3), Color(0.3, 0.6, 1.0), Color(0.4, 1.0, 0.5),

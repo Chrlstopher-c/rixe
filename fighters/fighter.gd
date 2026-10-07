@@ -144,15 +144,16 @@ func _physics_process(delta: float) -> void:
 	if intent.get("focus", false) and local_human(self) and Juice.use_focus():
 		Juice.notify("RALENTI")
 	grapple.tick(delta, intent.get("grab", false))
+	var fists := gun.kind() == "fists"
 	if not _try_execute() and not grapple.active():
-		melee.tick(delta, intent.get("melee", false))
+		melee.tick(delta, intent.get("melee", false) or (fists and intent.fire))
 	_throw_cd -= delta
 	if intent.get("throw", false):
 		throw_grenade()
 	_inventory_input(delta)
 	var can_fire: bool = body.arms_left() > 0 and not melee.active() and not grapple.active() \
 		and inventory.switching <= 0.0
-	gun.tick(delta, intent.fire and can_fire, intent.get("reload", false))
+	gun.tick(delta, intent.fire and can_fire and not fists, intent.get("reload", false))
 	if _debug_fire and is_player:
 		_trace_fire(delta, can_fire)
 	_bleed_stumps(delta)

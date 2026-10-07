@@ -132,7 +132,8 @@ func _banner(text: String) -> void:
 func end_match() -> void:
 	m._end_in = -1.0
 	var rows: Array = m.match_state.ranking()
-	var key := Modes.board_key(m.game_mode, m.game_option)
+	var key := "mainsnues" if m.config.arms == "mains nues" and m.game_mode == "arcade" \
+		else Modes.board_key(m.game_mode, m.game_option)
 	var lower := Modes.lower_is_better(m.game_mode)
 	var mine: int = m.match_state.kills_of("Toi")
 	var value: float = m.match_state.elapsed if lower else float(mine)

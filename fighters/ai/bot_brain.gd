@@ -69,6 +69,7 @@ func _breach(f: Node2D, delta: float, it: Dictionary) -> void:
 
 
 ## Recharge à l'abri (hors de vue) ou quand le chargeur est vide ; sans munitions, va au contact ou cherche une arme.
+## Aux poings : toujours au contact.
 func _ammo(f: Node2D, it: Dictionary) -> void:
 	var g: Gun = f.gun
 	var low: bool = g.mag < int(g.def.mag) * (0.25 + 0.4 * p.caution)
@@ -76,6 +77,11 @@ func _ammo(f: Node2D, it: Dictionary) -> void:
 		it.reload = true
 	if f.hp < 45.0 and f.inventory.medkits > 0 and (_unseen > 0.2 or f.hp < 25.0):
 		it.heal = true
+	if g.kind() == "fists":
+		it.reload = false
+		if state == State.ENGAGE:
+			state = State.RUSH
+		return
 	if g.mag == 0 and g.reserve == 0 and not g.reloading():
 		state = State.LOOT if is_instance_valid(_loot) else State.RUSH
 
@@ -186,6 +192,10 @@ func _combat(f: Node2D, delta: float, it: Dictionary) -> void:
 	if from.distance_to(chest) < 30.0 and randf() < delta * (1.0 + 6.0 * p.melee) and f.gun.kind() != "blade":
 		it.melee = true
 	var d := from.distance_to(chest)
+	if d < 24.0 and _unseen < 0.1 and randf() < delta * (0.3 + 1.5 * p.melee):
+		it.grab = true
+	if f.gun.kind() == "fists" and d > 40.0 and d < 75.0 and f.is_on_floor() and randf() < delta * 0.8:
+		it.jump = true
 	if f.gun.kind() == "projectile":
 		var flight: float = d / float(f.gun.def.speed)
 		it.aim = (it.aim as Vector2) + Vector2(0, -160.0 * flight * flight)

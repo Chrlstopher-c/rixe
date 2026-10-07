@@ -31,6 +31,8 @@ func spawn(nm: String, pos: Vector2, color: Color, brain: RefCounted, weapon: St
 		mods: Dictionary = {}) -> Fighter:
 	var f := Fighter.new()
 	f.setup(nm, color, brain, weapon, is_player, mods)
+	if weapon == "fists":
+		f.grenades = 0
 	f.position = pos
 	fighters.add_child(f)
 	return f
@@ -114,6 +116,9 @@ func spawn_pickups() -> void:
 		Juice.world.add_child(p)
 		p.global_position = Vector2(r.get_center().x, r.position.y - 20.0)
 		var ids: Array = Arsenal.ids().filter(func(w: String) -> bool: return config.allows(w))
+		if ids.is_empty():
+			p.queue_free()
+			continue
 		p.setup(ids[rng.randi_range(0, ids.size() - 1)], Vector2.ZERO)
 	var atts := Arsenal.ATTACHMENTS.keys()
 	for i in rng.randi_range(1, 2):

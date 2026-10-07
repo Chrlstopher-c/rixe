@@ -173,12 +173,24 @@ func _pose_arms() -> void:
 	gun_dir = aim
 	j.hand0 = pivot
 	j.hand1 = pivot + aim * 4.5
+	if fighter.gun.kind() == "fists" and not fighter.grapple.active():
+		_pose_fists(shoulder, aim, punch)
 	if k > 0.0:
 		j.hand1 = pivot + aim * 2.0 + Vector2(0, 3.0 + 2.0 * sin(k * TAU * 2.0))
 	j.elbow0 = ik(shoulder, j.hand0, UPPER, FORE, -fighter.facing)
 	j.elbow1 = ik(shoulder, j.hand1, UPPER, FORE, -fighter.facing)
 	j.pivot = pivot
 	muzzle_local = pivot + aim * float(fighter.gun.def.length)
+
+
+## Mains nues : garde poings levés ; le direct part du poing avant, le crochet du poing arrière.
+func _pose_fists(shoulder: Vector2, aim: Vector2, punch: Vector2) -> void:
+	var guard := shoulder + aim * 4.0 + Vector2(0, -1.0)
+	var rear := shoulder + aim * 2.0 + Vector2(-fighter.facing * 1.5, 1.5)
+	var cross := fighter.melee.active() and fighter.melee.step == 1
+	j.hand0 = guard + (Vector2.ZERO if cross else aim * punch.x)
+	j.hand1 = rear + (aim * (punch.x + 3.0) if cross else Vector2.ZERO)
+	j.pivot = j.hand0
 
 
 ## Coup de poing en cours : [allonge du poing, avancée de l'épaule] ; zéro hors des coups de poing.
@@ -369,6 +381,8 @@ func _draw_gun() -> void:
 		var k: float = 1.0 - fighter.gun.charge_t / Boss.CHARGE
 		draw_circle(muzzle_local, 2.0 + 5.0 * k, Color(2.6, 0.3, 0.2, 0.35 + 0.5 * k))
 	var look: String = d.get("look", "")
+	if look == "fists":
+		return
 	draw_set_transform(j.pivot, gun_dir.angle(), Vector2(1, fighter.facing))
 	if look == "blade":
 		_draw_blade(d)

@@ -4,6 +4,8 @@ class_name Remains
 
 
 static func drop_gun(f: Fighter, g: Gun, v: Vector2) -> void:
+	if g.kind() == "fists":
+		return
 	var p := WeaponPickup.new()
 	Juice.world.add_child(p)
 	p.global_position = f.rig.to_global(f.rig.j.pivot)
@@ -17,7 +19,9 @@ static func drop_loot(f: Fighter) -> void:
 		drops.append("ammo")
 	if randf() < 0.35 or f.inventory.medkits > 0:
 		drops.append("medkit")
-	if randf() < 0.3 or f.grenades > 0:
+	if f.gun.kind() == "fists":
+		drops.erase("ammo")
+	elif randf() < 0.3 or f.grenades > 0:
 		drops.append("grenade")
 	for k in drops:
 		var l := Loot.new()

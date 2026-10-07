@@ -361,6 +361,7 @@ func start_custom(cfg: GameConfig) -> void:
 
 func _on_start(mode: String, option: int, first_round: int = 1, cfg: GameConfig = null) -> void:
 	config = cfg if cfg else GameConfig.new()
+	mode = Modes.apply(mode, config)
 	config.mode = mode
 	config.option = option
 	spawner.config = config
