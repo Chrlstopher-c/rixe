@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["audio", "announcer"]
+	return ["audio", "announcer", "ambience"]
 
 
 func test_audio(t: Node) -> void:
@@ -63,3 +63,19 @@ func test_announcer(t: Node) -> void:
 	a.enabled = false
 	me.queue_free()
 	bot.queue_free()
+
+
+func test_ambience(t: Node) -> void:
+	Sfx.set_theme("acier")
+	var sync: AudioStreamSynchronized = Sfx.music.stream
+	var len_acier: float = sync.get_sync_stream(0).get_length()
+	Sfx.set_theme("rouille")
+	var len_rouille: float = sync.get_sync_stream(0).get_length()
+	t.check(absf(len_acier - len_rouille) > 2.0, "musique différente selon le décor (%.1f s / %.1f s)" % [len_acier,
+		len_rouille])
+	Sfx.set_place("mine")
+	var wet_mine: float = Sfx._reverb.wet
+	Sfx.set_place("toits")
+	t.check(wet_mine > Sfx._reverb.wet * 3.0, "plus d'écho dans la mine qu'en plein air")
+	Sfx.set_theme("crepuscule")
+	await t.frames(2)

@@ -98,6 +98,8 @@ func _start_round() -> void:
 	Juice.wind = w[1]
 	Juice.weather.set_kind(w[0])
 	_night(map_type == "foret")
+	Sfx.set_theme(theme_name)
+	Sfx.set_place(map_type)
 	if _foreground:
 		_foreground.regenerate(seed_base * 1000 + round_no, map_type)
 	var b := _populate_survival() if game_mode == "survie" and not attract else _populate()

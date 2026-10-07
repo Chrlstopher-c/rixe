@@ -1,4 +1,5 @@
-"""Synthétise la musique en trois couches synchrones, en boucle parfaite (numpy/scipy) → assets/music/*.wav.
+"""Synthétise la musique en trois couches synchrones, en boucle parfaite (numpy/scipy), une ambiance par décor
+→ assets/music/<thème>/{calme,combat,tension}.wav.
 
 calme (nappe, basse tenue, shaker), combat (batterie, basse, arpège), tension (dernier debout : pulsation,
 roulements, stabs). Les couches partagent tempo et longueur ; le jeu les mélange selon l'action.
@@ -148,14 +149,32 @@ def render(parts: list) -> np.ndarray:
     return track
 
 
+# Une ambiance par thème d'arène : tempo et progression d'accords (fondamentale en Hz, intervalles).
+THEMES = {
+    "crepuscule": {"bpm": 124, "seed": 7, "chords": [(110.0, [0, 3, 7]), (87.31, [0, 4, 7]), (73.42, [0, 3, 7]),
+                                                      (82.41, [0, 4, 7])]},
+    "acier": {"bpm": 132, "seed": 11, "chords": [(82.41, [0, 3, 7]), (65.41, [0, 4, 7]), (98.0, [0, 4, 7]),
+                                                  (73.42, [0, 4, 7])]},
+    "rouille": {"bpm": 112, "seed": 13, "chords": [(73.42, [0, 3, 7]), (58.27, [0, 4, 7]), (98.0, [0, 3, 7]),
+                                                    (110.0, [0, 4, 7])]},
+}
+
+
 def main() -> None:
-    OUT.mkdir(parents=True, exist_ok=True)
-    layers = {name: render(parts) for name, parts in LAYERS.items()}
-    gain = 0.85 / np.abs(np.tanh(sum(layers.values()) * 1.2)).max()
-    for name, x in layers.items():
-        y = np.tanh(x * 1.2) * gain
-        wavfile.write(OUT / f"{name}.wav", SR, (np.clip(y, -1, 1) * 32767).astype(np.int16))
-    print(f"musique {BARS * 4 * BEAT:.1f}s, couches {list(layers)} -> {OUT}")
+    global BPM, BEAT, CHORDS, RNG
+    for theme, cfg in THEMES.items():
+        BPM = cfg["bpm"]
+        BEAT = 60 / BPM
+        CHORDS = cfg["chords"]
+        RNG = np.random.default_rng(cfg["seed"])
+        out = OUT / theme
+        out.mkdir(parents=True, exist_ok=True)
+        layers = {name: render(parts) for name, parts in LAYERS.items()}
+        gain = 0.85 / np.abs(np.tanh(sum(layers.values()) * 1.2)).max()
+        for name, x in layers.items():
+            y = np.tanh(x * 1.2) * gain
+            wavfile.write(out / f"{name}.wav", SR, (np.clip(y, -1, 1) * 32767).astype(np.int16))
+        print(f"{theme} : {BARS * 4 * BEAT:.1f}s, couches {list(layers)} -> {out}")
 
 
 if __name__ == "__main__":

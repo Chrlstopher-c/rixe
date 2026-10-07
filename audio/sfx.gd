@@ -26,6 +26,11 @@ var _layer_db: Array[float] = [0.0, MUTE_DB, MUTE_DB]
 var _lowpass := AudioEffectLowPassFilter.new()
 var _music_bus := -1
 var _voice_bus := ""
+## Ambiance musicale en cours (thème d'arène) ; réverbération des bruitages selon le lieu.
+var theme := ""
+var _reverb := AudioEffectReverb.new()
+## Écho par carte : galeries et halls résonnent, le plein air reste sec.
+const PLACES := {"mine": 0.32, "usine": 0.22, "foret": 0.12, "toits": 0.06, "plateformes": 0.08, "survie": 0.05}
 var _next := 0
 
 
@@ -33,10 +38,12 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	for s in SOUNDS:
 		streams[s] = load("res://assets/sfx/%s.wav" % s)
+	_setup_sfx_bus()
 	for i in POOL:
 		var p := AudioStreamPlayer2D.new()
 		p.max_distance = 900.0
 		p.attenuation = 1.6
+		p.bus = "Sfx"
 		add_child(p)
 		_players.append(p)
 	for i in 4:
@@ -46,14 +53,47 @@ func _ready() -> void:
 	_setup_music()
 
 
-func _setup_music() -> void:
+func _setup_sfx_bus() -> void:
+	AudioServer.add_bus()
+	var i := AudioServer.bus_count - 1
+	AudioServer.set_bus_name(i, "Sfx")
+	AudioServer.set_bus_send(i, "Master")
+	_reverb.room_size = 0.75
+	_reverb.damping = 0.5
+	_reverb.dry = 1.0
+	_reverb.wet = 0.08
+	AudioServer.add_bus_effect(i, _reverb)
+
+
+## Lieu de la manche : plus ou moins d'écho sur les bruitages.
+func set_place(map: String) -> void:
+	_reverb.wet = PLACES.get(map, 0.08)
+
+
+## Ambiance musicale du thème (mêmes trois couches, autre tonalité et autre tempo) ; relancée si elle change.
+func set_theme(name: String) -> void:
+	if name == theme or not ResourceLoader.exists("res://assets/music/%s/calme.wav" % name):
+		return
+	theme = name
+	var playing := music.playing
+	_load_layers()
+	if playing:
+		music.play()
+
+
+func _load_layers() -> void:
 	_sync.stream_count = LAYERS.size()
 	for i in LAYERS.size():
-		var track: AudioStreamWAV = load("res://assets/music/%s.wav" % LAYERS[i])
+		var track: AudioStreamWAV = load("res://assets/music/%s/%s.wav" % [theme, LAYERS[i]])
 		track.loop_mode = AudioStreamWAV.LOOP_FORWARD
 		track.loop_end = int(track.get_length() * track.mix_rate)
 		_sync.set_sync_stream(i, track)
 		_sync.set_sync_stream_volume(i, _layer_db[i])
+
+
+func _setup_music() -> void:
+	theme = "crepuscule"
+	_load_layers()
 	AudioServer.add_bus()
 	_music_bus = AudioServer.bus_count - 1
 	AudioServer.set_bus_name(_music_bus, "Music")
