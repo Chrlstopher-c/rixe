@@ -34,4 +34,4 @@ Chaque story : intention — VERIFY exécutable. Tests de jeu = `godot --headles
 - [x] E9.S1 — tir aux jambes : le rayon arrêté par le sol juste devant un pied touche la jambe — VERIFY: `--tests=legshot`
 - [x] E9.S2 — écran titre (Entrée pour jouer) + pause Échap (reprendre, volume, HD/pixel, quitter) — VERIFY: `--tests=menu`
 - [x] E9.S3 — musique synthétisée en boucle, ducking pendant le ralenti — VERIFY: `--tests=audio` (piste chargée, boucle)
-- [ ] E9.S4 — bots qui ramassent une arme proche plus forte — VERIFY: `--tests=bot_pickup`
+- [x] E9.S4 — bots qui ramassent une arme proche plus forte — VERIFY: `--tests=bot_pickup`
