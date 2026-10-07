@@ -29,3 +29,9 @@ Chaque story : intention — VERIFY exécutable. Tests de jeu = `godot --headles
 
 ## E8 — Performance
 - [x] E8.S1 — 60 i/s stables en 1080p à 6 combattants sur la tour — VERIFY: `tools/perf.sh` (moyenne ≥ 60, 1 % bas ≥ 50)
+
+## E9 — Finitions V1 (nuit, après les épiques validées)
+- [ ] E9.S1 — tir aux jambes : le rayon arrêté par le sol juste devant un pied touche la jambe — VERIFY: `--tests=legshot`
+- [ ] E9.S2 — écran titre (Entrée pour jouer) + pause Échap (reprendre, volume, HD/pixel, quitter) — VERIFY: `--tests=menu`
+- [ ] E9.S3 — musique synthétisée en boucle, ducking pendant le ralenti — VERIFY: `--tests=audio` (piste chargée, boucle)
+- [ ] E9.S4 — bots qui ramassent une arme proche plus forte — VERIFY: `--tests=bot_pickup`

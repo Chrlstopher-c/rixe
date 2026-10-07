@@ -60,8 +60,21 @@ func _pellet(from: Vector2, dir: Vector2) -> void:
 			if def.pierce:
 				end = to
 				continue
-		else:
+		elif not _graze_legs(end, dir, exclude):
 			Effects.impact(end, hit.normal, def.tracer)
 			Sfx.play("impact", end, -8.0, 0.25)
 		break
 	Effects.tracer(from, end, def.tracer, def.width, 0.16 if def.pierce else 0.08)
+
+
+## Un tir arrêté par le sol au ras d'un pied touche quand même la jambe (sinon viser les pieds est impossible).
+func _graze_legs(at: Vector2, dir: Vector2, exclude: Array[RID]) -> bool:
+	for f in owner.get_tree().get_nodes_in_group("fighters"):
+		if not f.alive or f.get_rid() in exclude:
+			continue
+		var feet: Vector2 = f.global_position
+		if absf(at.x - feet.x) < 8.0 and at.y > feet.y - 12.0 and at.y < feet.y + 4.0:
+			var leg := "foot0" if f.body.has("leg0") else "foot1"
+			f.take_hit(def.dmg, dir, f.rig.to_global(f.rig.j[leg]) + Vector2(0, -2), owner, def.knock)
+			return true
+	return false

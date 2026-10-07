@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["hitzones", "dismember", "headshot_slowmo"]
+	return ["hitzones", "dismember", "headshot_slowmo", "legshot"]
 
 
 func _target(t: Node, is_player: bool = false) -> Fighter:
@@ -63,3 +63,18 @@ func test_headshot_slowmo(t: Node) -> void:
 	b.hp = 5.0
 	_shoot_at(b, "head", 9.0, shooter)
 	t.check(Juice._slowmo > 0.0, "ralenti sur une mort par la tête")
+
+
+func test_legshot(t: Node) -> void:
+	var brain := ScriptBrain.new()
+	var me: Fighter = t.main.spawn_test_fighter(Vector2(440, -10), brain, "rifle", true)
+	var foe := await _target(t)
+	foe.hp = 999.0
+	var legs0: float = foe.body.hp.leg0 + foe.body.hp.leg1
+	for i in 90:
+		brain.aim = foe.global_position + Vector2(0, -1)
+		brain.fire = true
+		await t.frames(1)
+	brain.fire = false
+	var legs1: float = foe.body.hp.leg0 + foe.body.hp.leg1
+	t.check(legs1 < legs0 - 10.0, "viser les pieds blesse les jambes (%.0f → %.0f)" % [legs0, legs1])
