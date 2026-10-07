@@ -10,6 +10,7 @@ var demo := false
 var attract := false
 var _skip_title := false
 var _menu: CanvasLayer
+var _backdrop: CanvasLayer
 var _volume := 0.8
 var player: Fighter
 var _fighters: Node2D
@@ -89,7 +90,8 @@ func _build() -> void:
 	env.environment.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
 	add_child(env)
 	if not ("backdrop" in _off):
-		add_child(preload("res://arena/backdrop.gd").new())
+		_backdrop = preload("res://arena/backdrop.gd").new()
+		add_child(_backdrop)
 	Juice.world = Node2D.new()
 	add_child(Juice.world)
 	Juice.arena = _child(Juice.world, preload("res://arena/arena.gd").new())
@@ -135,6 +137,7 @@ func _start_round() -> void:
 	Juice.stains.clear()
 	_rng.seed = seed_base * 1000 + round_no
 	Juice.arena.generate(_rng.seed)
+	apply_theme(Themes.names()[_rng.randi_range(0, Themes.names().size() - 1)])
 	var n := mini(2 + round_no, 6)
 	var spots: Array = Juice.arena.spawn_points(n + 1, _rng)
 	var mine := _rng.randi_range(0, n)
@@ -165,6 +168,12 @@ func reset_for_test() -> void:
 			c.free()
 	Juice.fx.clear()
 	Juice.arena.generate_flat()
+
+
+func apply_theme(name: String) -> void:
+	Juice.arena.set_theme(name)
+	if _backdrop:
+		_backdrop.set_theme(name)
 
 
 func follow(f: Fighter) -> void:

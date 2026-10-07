@@ -4,7 +4,6 @@ extends Node2D
 const W := 1600.0
 const LEVEL_GAP := 74.0
 const PLATFORM_H := 8.0
-const RIM := Color(1.6, 0.75, 0.5)
 
 var solids: Array[Rect2] = []
 var solid_kinds: Array[String] = []
@@ -13,11 +12,20 @@ var platforms: Array[Rect2] = []
 const CELL := 16.0
 var _cells := {}
 var _tex := {}
+var theme := "crepuscule"
+var rim := Color(1.6, 0.75, 0.5)
 
 
 func _ready() -> void:
+	set_theme(theme)
+
+
+func set_theme(name: String) -> void:
+	theme = name
+	rim = Themes.ALL[name].rim
 	for n in ["ground", "metal", "bricks"]:
-		_tex[n] = load("res://assets/textures/%s.png" % n)
+		_tex[n] = Themes.texture(name, n)
+	queue_redraw()
 
 
 func generate(seed_value: int) -> void:
@@ -177,10 +185,10 @@ func _draw_solid(r: Rect2, kind: String) -> void:
 			draw_texture_rect(_tex.bricks, r, true, Color(0.45, 0.4, 0.5))
 		_:
 			draw_texture_rect(_tex.metal, r, true)
-			draw_line(r.position, Vector2(r.end.x, r.position.y), RIM, 1.0)
+			draw_line(r.position, Vector2(r.end.x, r.position.y), rim, 1.0)
 
 
 func _draw_platform(r: Rect2) -> void:
 	draw_rect(Rect2(r.position + Vector2(2, r.size.y), Vector2(r.size.x - 4, 4)), Color(0, 0, 0, 0.35))
 	draw_texture_rect(_tex.metal, r, true)
-	draw_line(r.position, Vector2(r.end.x, r.position.y), RIM, 1.0)
+	draw_line(r.position, Vector2(r.end.x, r.position.y), rim, 1.0)
