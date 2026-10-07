@@ -45,7 +45,18 @@ func think(f: Node2D, delta: float) -> Dictionary:
 	_act(f, delta, it)
 	_combat(f, delta, it)
 	_dodge(f, delta, it)
+	_ammo(f, it)
 	return it
+
+
+## Recharge à l'abri (hors de vue) ou quand le chargeur est vide ; sans munitions, va au contact ou cherche une arme.
+func _ammo(f: Node2D, it: Dictionary) -> void:
+	var g: Gun = f.gun
+	var low: bool = g.mag < int(g.def.mag) * (0.25 + 0.4 * p.caution)
+	if g.mag == 0 or (low and _unseen > 0.3):
+		it.reload = true
+	if g.mag == 0 and g.reserve == 0 and not g.reloading():
+		state = State.LOOT if is_instance_valid(_loot) else State.RUSH
 
 
 func _perceive(f: Node2D, delta: float) -> void:
@@ -81,7 +92,7 @@ func _choose(f: Node2D) -> State:
 		State.ENGAGE: 0.5,
 		State.RUSH: p.aggression * (1.2 if dist < 220.0 or f.gun.id == "shotgun" else 0.5),
 		State.RETREAT: p.caution * 1.6 if f.hp < p.flee_hp() else 0.0,
-		State.LOOT: p.greed * 0.9 if is_instance_valid(_loot) else 0.0,
+		State.LOOT: (p.greed * 0.9 + (0.8 if f.gun.reserve == 0 else 0.0)) if is_instance_valid(_loot) else 0.0,
 		State.SEARCH: 0.8 if _unseen > 1.5 else 0.0,
 		State.HIGH: p.height * 0.7 if target.global_position.y > f.global_position.y - 30.0 else 0.0,
 	}
@@ -139,7 +150,9 @@ func _combat(f: Node2D, delta: float, it: Dictionary) -> void:
 	var chest := _chest(target)
 	var tp := chest if randf() > p.accuracy * 0.25 else chest + Vector2(0, -7)
 	aim.track(tp, target.velocity, delta)
-	it.aim = aim.point
+	var from_aim: Vector2 = f.global_position + Vector2(0, -27)
+	var comp: float = f.gun.climb * f.facing * p.accuracy
+	it.aim = from_aim + (aim.point - from_aim).rotated(comp)
 	var from: Vector2 = f.global_position + Vector2(0, -27)
 	var in_range: bool = from.distance_to(chest) < float(f.gun.def.range) * 0.9
 	if _unseen < 0.1 and in_range and state != State.LOOT and aim.trigger(from, chest, delta):
@@ -195,7 +208,8 @@ func _wanted_pickup(f: Node2D) -> Node2D:
 	var mine: int = RANK.get(f.gun.id, 0)
 	var best: Node2D = null
 	for pk in f.get_tree().get_nodes_in_group("pickups"):
-		if RANK.get(pk.weapon_id, 0) <= mine or (pk.immune == f and pk.immune_t > 0.0):
+		var ammo_run: bool = pk.weapon_id == f.gun.id and f.gun.reserve < int(f.gun.def.reserve) / 2
+		if (RANK.get(pk.weapon_id, 0) <= mine and not ammo_run) or (pk.immune == f and pk.immune_t > 0.0):
 			continue
 		var d: float = f.global_position.distance_to(pk.global_position)
 		if d < 120.0 + 260.0 * p.greed and (best == null or d < f.global_position.distance_to(best.global_position)):

@@ -4,6 +4,7 @@ extends CanvasLayer
 signal start_requested(mode: String, option: int)
 signal resume_requested
 signal title_requested
+signal restart_requested
 signal quit_requested
 signal hd_changed(on: bool)
 signal volume_changed(v: float)
@@ -58,7 +59,7 @@ func _ids() -> Array[String]:
 	if mode == "board":
 		return ["board_mode", "back"]
 	if mode == "pause":
-		return ["resume", "volume", "display", "title", "quit"]
+		return ["resume", "restart", "volume", "display", "title", "quit"]
 	var ids: Array[String] = ["mode"]
 	if Modes.has_option(game_mode):
 		ids.append("option")
@@ -84,6 +85,8 @@ func _text(id: String) -> String:
 			return "REPRENDRE"
 		"title":
 			return "MENU PRINCIPAL"
+		"restart":
+			return "RECOMMENCER"
 		"back":
 			return "RETOUR"
 	return "QUITTER"
@@ -156,6 +159,8 @@ func activate(i: int) -> void:
 			resume_requested.emit()
 		"title":
 			title_requested.emit()
+		"restart":
+			restart_requested.emit()
 		"quit":
 			quit_requested.emit()
 		"volume":
@@ -190,7 +195,7 @@ func _draw_menu() -> void:
 	if mode == "board":
 		_draw_board(size.x * 0.5, top + 26)
 	_draw_items(size.x * 0.5, size.y * (0.4 if mode == "title" else 0.36) + (150.0 if mode == "board" else 0.0))
-	var help := "ZQSD bouger · Espace sauter · clic tirer · Maj dash · E coup de pied · Échap pause · F1 HD/pixel"
+	var help := "ZQSD bouger · Espace sauter · clic tirer · clic droit viser · R recharger · Maj dash · E coup de pied"
 	_canvas.draw_string(_font, Vector2(0, size.y - 12), help, HORIZONTAL_ALIGNMENT_CENTER, size.x, 8,
 		Color(1, 0.9, 0.95, 0.55))
 

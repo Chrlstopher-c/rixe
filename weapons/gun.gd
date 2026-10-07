@@ -1,33 +1,94 @@
 class_name Gun
 extends RefCounted
-## Arme tenue par un combattant : cadence, tir hitscan (dispersion, perforation), recul et effets.
+## Arme tenue par un combattant : chargeur et réserve, rechargement, cadence, remontée du canon, tir hitscan
+## (dispersion, perforation, ricochets) et effets.
+
+signal reloaded
 
 var id: String
 var def: Dictionary
 var owner: Node2D
 var cd := 0.0
+var mag := 0
+var reserve := 0
+var reload_t := 0.0
+## Remontée du canon accumulée par les tirs (radians), à compenser à la souris.
+var climb := 0.0
+var _since_shot := 99.0
 
 
 func _init(holder: Node2D, weapon_id: String) -> void:
 	owner = holder
 	id = weapon_id
 	def = Arsenal.WEAPONS[weapon_id]
+	mag = int(def.mag)
+	reserve = int(def.reserve)
 
 
-func tick(delta: float, trigger: bool) -> void:
+func reloading() -> bool:
+	return reload_t > 0.0
+
+
+## Avancement du rechargement (0 → 1), pour la pose et l'interface.
+func reload_progress() -> float:
+	return 1.0 - reload_t / float(def.reload) if reload_t > 0.0 else 0.0
+
+
+func tick(delta: float, trigger: bool, reload_pressed: bool = false) -> void:
 	cd -= delta
-	if trigger and cd <= 0.0:
-		cd = def.rate
-		_fire()
+	_since_shot += delta
+	if _since_shot > 0.18:
+		climb = move_toward(climb, 0.0, Arsenal.RECOVER * delta)
+	if reload_t > 0.0:
+		reload_t -= delta
+		if reload_t <= 0.0:
+			_finish_reload()
+		return
+	if reload_pressed:
+		start_reload()
+	if not trigger or cd > 0.0:
+		return
+	if mag <= 0:
+		cd = 0.3
+		if not start_reload():
+			Sfx.play("dry", owner.global_position, -6.0, 0.05)
+		return
+	cd = def.rate
+	mag -= 1
+	_since_shot = 0.0
+	_fire()
+
+
+func start_reload() -> bool:
+	if reload_t > 0.0 or mag >= int(def.mag) or reserve <= 0:
+		return false
+	reload_t = def.reload
+	Sfx.play("reload_out", owner.global_position, -4.0, 0.05)
+	Juice.fx.emit(4, owner.rig.ejection_global(), Vector2(-owner.facing * 30.0, -60.0), 2.0, 2.2, Color(0.12, 0.12, 0.16))
+	return true
+
+
+func _finish_reload() -> void:
+	var need: int = int(def.mag) - mag
+	var take := mini(need, reserve)
+	mag += take
+	reserve -= take
+	Sfx.play("reload_in", owner.global_position, -3.0, 0.05)
+	reloaded.emit()
+
+
+## Direction réelle du tir : la visée, remontée par le recul accumulé.
+func shot_dir() -> Vector2:
+	return owner.aim_dir.rotated(-climb * owner.facing)
 
 
 func _fire() -> void:
-	var dir: Vector2 = owner.aim_dir
+	var dir := shot_dir()
 	var muzzle: Vector2 = owner.rig.muzzle_global()
-	var one_hand: bool = owner.body.arms_left() < 2
-	var spread: float = def.spread * 2.5 + 0.04 if one_hand else def.spread
+	var spread := _spread()
 	for i in def.pellets:
 		_pellet(muzzle, dir.rotated(randf_range(-spread, spread)))
+	climb = minf(climb + float(def.climb) * (0.4 if owner.get("aiming") else 1.0), 0.6)
 	owner.rig.recoil = def.recoil
 	owner.velocity -= dir * def.kick
 	Effects.muzzle(muzzle, dir, def.tracer, def.flash)
@@ -40,6 +101,15 @@ func _fire() -> void:
 		Juice.shockwave(muzzle, 0.6)
 		if owner.is_player:
 			Juice.aberration += 0.6
+
+
+func _spread() -> float:
+	var s: float = def.spread
+	if owner.body.arms_left() < 2:
+		s = s * 2.5 + 0.04
+	if owner.get("aiming"):
+		s *= 0.4
+	return s
 
 
 func _pellet(from: Vector2, dir: Vector2) -> void:

@@ -37,6 +37,9 @@ var recent_hit := 0.0
 var shield := SPAWN_SHIELD
 var _since_hit := 99.0
 var intent := {}
+## Visée précise (clic droit) : dispersion et remontée réduites, déplacement ralenti, caméra qui glisse.
+var aiming := false
+var aim_point := Vector2.ZERO
 var body := BodyParts.new()
 var melee := Melee.new(self)
 var last_zone := ""
@@ -92,12 +95,14 @@ func _physics_process(delta: float) -> void:
 	if not was_floor and is_on_floor():
 		_land(vy)
 	melee.tick(delta, intent.get("melee", false))
-	gun.tick(delta, intent.fire and body.arms_left() > 0 and not melee.active())
+	gun.tick(delta, intent.fire and body.arms_left() > 0 and not melee.active(), intent.get("reload", false))
 	_bleed_stumps(delta)
 
 
 func _aim() -> void:
 	var target: Vector2 = intent.aim
+	aim_point = target
+	aiming = intent.get("aiming", false) and dash_t <= 0.0
 	var from := global_position + Vector2(0, -27)
 	aim_dir = (target - from).normalized() if from.distance_to(target) > 2.0 else aim_dir
 	facing = 1 if aim_dir.x >= 0.0 else -1
@@ -130,7 +135,7 @@ func _move(delta: float) -> void:
 		if int(dash_t * 120.0) % 3 == 0:
 			Effects.dust(global_position + Vector2(0, -2), 1, 0.3)
 		return
-	var goal: float = intent.move * RUN * leg_factor()
+	var goal: float = intent.move * RUN * leg_factor() * (0.6 if aiming else 1.0)
 	var accel := ACCEL_GROUND if is_on_floor() else ACCEL_AIR
 	velocity.x = move_toward(velocity.x, goal, accel * delta)
 	var g := GRAVITY
@@ -305,7 +310,7 @@ func drop_weapon(v: Vector2) -> void:
 	var p := WeaponPickup.new()
 	Juice.world.add_child(p)
 	p.global_position = rig.to_global(rig.j.pivot)
-	p.setup(gun.id, v, self)
+	p.setup(gun.id, v, self, gun.mag, gun.reserve)
 
 
 func _corpse_points() -> Dictionary:

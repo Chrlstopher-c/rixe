@@ -59,6 +59,7 @@ func _draw_hud() -> void:
 			Color(f.color, a))
 	_draw_banner()
 	_draw_mode_center()
+	_draw_ammo()
 	if show_crosshair:
 		_draw_crosshair(_canvas.get_local_mouse_position())
 
@@ -124,3 +125,26 @@ func _draw_mode_center() -> void:
 		_canvas.draw_rect(Rect2(0, 186, w, 26), Color(0, 0, 0, 0.4))
 		_canvas.draw_string(_font, Vector2(0, 204), "RÉAPPARITION  %d" % ceili(respawn_t), HORIZONTAL_ALIGNMENT_CENTER,
 			w, 14, Color(0.6, 1.8, 2.0))
+
+
+func _draw_ammo() -> void:
+	if not is_instance_valid(player) or not player.alive:
+		return
+	var g: Gun = player.gun
+	var size := _canvas.size
+	var empty := g.mag == 0
+	var col := Color(2.0, 0.5, 0.5) if empty or g.mag <= int(g.def.mag) / 5 else Color(1.6, 1.55, 1.5)
+	var x := size.x - 140.0
+	_canvas.draw_string(_font, Vector2(x, size.y - 16), "%d" % g.mag, HORIZONTAL_ALIGNMENT_RIGHT, 60, 22, col)
+	_canvas.draw_string(_font, Vector2(x + 64, size.y - 16), "/ %d" % g.reserve, HORIZONTAL_ALIGNMENT_LEFT, -1, 11,
+		Color(1, 0.9, 0.95, 0.7))
+	_canvas.draw_string(_font, Vector2(x, size.y - 40), String(g.def.name).to_upper(), HORIZONTAL_ALIGNMENT_RIGHT,
+		124, 8, Color(1, 0.9, 0.95, 0.6))
+	if g.reloading():
+		var r := Rect2(x + 4, size.y - 12, 120, 3)
+		_canvas.draw_rect(r, Color(0, 0, 0, 0.5))
+		_canvas.draw_rect(Rect2(r.position, Vector2(r.size.x * g.reload_progress(), r.size.y)), Color(0.4, 1.6, 1.9))
+	elif empty:
+		var msg := "R : RECHARGER" if g.reserve > 0 else "PLUS DE MUNITIONS · E : COUP DE PIED"
+		_canvas.draw_string(_font, Vector2(0, size.y * 0.5 + 40), msg, HORIZONTAL_ALIGNMENT_CENTER, size.x, 10,
+			Color(2.0, 0.6, 0.6, 0.6 + 0.4 * sin(Time.get_ticks_msec() * 0.01)))

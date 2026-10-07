@@ -6,6 +6,8 @@ var move := 0.0
 var jump_held := false
 var drop := false
 var fire := false
+var aiming := false
+var reload := false
 var aim := Vector2.ZERO
 var _jump := false
 var _dash := false
@@ -27,7 +29,7 @@ func press_melee() -> void:
 
 func think(f: Node2D, _delta: float) -> Dictionary:
 	var it := {"move": move, "jump": _jump, "jump_held": jump_held, "drop": drop, "dash": _dash, "fire": fire,
-		"melee": _melee, "aim": aim if aim != Vector2.ZERO else f.global_position + Vector2(100, -20)}
+		"melee": _melee, "aiming": aiming, "reload": reload, "aim": aim if aim != Vector2.ZERO else f.global_position + Vector2(100, -20)}
 	_jump = false
 	_dash = false
 	_melee = false

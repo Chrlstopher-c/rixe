@@ -8,7 +8,7 @@ Jeu de combat 2D vu de côté entre stickmen armés, contre des bots. Godot 4.7.
 
 ## Commandes (touches physiques : ZQSD sur AZERTY)
 ZQSD/flèches : bouger · Espace/Z : sauter (maintenu = rebonds, 2 sauts en l'air) · S : descendre d'une plateforme ·
-souris : viser · clic gauche : tirer · Maj/clic droit : dash · E/clic molette : mêlée · F1 : HD ⇄ pixel · au titre : ‹ › pour le mode et la durée/objectif, Classement · R : relancer la manche · Échap : pause (volume, affichage, quitter)
+souris : viser · clic gauche : tirer · clic droit maintenu : visée précise · R : recharger · Maj : dash · E/clic molette : mêlée · F1 : HD ⇄ pixel · au titre : ‹ › pour le mode et la durée/objectif, Classement · Échap : pause (reprendre, recommencer, volume, affichage, menu)
 
 ## Outils
 - `tools/verify.sh [tests]` : import + tests headless (PASS/FAIL)

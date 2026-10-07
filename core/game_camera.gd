@@ -26,6 +26,9 @@ func _process(delta: float) -> void:
 	if is_instance_valid(target):
 		var aim: Vector2 = target.get("aim_dir")
 		var goal: Vector2 = target.global_position + Vector2(0, -34) + aim * 36.0 + target.get("velocity") * 0.12
+		if target.get("aiming"):
+			var reach: Vector2 = (target.get("aim_point") - target.global_position) * 0.45
+			goal += reach.limit_length(170.0)
 		global_position = global_position.lerp(goal, 1.0 - exp(-5.0 * real))
 	var s := Juice.trauma * Juice.trauma
 	offset = Vector2(_noise.get_noise_2d(_t * 30.0, 0.0), _noise.get_noise_2d(0.0, _t * 30.0)) * 9.0 * s

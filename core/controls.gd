@@ -10,7 +10,8 @@ static func register() -> void:
 	_keys("dash", [KEY_SHIFT])
 	_keys("fire", [KEY_J])
 	_mouse("fire", MOUSE_BUTTON_LEFT)
-	_mouse("dash", MOUSE_BUTTON_RIGHT)
+	_mouse("aim", MOUSE_BUTTON_RIGHT)
+	_keys("reload", [KEY_R])
 	_keys("melee", [KEY_E, KEY_F])
 	_mouse("melee", MOUSE_BUTTON_MIDDLE)
 

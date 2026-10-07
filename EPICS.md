@@ -57,3 +57,18 @@ Chaque story : intention — VERIFY exécutable. Tests de jeu = `godot --headles
 - [x] E13.S2 — comportements : engager, foncer, fuir et se soigner, esquiver quand on est visé, flanquer, chercher une arme, se mettre à couvert — VERIFY: `--tests=behaviours`
 - [x] E13.S3 — humanisation : temps de réaction, visée qui suit avec dépassement, rafales, mémoire de la dernière position vue, déblocage — VERIFY: `--tests=humanize` + capture relue
 - [x] E13.S4 — navigation : monter vers une plateforme accessible, descendre, sauter les trous creusés — VERIFY: `--tests=navigation`
+
+# V1.2 — Armurerie
+
+## E14 — Munitions et visée
+- [x] E14.S1 — chargeur + réserve par arme, rechargement (R, auto à vide), pose et sons de rechargement, munitions récupérées sur une arme identique au sol, affichage — VERIFY: `--tests=ammo`
+- [x] E14.S2 — visée précise au clic droit (dispersion ×0,4, déplacement ×0,6, caméra qui glisse vers le viseur) — VERIFY: `--tests=aim_recoil`
+- [x] E14.S3 — remontée du canon en rafale, à compenser à la souris ; les bots précis compensent — VERIFY: `--tests=aim_recoil`
+
+## E15 — Nouvelles armes et grenades
+- [ ] E15.S1 — pistolet, mitraillette, fusil de précision, lance-grenades, katana — VERIFY: `--tests=arsenal`
+- [ ] E15.S2 — grenades (G) : rebonds, explosion qui creuse le décor et arrache des membres, bots qui en lancent — VERIFY: `--tests=grenade`
+
+## E16 — Personnalisation
+- [ ] E16.S1 — accessoires (point rouge, lunette, chargeur étendu, canon long, crosse) trouvés dans l'arène, visibles sur l'arme — VERIFY: `--tests=attachments`
+- [ ] E16.S2 — armurerie au titre : arme et accessoires de départ, accessoires débloqués en les ramassant une fois — VERIFY: `--tests=armory`

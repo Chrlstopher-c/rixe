@@ -155,6 +155,22 @@ def ricochet() -> np.ndarray:
     return lp(mix(click * 0.6, whine * 0.5), 7000)
 
 
+def reload_out() -> np.ndarray:
+    clack = env(bp(noise(0.08), 1500, 6000), 0.0005, 0.012)
+    slide = env(bp(noise(0.12), 800, 3000), 0.01, 0.04) * 0.5
+    return mix(clack, np.concatenate([np.zeros(int(SR * 0.05)), slide]))
+
+
+def reload_in() -> np.ndarray:
+    seat = env(lp(noise(0.06), 1800), 0.0005, 0.01) * 1.2
+    cock = env(bp(noise(0.1), 2000, 7000), 0.0005, 0.015)
+    return mix(seat, np.concatenate([np.zeros(int(SR * 0.11)), cock]), env(sweep(0.05, 300, 120), 0.001, 0.02))
+
+
+def dry() -> np.ndarray:
+    return env(bp(noise(0.05), 2500, 8000), 0.0002, 0.006) * 0.8
+
+
 def round_start() -> np.ndarray:
     tt = t(0.9)
     chord = sum(np.sin(2 * np.pi * f * tt) for f in [110, 165, 220, 330])
@@ -165,6 +181,7 @@ SOUNDS = {
     "rifle": rifle, "shotgun": shotgun, "railgun": railgun, "impact": impact, "flesh": flesh, "gore": gore,
     "jump": jump, "air_jump": air_jump, "land": land, "dash": dash, "shell": shell, "swing": swing,
     "punch": punch, "slowmo": slowmo, "pickup": pickup, "round": round_start, "ricochet": ricochet,
+    "reload_out": reload_out, "reload_in": reload_in, "dry": dry,
 }
 
 

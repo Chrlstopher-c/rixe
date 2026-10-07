@@ -16,6 +16,8 @@ var j := {}
 var recoil := 0.0
 var muzzle_local := Vector2.ZERO
 var missing: Array[String] = []
+## Direction affichée du canon (visée + remontée + bascule de rechargement).
+var gun_dir := Vector2.RIGHT
 var _kick_trail: Array[Vector2] = []
 var _phase := 0.0
 var _t := 0.0
@@ -122,11 +124,19 @@ func _pose_kick() -> void:
 
 
 func _pose_arms() -> void:
-	var aim := fighter.aim_dir
+	var aim: Vector2 = fighter.gun.shot_dir()
 	var shoulder: Vector2 = j.shoulder
 	var pivot := shoulder + Vector2(0, 1.5) + aim * (4.0 - recoil)
+	var k: float = fighter.gun.reload_progress()
+	if k > 0.0:
+		var dip := sin(k * PI)
+		aim = aim.rotated(fighter.facing * 0.9 * dip)
+		pivot += Vector2(0, 2.0 * dip)
+	gun_dir = aim
 	j.hand0 = pivot
 	j.hand1 = pivot + aim * 4.5
+	if k > 0.0:
+		j.hand1 = pivot + aim * 2.0 + Vector2(0, 3.0 + 2.0 * sin(k * TAU * 2.0))
 	j.elbow0 = ik(shoulder, j.hand0, UPPER, FORE, -fighter.facing)
 	j.elbow1 = ik(shoulder, j.hand1, UPPER, FORE, -fighter.facing)
 	j.pivot = pivot
@@ -265,7 +275,7 @@ func _draw_gun() -> void:
 	var d: Dictionary = fighter.gun.def
 	var L: float = d.length
 	var t: float = d.thick
-	draw_set_transform(j.pivot, fighter.aim_dir.angle(), Vector2(1, fighter.facing))
+	draw_set_transform(j.pivot, gun_dir.angle(), Vector2(1, fighter.facing))
 	var metal := Color(0.13, 0.12, 0.17)
 	draw_rect(Rect2(-3.5, -t * 0.5, L - 1.0, t), metal)
 	draw_rect(Rect2(L - 4.5, -0.45, 4.5, 0.9), metal)

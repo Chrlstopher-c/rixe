@@ -127,6 +127,7 @@ func _build_screens() -> void:
 	_menu.start_requested.connect(_on_start)
 	_menu.resume_requested.connect(_resume)
 	_menu.title_requested.connect(_to_title)
+	_menu.restart_requested.connect(func() -> void: _on_start(game_mode, game_option))
 	_menu.quit_requested.connect(func() -> void: get_tree().quit())
 	_menu.hd_changed.connect(_set_hd)
 	_menu.volume_changed.connect(_on_volume)
@@ -381,9 +382,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		match event.physical_keycode:
 			KEY_F1:
 				_set_hd(not Juice.hd)
-			KEY_R:
-				if not attract and game_mode == "arcade":
-					_start_round()
 			KEY_ESCAPE:
 				if not attract and not demo:
 					_pause()

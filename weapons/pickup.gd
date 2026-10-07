@@ -1,6 +1,7 @@
 class_name WeaponPickup
 extends Node2D
-## Arme au sol : tombe, rebondit, brille ; un combattant qui passe dessus l'échange contre la sienne.
+## Arme au sol : tombe, rebondit, brille ; un combattant qui passe dessus l'échange contre la sienne,
+## ou récupère ses munitions si c'est la même arme.
 
 const GRAB_RADIUS := 16.0
 const GRAVITY := 900.0
@@ -9,11 +10,17 @@ var weapon_id := "rifle"
 var vel := Vector2.ZERO
 var immune: Node2D
 var immune_t := 0.0
+## Munitions portées (-1 = plein).
+var mag := -1
+var reserve := -1
 var _t := 0.0
 
 
-func setup(id: String, v: Vector2, dropper: Node2D = null) -> void:
+func setup(id: String, v: Vector2, dropper: Node2D = null, ammo_mag: int = -1, ammo_reserve: int = -1) -> void:
 	weapon_id = id
+	var d: Dictionary = Arsenal.WEAPONS[id]
+	mag = int(d.mag) if ammo_mag < 0 else ammo_mag
+	reserve = int(d.reserve) if ammo_reserve < 0 else ammo_reserve
 	vel = v
 	immune = dropper
 	immune_t = 1.5
@@ -36,21 +43,36 @@ func _physics_process(delta: float) -> void:
 
 func _try_grab() -> void:
 	for f in get_tree().get_nodes_in_group("fighters"):
-		if not f.alive or f.gun.id == weapon_id or f.body.arms_left() == 0:
+		if not f.alive or f.body.arms_left() == 0:
+			continue
+		var same: bool = f.gun.id == weapon_id
+		if same and (f.gun.reserve >= int(f.gun.def.reserve) * 2 or mag + reserve <= 0):
 			continue
 		if f == immune and immune_t > 0.0:
 			continue
 		if f.global_position.distance_to(global_position + Vector2(0, 8)) < GRAB_RADIUS + 10.0:
-			_swap(f)
+			if same:
+				_take_ammo(f)
+			else:
+				_swap(f)
 			return
 
 
 func _swap(f: Node2D) -> void:
-	var old: String = f.gun.id
+	var old: Gun = f.gun
 	f.gun = Gun.new(f, weapon_id)
+	f.gun.mag = mag
+	f.gun.reserve = reserve
 	Sfx.play("pickup", global_position, -2.0, 0.05)
 	Juice.fx.emit(5, global_position, Vector2.ZERO, 0.25, 10.0, Color(2.0, 1.8, 1.4, 0.8))
-	setup(old, Vector2(-f.facing * 60.0, -160.0), f)
+	setup(old.id, Vector2(-f.facing * 60.0, -160.0), f, old.mag, old.reserve)
+
+
+func _take_ammo(f: Node2D) -> void:
+	f.gun.reserve = mini(f.gun.reserve + mag + reserve, int(f.gun.def.reserve) * 2)
+	Sfx.play("pickup", global_position, -4.0, 0.1)
+	Juice.fx.emit(5, global_position, Vector2.ZERO, 0.2, 8.0, Color(1.6, 1.6, 1.2, 0.7))
+	queue_free()
 
 
 func _draw() -> void:
