@@ -7,6 +7,10 @@ const BOT_COLORS := [Color(1.0, 0.25, 0.3), Color(1.0, 0.6, 0.15), Color(0.95, 0
 var round_no := 1
 var seed_base := 1
 var demo := false
+var attract := false
+var _skip_title := false
+var _menu: CanvasLayer
+var _volume := 0.8
 var player: Fighter
 var _fighters: Node2D
 var _hud: CanvasLayer
@@ -22,6 +26,10 @@ var _frame_times: Array[float] = []
 
 func _ready() -> void:
 	Controls.register()
+	var prefs := Settings.load_all()
+	Juice.hd = prefs.hd
+	_volume = prefs.volume
+	Settings.apply_volume(_volume)
 	_parse_args()
 	_build()
 	Juice.fighter_killed.connect(_on_killed)
@@ -29,6 +37,10 @@ func _ready() -> void:
 	if _tests != "":
 		add_child(preload("res://tests/test_runner.gd").new(self, _tests))
 		return
+	attract = not demo and not _skip_title
+	if attract:
+		_hud.visible = false
+		_menu.show_title()
 	_start_round()
 
 
@@ -42,6 +54,9 @@ func _parse_args() -> void:
 			_shot(a.get_slice("=", 1))
 		elif a.begins_with("--tests="):
 			_tests = a.get_slice("=", 1)
+			Settings.persist = false
+		elif a == "--play":
+			_skip_title = true
 		elif a.begins_with("--off="):
 			_off = a.get_slice("=", 1).split(",")
 		elif a.begins_with("--round="):
@@ -88,6 +103,13 @@ func _build() -> void:
 	Juice.camera = _camera
 	if not ("post" in _off):
 		add_child(preload("res://fx/post.gd").new())
+	_menu = preload("res://hud/menu.gd").new()
+	add_child(_menu)
+	_menu.start_requested.connect(_on_start)
+	_menu.resume_requested.connect(_resume)
+	_menu.quit_requested.connect(func() -> void: get_tree().quit())
+	_menu.hd_changed.connect(_set_hd)
+	_menu.volume_changed.connect(_on_volume)
 	_hud = preload("res://hud/hud.gd").new()
 	_hud.show_crosshair = not demo
 	add_child(_hud)
@@ -114,7 +136,7 @@ func _start_round() -> void:
 	var n := mini(2 + round_no, 6)
 	var spots: Array = Juice.arena.spawn_points(n + 1, _rng)
 	var mine := _rng.randi_range(0, n)
-	var brain: RefCounted = BotBrain.new(1.0) if demo else PlayerBrain.new()
+	var brain: RefCounted = BotBrain.new(1.0) if demo or attract else PlayerBrain.new()
 	player = _spawn("Toi", spots[mine], PLAYER_COLOR, brain, "rifle", true)
 	var b := 0
 	for i in spots.size():
@@ -245,9 +267,42 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_F1:
 				_set_hd(not Juice.hd)
 			KEY_R:
-				_start_round()
+				if not attract:
+					_start_round()
 			KEY_ESCAPE:
-				get_tree().quit()
+				if not attract and not demo:
+					_pause()
+
+
+func _on_start() -> void:
+	attract = false
+	round_no = 1
+	_restart_in = -1.0
+	_menu.close()
+	_hud.visible = true
+	_hud.kills = 0
+	_start_round()
+	_set_hd(Juice.hd)
+
+
+func _pause() -> void:
+	get_tree().paused = true
+	_menu.volume = _volume
+	_menu.hd = Juice.hd
+	_menu.show_pause()
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+func _resume() -> void:
+	_menu.close()
+	get_tree().paused = false
+	_set_hd(Juice.hd)
+
+
+func _on_volume(v: float) -> void:
+	_volume = v
+	Settings.apply_volume(v)
+	Settings.save_all(_volume, Juice.hd)
 
 
 func _set_hd(on: bool) -> void:
@@ -255,4 +310,8 @@ func _set_hd(on: bool) -> void:
 	var w := get_window()
 	w.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS if on else Window.CONTENT_SCALE_MODE_VIEWPORT
 	get_viewport().msaa_2d = Viewport.MSAA_4X if on and not ("msaa" in _off) else Viewport.MSAA_DISABLED
-	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN if not demo else Input.MOUSE_MODE_VISIBLE
+	var menu_open: bool = _menu != null and _menu.visible
+	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN if not (demo or menu_open) else Input.MOUSE_MODE_VISIBLE
+	if _menu:
+		_menu.hd = on
+		Settings.save_all(_volume, on)

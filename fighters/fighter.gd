@@ -105,7 +105,7 @@ func _aim() -> void:
 func _timers(delta: float) -> void:
 	hit_flash -= delta
 	shield -= delta
-	if is_player:
+	if is_player and brain is PlayerBrain:
 		var low := clampf(1.0 - hp / 45.0, 0.0, 1.0) * 0.45
 		Juice.hurt = maxf(move_toward(Juice.hurt, 0.0, delta * 1.2), low)
 	_since_hit += delta
@@ -229,7 +229,7 @@ func _hit_feedback(from: Node2D, dmg: float) -> void:
 	var player_involved: bool = is_player or (is_instance_valid(from) and from.get("is_player"))
 	if player_involved and dmg >= 20.0:
 		Juice.hitstop(0.04)
-	if is_player:
+	if is_player and brain is PlayerBrain:
 		Juice.hurt = minf(Juice.hurt + 0.35, 0.8)
 		Juice.aberration = minf(Juice.aberration + 0.35, 1.5)
 		Juice.shake(0.18)

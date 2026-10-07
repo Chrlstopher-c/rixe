@@ -13,7 +13,7 @@ trap 'kill $XPID 2>/dev/null' EXIT
 sleep 1
 env -u WAYLAND_DISPLAY DISPLAY="$DISP" godot --path . --display-driver x11 --audio-driver Dummy \
   --position 0,0 --resolution 1280x720 \
-  -- --demo "$@" > "$OUT/godot.log" 2>&1 &
+  -- ${CAPTURE_NO_DEMO:+--nodemo} ${CAPTURE_NO_DEMO:---demo} "$@" > "$OUT/godot.log" 2>&1 &
 GPID=$!
 sleep 2
 ffmpeg -loglevel error -y -f x11grab -framerate 60 -video_size 1280x720 -i "$DISP+0,0" -t "$SECS" \

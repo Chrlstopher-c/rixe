@@ -9,7 +9,7 @@ var _suites: Array = []
 
 func _init(game: Node, names: String) -> void:
 	main = game
-	for n in ["movement", "combat", "audio", "melee", "pickup", "showcase"]:
+	for n in ["movement", "combat", "audio", "melee", "pickup", "menu", "showcase"]:
 		var path := "res://tests/test_%s.gd" % n
 		var suite: Object = load(path).new()
 		_suites.append(suite)
@@ -17,6 +17,7 @@ func _init(game: Node, names: String) -> void:
 
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	Engine.time_scale = 1.0
 	await get_tree().process_frame
 	var ran := 0
