@@ -54,3 +54,7 @@
   (`arena.W`), cellules WOOD + `terrain.built` + signal `cell_broken(c, k, by)` pour la récolte, arbres/buissons/
   portes/pointes (`arena/props/`), équipes (`Fighter.team`, couche de collision des portes `MASK_DOORS`),
   fond de décor en région répétée (montagnes Pigment `tileable`).
+- V3.0 (07/10) : manette (`fighters/pad_brain.gd`, PlayerBrain hybride, `Controls.menu_key`), écran partagé
+  (`game/split_view.gd` : deux SubViewport partageant le World2D, rendu pleine définition réduit dans chaque moitié,
+  caméras dans `Juice.cameras`, vue principale éteinte), partie à deux (`game/duo.gd`). Démarrage sorti de main dans
+  `game/bootstrap.gd`. Multijoueur en ligne : en attente (infrastructure à décider).

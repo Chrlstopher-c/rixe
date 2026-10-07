@@ -15,6 +15,7 @@ var mode := ""
 var volume := 0.8
 var hd := true
 var best := 0
+var players := 1
 var game_mode := "arcade"
 var options := {"arcade": 0, "chrono": Modes.default_option("chrono"), "objectif": Modes.default_option("objectif")}
 var _sel := 0
@@ -71,6 +72,8 @@ func _ids() -> Array[String]:
 	var ids: Array[String] = ["mode"]
 	if Modes.has_option(game_mode):
 		ids.append("option")
+	if game_mode != "survie":
+		ids.append("players")
 	ids.append_array(["play", "armory", "board", "volume", "display", "quit"])
 	return ids
 
@@ -83,6 +86,8 @@ func _text(id: String) -> String:
 			return "‹ %s ›" % Modes.option_text(game_mode, options[game_mode])
 		"play":
 			return "JOUER"
+		"players":
+			return "JOUEURS  ‹ %d ›%s" % [players, "  (2e : manette, écran partagé)" if players == 2 else ""]
 		"board":
 			return "CLASSEMENT"
 		"armory":
@@ -102,12 +107,15 @@ func _text(id: String) -> String:
 		"back":
 			return "RETOUR"
 	if id.begins_with("slot_"):
-		var slot := id.substr(5)
-		var a: String = loadout.attachments.get(slot, "")
-		var label: String = {"optic": "VISEUR", "mag": "CHARGEUR", "barrel": "CANON", "stock": "CROSSE"}[slot]
-		var name := "aucun" if a == "" else String(Arsenal.ATTACHMENTS[a].name)
-		return "%s  ‹ %s ›" % [label, name.to_upper()]
+		return _slot_text(id.substr(5))
 	return "QUITTER"
+
+
+func _slot_text(slot: String) -> String:
+	var a: String = loadout.attachments.get(slot, "")
+	var label: String = {"optic": "VISEUR", "mag": "CHARGEUR", "barrel": "CANON", "stock": "CROSSE"}[slot]
+	var name := "aucun" if a == "" else String(Arsenal.ATTACHMENTS[a].name)
+	return "%s  ‹ %s ›" % [label, name.to_upper()]
 
 
 func _process(delta: float) -> void:
@@ -155,6 +163,8 @@ func _adjust(id: String, step: int) -> void:
 		"option":
 			var count: int = (Modes.ALL[game_mode].options as Array).size()
 			options[game_mode] = posmod(options[game_mode] + step, count)
+		"players":
+			players = 2 if players == 1 else 1
 		"weapon":
 			loadout.weapon = _cycle(Unlocks.weapons(), loadout.weapon, step)
 			if not Arsenal.accepts(loadout.weapon):

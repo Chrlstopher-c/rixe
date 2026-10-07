@@ -23,6 +23,8 @@ var _scoreboard: CanvasLayer
 var _inventory: CanvasLayer
 var spawner: Spawner
 var director: SurvivalDirector
+var duo: Duo
+var _post: CanvasLayer
 var player: Fighter
 var _fighters: Node2D
 var _hud: CanvasLayer
@@ -39,8 +41,8 @@ func _ready() -> void:
 	Juice.hd = prefs.hd
 	_volume = prefs.volume
 	Settings.apply_volume(_volume)
-	_parse_args()
-	_build()
+	Bootstrap.parse_args(self)
+	Bootstrap.build(self)
 	Juice.fighter_killed.connect(_on_killed)
 	_set_hd(Juice.hd)
 	if _tests != "":
@@ -54,102 +56,12 @@ func _ready() -> void:
 	_start_round()
 
 
-func _parse_args() -> void:
-	for a in OS.get_cmdline_user_args():
-		if a == "--demo":
-			demo = true
-		elif a == "--pixel":
-			Juice.hd = false
-		elif a.begins_with("--shot="):
-			_shot(a.get_slice("=", 1))
-		elif a.begins_with("--tests="):
-			_tests = a.get_slice("=", 1)
-			Settings.persist = false
-		elif a == "--play":
-			_skip_title = true
-		elif a.begins_with("--off="):
-			_off = a.get_slice("=", 1).split(",")
-			Juice.off = _off
-		elif a.begins_with("--map="):
-			forced_map = a.get_slice("=", 1)
-		elif a.begins_with("--round="):
-			round_no = int(a.get_slice("=", 1))
-		elif a.begins_with("--perf="):
-			var probe := preload("res://core/perf_probe.gd").new()
-			probe.duration = float(a.get_slice("=", 1))
-			probe.fighters = func() -> int: return _fighters.get_child_count()
-			add_child(probe)
-		elif a.begins_with("--seed="):
-			seed_base = int(a.get_slice("=", 1))
-
-
 func _shot(path: String) -> void:
 	await get_tree().create_timer(6.0, true, false, true).timeout
 	var img := get_viewport().get_texture().get_image()
 	img.save_png(path)
 	print("shot %s %dx%d" % [path, img.get_width(), img.get_height()])
 	get_tree().quit()
-
-
-func _build() -> void:
-	_build_environment()
-	if not ("backdrop" in _off):
-		_backdrop = preload("res://arena/backdrop.gd").new()
-		add_child(_backdrop)
-	Juice.world = Node2D.new()
-	add_child(Juice.world)
-	Juice.arena = _child(Juice.world, preload("res://arena/arena.gd").new())
-	Juice.stains = _child(Juice.world, preload("res://fx/stains.gd").new())
-	_fighters = _child(Juice.world, Node2D.new())
-	spawner = Spawner.new(_fighters, _rng)
-	Juice.fx = _child(Juice.world, preload("res://fx/fx_layer.gd").new())
-	Juice.weather = _child(Juice.world, preload("res://fx/weather.gd").new())
-	_camera = preload("res://core/game_camera.gd").new()
-	_camera.limit_left = -20
-	_camera.limit_right = int(Juice.arena.W) + 20
-	_camera.limit_top = -440
-	_camera.limit_bottom = 44
-	add_child(_camera)
-	Juice.camera = _camera
-	if not ("post" in _off):
-		add_child(preload("res://fx/post.gd").new())
-	_build_screens()
-
-
-func _build_environment() -> void:
-	var env := WorldEnvironment.new()
-	env.environment = Environment.new()
-	env.environment.background_mode = Environment.BG_CANVAS
-	env.environment.glow_enabled = not ("glow" in _off)
-	env.environment.glow_intensity = 0.55
-	env.environment.glow_strength = 0.9
-	env.environment.glow_hdr_threshold = 1.0
-	env.environment.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
-	add_child(env)
-
-
-func _build_screens() -> void:
-	_menu = preload("res://hud/menu.gd").new()
-	add_child(_menu)
-	_menu.best = score.best
-	_menu.start_requested.connect(_on_start)
-	_menu.resume_requested.connect(_resume)
-	_menu.title_requested.connect(_to_title)
-	_menu.restart_requested.connect(func() -> void: _on_start(game_mode, game_option))
-	_menu.quit_requested.connect(func() -> void: get_tree().quit())
-	_menu.hd_changed.connect(_set_hd)
-	_menu.volume_changed.connect(_on_volume)
-	_scoreboard = preload("res://hud/scoreboard.gd").new()
-	add_child(_scoreboard)
-	_scoreboard.replay_requested.connect(func() -> void: _on_start(game_mode, game_option))
-	_scoreboard.menu_requested.connect(_to_title)
-	_inventory = preload("res://hud/inventory_screen.gd").new()
-	add_child(_inventory)
-	_inventory.close_requested.connect(_toggle_inventory)
-	_hud = preload("res://hud/hud.gd").new()
-	_hud.best = score.best
-	_hud.show_crosshair = not demo
-	add_child(_hud)
 
 
 func _child(parent: Node, node: Node) -> Node:
@@ -173,6 +85,10 @@ func _start_round() -> void:
 	Juice.weather.set_kind(w[0])
 	var b := _populate_survival() if game_mode == "survie" and not attract else _populate()
 	spawner.spawn_pickups()
+	if duo and not attract:
+		duo.enter()
+		duo.bind()
+		duo.split.set_theme(theme_name)
 	_camera.target = player
 	_camera.snap_to(player.global_position + Vector2(0, -34))
 	_hud.player = player
@@ -202,12 +118,16 @@ func _populate() -> int:
 	var n := mini(2 + round_no, 6) if game_mode == "arcade" or attract else 5
 	var spots: Array = Juice.arena.spawn_points(n + 1, _rng)
 	var mine := _rng.randi_range(0, spots.size() - 1)
-	var brain: RefCounted = BotBrain.new(1.0, "acrobate") if demo or attract else PlayerBrain.new()
-	player = _spawn_player(spots[mine], brain)
+	var taken := -1
+	if duo and not attract:
+		taken = duo.populate(spots, mine)
+	else:
+		var brain: RefCounted = BotBrain.new(1.0, "acrobate") if demo or attract else PlayerBrain.new()
+		player = _spawn_player(spots[mine], brain)
 	spawner.clear_names()
 	var b := 0
 	for i in spots.size():
-		if i != mine:
+		if i != mine and i != taken:
 			_spawn_bot(spots[i], "")
 			b += 1
 	return b
@@ -275,11 +195,19 @@ func _spawn_bot(pos: Vector2, name: String) -> Fighter:
 
 func _respawn(entry: Dictionary) -> void:
 	var pos := spawner.far_spawn()
-	if entry.player:
+	if duo and duo.respawn(entry, pos):
+		pass
+	elif entry.player:
 		var brain: RefCounted = BotBrain.new(1.0, "acrobate") if demo else PlayerBrain.new()
+		if duo:
+			var kb := PlayerBrain.new()
+			kb.pad_enabled = false
+			brain = kb
 		player = _spawn_player(pos, brain)
 		_camera.target = player
 		_hud.player = player
+		if duo:
+			duo.split.follow(0, player)
 	else:
 		_spawn_bot(pos, entry.name)
 	Juice.fx.emit(5, pos + Vector2(0, -20), Vector2.ZERO, 0.4, 24.0, Color(entry.color * 1.8, 0.8))
@@ -312,7 +240,10 @@ func _on_killed(victim: Node2D, killer: Node2D) -> void:
 func _rounds_after_kill(victim: Node2D) -> void:
 	if _restart_in >= 0.0:
 		return
-	if victim == player:
+	var human: bool = victim == player or (duo and victim == duo.player2)
+	if human and duo and not attract and duo.survivor_left(victim):
+		return
+	if human:
 		if attract or demo:
 			_hud.banner("ÉLIMINÉ")
 			_restart_in = 3.0
@@ -401,6 +332,12 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _on_start(mode: String, option: int) -> void:
 	_leave_survival()
+	var two: bool = _menu.players == 2 and mode != "survie"
+	if two and duo == null:
+		duo = Duo.new(self)
+	elif not two and duo:
+		duo.leave()
+		duo = null
 	game_mode = mode
 	game_option = option
 	attract = false
@@ -419,6 +356,16 @@ func _on_start(mode: String, option: int) -> void:
 	_set_hd(Juice.hd)
 
 
+## Écran partagé : la vue principale ne montre plus le monde (sa caméra regarde ailleurs) ni son interface.
+func _set_root_view(on: bool) -> void:
+	_camera.enabled = on
+	if not on:
+		get_viewport().canvas_transform = Transform2D(0.0, Vector2(-100000, -100000))
+	for layer in [_backdrop, _post, _hud]:
+		if layer:
+			layer.visible = on
+
+
 func _leave_survival() -> void:
 	if is_instance_valid(director):
 		director.queue_free()
@@ -429,6 +376,9 @@ func _leave_survival() -> void:
 
 func _to_title() -> void:
 	_leave_survival()
+	if duo:
+		duo.leave()
+		duo = null
 	_scoreboard.close()
 	get_tree().paused = false
 	attract = true

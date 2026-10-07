@@ -63,6 +63,8 @@
 - fighters/inventory.gd.uid
 - fighters/melee.gd
 - fighters/melee.gd.uid
+- fighters/pad_brain.gd
+- fighters/pad_brain.gd.uid
 - fighters/player_brain.gd
 - fighters/player_brain.gd.uid
 - fighters/ragdoll.gd
@@ -81,6 +83,10 @@
 - fx/stains.gd.uid
 - fx/weather.gd
 - fx/weather.gd.uid
+- game/bootstrap.gd
+- game/bootstrap.gd.uid
+- game/duo.gd
+- game/duo.gd.uid
 - game/end_texts.gd
 - game/end_texts.gd.uid
 - game/leaderboard.gd
@@ -96,6 +102,8 @@
 - game/run_score.gd.uid
 - game/spawner.gd
 - game/spawner.gd.uid
+- game/split_view.gd
+- game/split_view.gd.uid
 - game/unlocks.gd
 - game/unlocks.gd.uid
 - .github/workflows/ci.yml
@@ -135,6 +143,8 @@
 - tests/test_audio.gd.uid
 - tests/test_combat.gd
 - tests/test_combat.gd.uid
+- tests/test_duo.gd
+- tests/test_duo.gd.uid
 - tests/test_loot.gd
 - tests/test_loot.gd.uid
 - tests/test_maps.gd
@@ -147,6 +157,8 @@
 - tests/test_modes.gd.uid
 - tests/test_movement.gd
 - tests/test_movement.gd.uid
+- tests/test_pad.gd
+- tests/test_pad.gd.uid
 - tests/test_pickup.gd
 - tests/test_pickup.gd.uid
 - tests/test_props.gd

@@ -16,6 +16,10 @@ var stains: Node2D
 var arena: Node2D
 var world: Node2D
 var camera: Camera2D
+## Caméras visibles (une en solo, deux en écran partagé) : culling, météo, tests « à l'écran ».
+var cameras: Array[Camera2D] = []
+## Vue partagée en cours (null en solo).
+var split: CanvasLayer
 var hd := true
 ## Tests : traite la manette n°0 comme branchée.
 var force_pad := false
@@ -87,10 +91,21 @@ func notify(text: String) -> void:
 
 
 func on_screen(p: Vector2, margin: float = 0.0) -> bool:
-	if not camera:
-		return false
-	var half := camera.get_viewport_rect().size * 0.5 / camera.zoom
-	return Rect2(camera.get_screen_center_position() - half, half * 2.0).grow(margin).has_point(p)
+	for r in views(margin):
+		if r.has_point(p):
+			return true
+	return false
+
+
+## Rectangles du monde vus par chaque caméra active.
+func views(margin: float = 0.0) -> Array[Rect2]:
+	var out: Array[Rect2] = []
+	var list: Array = cameras if not cameras.is_empty() else ([camera] if camera else [])
+	for c: Camera2D in list:
+		if is_instance_valid(c):
+			var half := c.get_viewport_rect().size * 0.5 / c.zoom
+			out.append(Rect2(c.get_screen_center_position() - half, half * 2.0).grow(margin))
+	return out
 
 
 func shockwave(pos: Vector2, strength: float = 1.0) -> void:

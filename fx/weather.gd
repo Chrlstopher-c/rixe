@@ -67,9 +67,13 @@ func _splash() -> void:
 
 
 func _draw() -> void:
-	if kind == "" or not Juice.camera:
+	if kind == "":
 		return
-	var origin: Vector2 = Juice.camera.get_screen_center_position() - Vector2(380, 230)
+	for v in Juice.views():
+		_draw_drops(v.get_center() - Vector2(380, 230))
+
+
+func _draw_drops(origin: Vector2) -> void:
 	var tilt := Vector2(Juice.wind * 0.012, 1.0)
 	for d in _drops:
 		var p := origin + Vector2(d.x, d.y)

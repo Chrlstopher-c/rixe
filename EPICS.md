@@ -104,3 +104,14 @@ Chaque story : intention — VERIFY exécutable. Tests de jeu = `godot --headles
 
 ## E23 — Vagues
 - [x] E23.S1 — pillards (équipe, visent le joueur, forcent murs et portes) : vague à chaque nuit (2 + 2 × jour), rôdeurs le jour ; mort = fin, score = nuits tenues, classement — VERIFY: `--tests=survival`
+
+# V3.0 — Ensemble (local)
+
+## E24 — Manette
+- [x] E24.S1 — manette : sticks, gâchettes (tir / visée précise), boutons, aide à la visée, vibrations ; bascule automatique clavier ⇄ manette ; menus à la croix — VERIFY: `--tests=pad`
+
+## E25 — Écran partagé
+- [x] E25.S1 — deux joueurs (J1 clavier/souris, J2 manette), écran coupé en deux rendus pleine définition, coopération en arcade, chacun pour soi en chrono/objectif — VERIFY: `--tests=duo` + capture relue
+
+## E26 — En ligne (en attente de décision de Chris)
+- [!] E26.S1 — multijoueur pair à pair sans ouvrir de ports : nécessite un serveur de mise en relation (signalisation WebRTC + relais TURN de secours) hébergé quelque part → décision d'infrastructure à prendre par Chris

@@ -10,6 +10,9 @@ Jeu de combat 2D vu de côté entre stickmen armés, contre des bots. Godot 4.7.
 ZQSD/flèches : bouger · Espace/Z : sauter (maintenu = rebonds, 2 sauts en l'air) · S : descendre d'une plateforme ·
 souris : viser · clic gauche : tirer · clic droit maintenu : visée précise · R : recharger · G : grenade · 1/2/molette : changer d'arme · H : soin · Tab : inventaire (et fabrication en survie) · B : construire · C : manger (survie) · Maj : dash · E/clic molette : mêlée · F1 : HD ⇄ pixel · au titre : ‹ › pour le mode et la durée/objectif, Armurerie (arme et accessoires de départ), Classement · Échap : pause (reprendre, recommencer, volume, affichage, menu)
 
+## Manette et deux joueurs
+Manette : stick gauche bouger, A sauter, stick droit viser, gâchette droite tirer, gâchette gauche visée précise, B coup de pied, X recharger, RB grenade, LB dash, Y changer d'arme, croix haut soin, Start pause. Au titre, « JOUEURS 2 » : écran partagé, J1 au clavier/souris, J2 à la manette.
+
 ## Outils
 - `tools/verify.sh [tests]` : import + tests headless (PASS/FAIL)
 - `tools/capture.sh <s> [args]` : partie démo filmée hors écran (Xvfb + GPU) → `~/Downloads/rixe-captures/demo.mp4`

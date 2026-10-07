@@ -10,6 +10,8 @@ var _ember_data: Array[Vector4] = []
 var _t := 0.0
 var _sky: Sprite2D
 var _ember := Color(2.2, 0.9, 0.4)
+## Caméra suivie (écran partagé : une par moitié) ; nulle = caméra principale.
+var cam: Camera2D
 
 
 func _ready() -> void:
@@ -73,8 +75,9 @@ func _haze_texture(haze: Color) -> GradientTexture2D:
 func _process(delta: float) -> void:
 	_t += delta
 	var c := Vector2(320, -110)
-	if Juice.camera:
-		c = Juice.camera.get_screen_center_position()
+	var follow: Camera2D = cam if is_instance_valid(cam) else Juice.camera
+	if follow:
+		c = follow.get_screen_center_position()
 	for i in _sprites.size():
 		var f: float = LAYERS[i][0]
 		var pos := Vector2(-80.0, LAYERS[i][1] - (c.y + 110.0) * f * 0.6)

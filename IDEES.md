@@ -12,7 +12,7 @@ Les idées de Chris (07/10) sont marquées (Chris).
 | ~~1.2~~ | Armurerie | munitions et chargeurs, visée précise, nouvelles armes, grenades, personnalisation |
 | ~~1.3~~ | Butin et cartes | drops, inventaire, nouvelles cartes, météo |
 | ~~2.0~~ | Survie | grande carte, construction, ressources, faim, vagues |
-| **3.0** | Ensemble | écran partagé, manette, multijoueur pair à pair |
+| ~~3.0~~ | Ensemble | écran partagé, manette (fait) ; multijoueur pair à pair (en attente : serveur de mise en relation à héberger) |
 
 ## 1.2 — Armurerie
 - Munitions et chargeurs, rechargement (touche R, animation, son), à court = coup de pied. (Chris)

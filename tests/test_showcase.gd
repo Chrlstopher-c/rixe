@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["showcase", "showcase_end", "showcase_armory", "showcase_inventory", "showcase_survival"]
+	return ["showcase", "showcase_end", "showcase_armory", "showcase_inventory", "showcase_survival", "showcase_duo"]
 
 
 func _fire_at(t: Node, brain: ScriptBrain, target: Variant, joint: String, frames: int) -> void:
@@ -109,4 +109,16 @@ func test_showcase_survival(t: Node) -> void:
 	await t.frames(120)
 	s.t = Survival.DAY - 3.0
 	await t.frames(2400)
+	t.check(true, "vitrine")
+
+
+func test_showcase_duo(t: Node) -> void:
+	var main: Node = t.main
+	main.live_rules = true
+	main._menu.players = 2
+	main._on_start("arcade", 0)
+	await t.frames(5)
+	main.player.brain = BotBrain.new(1.0, "renard")
+	main.duo.player2.brain = BotBrain.new(1.0, "brute")
+	await t.frames(1500)
 	t.check(true, "vitrine")

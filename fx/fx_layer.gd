@@ -106,12 +106,9 @@ func _draw() -> void:
 	var thin_c := PackedColorArray()
 	var thick := PackedVector2Array()
 	var thick_c := PackedColorArray()
-	var view := Rect2(-1e9, -1e9, 2e9, 2e9)
-	if Juice.camera:
-		var half: Vector2 = Juice.camera.get_viewport_rect().size * 0.5 / Juice.camera.zoom
-		view = Rect2(Juice.camera.get_screen_center_position() - half, half * 2.0).grow(40.0)
+	var views: Array[Rect2] = Juice.views(40.0)
 	for p in parts:
-		if not view.has_point(p.pos):
+		if not views.is_empty() and not _seen(views, p.pos):
 			continue
 		var k := p.life / p.max_life
 		match p.kind:
@@ -132,6 +129,13 @@ func _draw() -> void:
 		draw_multiline_colors(thin, thin_c, 1.0)
 	if not thick.is_empty():
 		draw_multiline_colors(thick, thick_c, 1.8)
+
+
+static func _seen(views: Array[Rect2], p: Vector2) -> bool:
+	for v in views:
+		if v.has_point(p):
+			return true
+	return false
 
 
 func _draw_shape(p: P, k: float) -> void:

@@ -3,6 +3,8 @@ extends CanvasLayer
 
 const SHUTTER := 0.2
 var _mat := ShaderMaterial.new()
+## Caméra de cette vue (écran partagé) ; nulle = caméra principale.
+var view_cam: Camera2D
 
 
 func _ready() -> void:
@@ -18,7 +20,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	var size := get_viewport().get_visible_rect().size
 	var real: float = Juice.real_delta(delta)
-	var cam: Camera2D = Juice.camera
+	var cam: Camera2D = view_cam if is_instance_valid(view_cam) else Juice.camera
 	var blur := Vector2.ZERO
 	if cam:
 		blur = (cam.velocity * real * SHUTTER / size).limit_length(0.01)

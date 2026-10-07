@@ -3,13 +3,15 @@ extends RefCounted
 ## Intention du joueur seul : clavier/souris, ou la première manette dès qu'elle sert (la dernière utilisée gagne).
 
 var pad := PadBrain.new(0)
+## Écran partagé : le joueur 1 reste au clavier/souris (la manette est au joueur 2).
+var pad_enabled := true
 var _mouse_t := -99.0
 var _last_mouse := Vector2.ZERO
 
 
 func think(f: Node2D, delta: float) -> Dictionary:
 	var kb := _keyboard(f)
-	if Input.get_connected_joypads().is_empty() and not Juice.force_pad:
+	if not pad_enabled or (Input.get_connected_joypads().is_empty() and not Juice.force_pad):
 		return kb
 	var p := pad.think(f, delta)
 	var mouse := f.get_viewport().get_mouse_position()
@@ -39,7 +41,7 @@ func _keyboard(f: Node2D) -> Dictionary:
 		"cycle": Input.is_action_just_pressed("cycle"),
 		"heal": Input.is_action_just_pressed("heal"),
 		"aiming": Input.is_action_pressed("aim") and not building,
-		"aim": f.get_global_mouse_position(),
+		"aim": Juice.split.mouse_world(0) if is_instance_valid(Juice.split) else f.get_global_mouse_position(),
 	}
 
 
