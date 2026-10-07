@@ -504,7 +504,9 @@ func test_online_custom_guest(t: Node) -> void:
 	main.live_rules = true
 	var s := await _join(t, main)
 	var box := _inbox(s)
-	var got: bool = await t.until(func() -> bool: return s.match_sync.cfg.teams == 2 and s.match_sync.cfg.bots == 2, 1800)
+	var got: bool = await t.until(func() -> bool:
+		var c: GameConfig = s.match_sync.cfg
+		return c.teams == 2 and c.bots == 2 and c.arms == "automatiques", 1800)
 	t.check(got, "réglages de l'hôte reçus (%s)" % [s.match_sync.cfg.to_dict()])
 	t.check(s.match_sync.cfg.arms == "automatiques", "armes choisies par l'hôte visibles")
 	s.match_sync.ask_team(1)
