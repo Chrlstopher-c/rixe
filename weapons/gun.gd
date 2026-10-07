@@ -214,6 +214,8 @@ func _trace(from: Vector2, dir: Vector2, reach: float, dmg: float, bounces: int,
 			hit = {}
 		break
 	Effects.tracer(from, end, def.tracer, def.width, 0.16 if def.pierce else 0.08)
+	if Juice.replay:
+		Juice.replay.shot(from, end, def.tracer)
 	var ends := 0 if hit.is_empty() else (2 if hit.collider.has_method("take_hit") else 1)
 	segs.append([from, end, ends])
 	if hit.is_empty() or hit.collider.has_method("take_hit"):

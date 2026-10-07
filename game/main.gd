@@ -13,6 +13,7 @@ var _lobby: CanvasLayer
 var _custom: CanvasLayer
 var _foreground: Foreground
 var _dark: CanvasModulate
+var photo: PhotoMode
 var _backdrop: CanvasLayer
 var _volume := 0.8
 var score := RunScore.new()
@@ -139,6 +140,8 @@ func _night(on: bool) -> void:
 
 func _clear_world() -> void:
 	_end_in = -1.0
+	if Juice.replay:
+		Juice.replay.clear()
 	Juice.reset()
 	for c in _fighters.get_children():
 		c.queue_free()

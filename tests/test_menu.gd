@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["menu", "lobby", "crosshair", "nick", "custom"]
+	return ["menu", "lobby", "crosshair", "nick", "custom", "replay_photo"]
 
 
 func _key(code: Key) -> void:
@@ -177,3 +177,34 @@ func test_custom(t: Node) -> void:
 	t.check(Juice.arena.map == "plateformes", "carte choisie (%s)" % Juice.arena.map)
 	main._to_title()
 	main.attract = true
+
+
+func test_replay_photo(t: Node) -> void:
+	var main: Node = t.main
+	var me: Fighter = main.spawn_test_fighter(Vector2(300, -10), ScriptBrain.new(), "rifle", true)
+	main.player = me
+	main.follow(me)
+	var rp: Replay = Juice.replay
+	rp.clear()
+	await t.frames(240)
+	t.check(rp.can_play() and rp.frames.size() >= 50,
+		"les dernières secondes sont enregistrées (%d images)" % rp.frames.size())
+	main._pause()
+	main._menu.activate(main._menu._ids().find("replay"))
+	await t.frames(30)
+	t.check(rp.playing and not main._fighters.visible, "rediffusion lancée depuis la pause")
+	_key(KEY_ESCAPE)
+	await t.frames(5)
+	t.check(not rp.playing and main._fighters.visible and main._menu.mode == "pause", "Échap : retour à la pause")
+	main._menu.activate(main._menu._ids().find("photo"))
+	await t.frames(5)
+	t.check(main.photo.active and not main._hud.visible, "mode photo : interface masquée")
+	if DisplayServer.get_name() != "headless":
+		main.photo._shoot()
+		await t.frames(10)
+		t.check(main.photo._saved.begins_with("Enregistrée"), "capture enregistrée (%s)" % main.photo._saved)
+	_key(KEY_ESCAPE)
+	await t.frames(5)
+	t.check(not main.photo.active and main._menu.mode == "pause", "retour à la pause")
+	main._resume()
+	me.queue_free()

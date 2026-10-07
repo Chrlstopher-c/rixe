@@ -96,6 +96,20 @@ static func _screens(m: Node) -> void:
 		else:
 			m._menu.show_title())
 	m._menu.custom_requested.connect(m._custom.open_local)
+	m._camera.process_mode = Node.PROCESS_MODE_ALWAYS
+	Juice.replay = m._child(Juice.world, Replay.new())
+	Juice.replay.setup(m)
+	Juice.replay.finished.connect(m._pause)
+	m.photo = PhotoMode.new()
+	m.add_child(m.photo)
+	m.photo.setup(m)
+	m.photo.finished.connect(m._pause)
+	m._menu.replay_requested.connect(func() -> void:
+		m._menu.close()
+		Juice.replay.play())
+	m._menu.photo_requested.connect(func() -> void:
+		m._menu.close()
+		m.photo.start())
 	var prof: CanvasLayer = preload("res://hud/profile_screen.gd").new()
 	prof.profile = m.profile
 	prof.spawner = m.spawner

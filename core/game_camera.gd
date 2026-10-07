@@ -2,6 +2,8 @@ extends Camera2D
 ## Caméra : suit la cible avec anticipation de visée, tremblement par bruit, punch de zoom ; expose sa vitesse (flou).
 
 var base_zoom := 1.15
+## Zoom supplémentaire (mode photo).
+var zoom_extra := 0.0
 
 var target: Node2D
 var velocity := Vector2.ZERO
@@ -23,13 +25,21 @@ func snap_to(pos: Vector2) -> void:
 func _process(delta: float) -> void:
 	var real: float = Juice.real_delta(delta)
 	_t += real
+	if target == null and not Juice.focus_w > 0.0:
+		_finish(real)
+		return
 	var goal := _follow_goal() if is_instance_valid(target) else global_position
 	goal = goal.lerp(Juice.focus, Juice.focus_w)
 	global_position = global_position.lerp(goal, 1.0 - exp(-(5.0 + Juice.focus_w * 6.0) * real))
+	_finish(real)
+
+
+## Tremblement, zoom, vitesse (pour le flou) : aussi quand la caméra est menée à la main (photo, rediffusion).
+func _finish(real: float) -> void:
 	var s := Juice.trauma * Juice.trauma
 	offset = Vector2(_noise.get_noise_2d(_t * 30.0, 0.0), _noise.get_noise_2d(0.0, _t * 30.0)) * 9.0 * s
 	rotation = _noise.get_noise_2d(_t * 20.0, 50.0) * 0.035 * s
-	zoom = Vector2.ONE * (base_zoom + Juice.zoom_punch + smoothstep(0.0, 1.0, Juice.focus_w) * 0.55)
+	zoom = Vector2.ONE * (base_zoom + zoom_extra + Juice.zoom_punch + smoothstep(0.0, 1.0, Juice.focus_w) * 0.55)
 	var center := get_screen_center_position()
 	velocity = (center - _last) / maxf(real, 0.0001)
 	_last = center

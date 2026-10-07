@@ -429,6 +429,8 @@ func _die(dir: Vector2, killer: Variant, dmg: float) -> void:
 	var bleed: Array = _spurt.keys() + (["shoulder", "hip"] if not cut.is_empty() else [])
 	corpse.setup(Remains.corpse_points(self), velocity, dir * (220.0 + dmg * 3.0), bleed, team_color, cut)
 	var chest := global_position + Vector2(0, -26)
+	if Juice.replay:
+		Juice.replay.death(chest, team_color)
 	Effects.blood(chest, dir, 24)
 	if death_cause == "split":
 		Effects.gore_burst(chest, dir, 1.4)

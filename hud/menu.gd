@@ -6,6 +6,8 @@ signal online_requested
 signal crosshair_requested
 signal custom_requested
 signal profile_requested
+signal replay_requested
+signal photo_requested
 signal resume_requested
 signal title_requested
 signal restart_requested
@@ -82,7 +84,7 @@ func _ids() -> Array[String]:
 	if mode == "pause":
 		if online:
 			return ["resume", "volume", "display", "shadows", "numbers", "title", "quit"]
-		return ["resume", "restart", "volume", "display", "shadows", "numbers", "title", "quit"]
+		return ["resume", "restart", "replay", "photo", "volume", "display", "shadows", "numbers", "title", "quit"]
 	var ids: Array[String] = ["nick", "mode"]
 	if Modes.has_option(game_mode):
 		ids.append("option")
@@ -123,6 +125,10 @@ func _text(id: String) -> String:
 			return "PARTIE PERSONNALISÉE"
 		"profile":
 			return "PROFIL ET TENUE"
+		"replay":
+			return "REVOIR LES 15 DERNIÈRES SECONDES"
+		"photo":
+			return "MODE PHOTO"
 		"armory":
 			return "ARMURERIE"
 		"weapon":
@@ -274,6 +280,10 @@ func activate(i: int) -> void:
 		"profile":
 			close()
 			profile_requested.emit()
+		"replay":
+			replay_requested.emit()
+		"photo":
+			photo_requested.emit()
 		"armory":
 			loadout = Unlocks.loadout()
 			_open("armory")

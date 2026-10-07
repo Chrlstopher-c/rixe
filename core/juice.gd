@@ -32,6 +32,8 @@ var force_pad := false
 ## Vent de la manche (px/s, positif vers la droite) : pluie, neige, fumée, écharpes, grenades.
 var wind := 0.0
 var weather: Node2D
+## Enregistreur de rediffusion (15 dernières secondes).
+var replay: Node2D
 ## Partie en ligne en cours (NetSession) ; null hors ligne.
 var net: Node
 ## Partie de survie en cours (ressources, faim, jour/nuit) ; null en arène.

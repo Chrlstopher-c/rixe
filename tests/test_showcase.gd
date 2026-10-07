@@ -5,7 +5,7 @@ extends RefCounted
 func names() -> Array[String]:
 	return ["showcase", "showcase_end", "showcase_armory", "showcase_inventory", "showcase_survival", "showcase_duo",
 		"showcase_killcam", "showcase_execution",
-		"showcase_crosshair", "showcase_custom", "showcase_profile"]
+		"showcase_crosshair", "showcase_custom", "showcase_profile", "showcase_replay"]
 
 
 func _fire_at(t: Node, brain: ScriptBrain, target: Variant, joint: String, frames: int) -> void:
@@ -230,5 +230,17 @@ func test_showcase_profile(t: Node) -> void:
 	scr.activate(scr.ROWS.size() - 1)
 	main._on_start("arcade", 0)
 	main.player.brain = BotBrain.new(1.0, "acrobate")
+	await t.frames(120 * 6)
+	t.check(true, "vitrine")
+
+
+func test_showcase_replay(t: Node) -> void:
+	var main: Node = t.main
+	main._on_start("arcade", 0)
+	main.player.brain = BotBrain.new(1.0, "acrobate")
+	main.player.shield = 99.0
+	await t.frames(120 * 8)
+	main._pause()
+	main._menu.activate(main._menu._ids().find("replay"))
 	await t.frames(120 * 6)
 	t.check(true, "vitrine")
