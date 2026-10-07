@@ -20,6 +20,7 @@ static func register() -> void:
 	_keys("heal", [KEY_H])
 	_keys("inventory", [KEY_TAB])
 	_keys("melee", [KEY_E, KEY_F])
+	_keys("focus", [KEY_X])
 	_mouse("melee", MOUSE_BUTTON_MIDDLE)
 
 

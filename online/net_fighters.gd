@@ -153,6 +153,7 @@ func puppet_hit(f: Fighter, dmg: float, dir: Vector2, at: Vector2, from: Variant
 	Sfx.play("flesh", at, -3.0, 0.2)
 	if Fighter.local_human(from):
 		Effects.hit_marker(at, zone == "head", false)
+		Effects.damage_number(at, dmg * float(BodyParts.PARTS[zone].mult), zone == "head")
 
 
 func on_hit(msg: Dictionary) -> void:

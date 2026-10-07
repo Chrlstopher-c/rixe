@@ -39,6 +39,7 @@ func think(f: Node2D, _delta: float) -> Dictionary:
 		"throw": _just(JOY_BUTTON_RIGHT_SHOULDER),
 		"cycle": _just(JOY_BUTTON_Y),
 		"heal": _just(JOY_BUTTON_DPAD_UP),
+		"focus": _just(JOY_BUTTON_LEFT_STICK),
 		"select": -1,
 		"aim": chest + _assist(f, chest, _aim) * REACH,
 	}

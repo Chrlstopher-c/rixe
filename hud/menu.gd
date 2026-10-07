@@ -80,14 +80,15 @@ func _ids() -> Array[String]:
 		return ids
 	if mode == "pause":
 		if online:
-			return ["resume", "volume", "display", "title", "quit"]
-		return ["resume", "restart", "volume", "display", "title", "quit"]
+			return ["resume", "volume", "display", "numbers", "title", "quit"]
+		return ["resume", "restart", "volume", "display", "numbers", "title", "quit"]
 	var ids: Array[String] = ["nick", "mode"]
 	if Modes.has_option(game_mode):
 		ids.append("option")
 	if game_mode != "survie":
 		ids.append("players")
-	ids.append_array(["play", "custom", "online", "armory", "crosshair", "board", "volume", "display", "quit"])
+	ids.append_array(["play", "custom", "online", "armory", "crosshair", "board", "volume", "display", "numbers",
+		"quit"])
 	return ids
 
 
@@ -113,6 +114,8 @@ func _text(id: String) -> String:
 			return "EN LIGNE"
 		"crosshair":
 			return "VISEUR"
+		"numbers":
+			return "CHIFFRES DE DÉGÂTS  ‹ %s ›" % ("OUI" if Juice.damage_numbers else "NON")
 		"custom":
 			return "PARTIE PERSONNALISÉE"
 		"armory":
@@ -209,6 +212,9 @@ func _adjust(id: String, step: int) -> void:
 			options[game_mode] = posmod(options[game_mode] + step, count)
 		"players":
 			players = 2 if players == 1 else 1
+		"numbers":
+			Juice.damage_numbers = not Juice.damage_numbers
+			Settings.set_pref("hud", "damage_numbers", Juice.damage_numbers)
 		"weapon":
 			loadout.weapon = _cycle(Unlocks.weapons(), loadout.weapon, step)
 			if not Arsenal.accepts(loadout.weapon):

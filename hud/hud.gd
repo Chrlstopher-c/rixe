@@ -63,6 +63,8 @@ func _process(delta: float) -> void:
 func _draw_hud() -> void:
 	_draw_letterbox()
 	_draw_health()
+	_draw_focus()
+	_draw_threats()
 	var info := _info_line()
 	_canvas.draw_string(_font, Vector2(12, 30), info, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(1, 0.9, 0.95, 0.75))
 	for i in _feed.size():
@@ -89,6 +91,36 @@ func _draw_letterbox() -> void:
 	var h := _canvas.size.y * 0.11 * w
 	_canvas.draw_rect(Rect2(0, 0, _canvas.size.x, h), Color.BLACK)
 	_canvas.draw_rect(Rect2(0, _canvas.size.y - h, _canvas.size.x, h), Color.BLACK)
+
+
+## Jauge de ralenti (hors ligne) sous la vie ; clignote quand elle est pleine (X / L3).
+func _draw_focus() -> void:
+	if Juice.net or not is_instance_valid(player):
+		return
+	var r := Rect2(12, 21, 120, 2)
+	_canvas.draw_rect(r.grow(1), Color(0, 0, 0, 0.5))
+	var full: bool = Juice.gauge >= 1.0
+	var col := Color(2.2, 1.8, 0.5, 0.7 + 0.3 * sin(Time.get_ticks_msec() * 0.01)) if full else Color(1.6, 1.3, 0.5, 0.8)
+	_canvas.draw_rect(Rect2(r.position, Vector2(r.size.x * Juice.gauge, r.size.y)), col)
+	if full:
+		_canvas.draw_string(_font, Vector2(138, 25), "X : RALENTI", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, col)
+
+
+## Flèches rouges au bord de l'écran vers les tireurs hors champ qui viennent de toucher le joueur.
+func _draw_threats() -> void:
+	if Juice.threats.is_empty() or not is_instance_valid(player):
+		return
+	var size := _canvas.size
+	var center := size * 0.5
+	var xf := get_viewport().get_canvas_transform()
+	for th in Juice.threats:
+		var dir: Vector2 = (xf * Vector2(th.at) - center).normalized()
+		var edge := center + dir * minf(size.x * 0.46, size.y * 0.42) / maxf(absf(dir.x) * 0.9 + absf(dir.y) * 0.9, 0.5)
+		edge = edge.clamp(Vector2(16, 16), size - Vector2(16, 16))
+		var a := clampf(float(th.t) / 1.2, 0.0, 1.0)
+		var side := dir.orthogonal() * 6.0
+		_canvas.draw_colored_polygon(PackedVector2Array([edge + dir * 8.0, edge - dir * 4.0 + side,
+			edge - dir * 4.0 - side]), Color(2.4, 0.3, 0.3, 0.85 * a))
 
 
 func _draw_health() -> void:

@@ -136,6 +136,8 @@ func _physics_process(delta: float) -> void:
 	_step_up()
 	if not was_floor and is_on_floor():
 		_land(vy)
+	if intent.get("focus", false) and local_human(self) and Juice.use_focus():
+		Juice.notify("RALENTI")
 	if not _try_execute():
 		melee.tick(delta, intent.get("melee", false))
 	_throw_cd -= delta
@@ -370,6 +372,9 @@ func take_hit(dmg: float, dir: Vector2, at: Vector2, from: Variant, knock: float
 			hp = 0.0
 	if local_human(from) and from != self:
 		Effects.hit_marker(at, last_zone == "head", hp <= 0.0)
+		Effects.damage_number(at, res.dmg, last_zone == "head")
+	if local_human(self) and is_instance_valid(from) and from != self and not Juice.on_screen(from.global_position):
+		Juice.threats.append({"at": from.global_position, "t": 1.2})
 	if hp <= 0.0:
 		_die(dir, from, res.dmg)
 
@@ -428,6 +433,8 @@ func _die(dir: Vector2, killer: Variant, dmg: float) -> void:
 	Juice.zoom_punch = 0.08
 	Juice.shake(0.4, chest)
 	_kill_time_fx(killer, chest)
+	if local_human(killer) and killer != self:
+		Juice.gauge = minf(Juice.gauge + (0.5 if death_cause in ["headshot", "decap"] else 0.34), 1.0)
 	if Juice.net and not remote:
 		Juice.net.local_death(self, dir, killer, dmg)
 	if Juice.net == null or Juice.net.is_host():

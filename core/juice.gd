@@ -6,6 +6,8 @@ signal fighter_killed(victim: Node2D, killer: Node2D)
 signal notified(text: String)
 ## Exécution lancée (victime tenue, kill cam) : l'interface affiche le titre.
 signal executed(victim: Node2D, killer: Node2D)
+## Ralenti à la demande déclenché.
+signal focus_used
 
 const MASK_WORLD := 1
 const MASK_FIGHTERS := 2
@@ -34,6 +36,13 @@ var net: Node
 var survival: Node
 ## Interrupteurs de profilage (--off=…), jamais utilisés en jeu normal.
 var off: PackedStringArray = []
+## Chiffres de dégâts au-dessus des touches (option du menu).
+var damage_numbers: bool = Settings.get_pref("hud", "damage_numbers", true)
+## Tireurs hors champ qui viennent de toucher le joueur : [{at, t}] (indicateur au bord de l'écran).
+var threats: Array[Dictionary] = []
+## Jauge de ralenti à la demande (0 à 1) : se remplit en éliminant.
+var gauge := 0.0
+const GAUGE_TIME := 3.0
 var trauma := 0.0
 var aberration := 0.0
 var zoom_punch := 0.0
@@ -64,6 +73,9 @@ func _process(delta: float) -> void:
 	for w in shockwaves:
 		w.age += real
 	shockwaves = shockwaves.filter(func(w: Dictionary) -> bool: return w.age < w.life)
+	for th in threats:
+		th.t -= real
+	threats = threats.filter(func(th: Dictionary) -> bool: return th.t > 0.0)
 	focus_t -= real
 	focus_w = move_toward(focus_w, 1.0 if focus_t > 0.0 else 0.0, real * (5.0 if focus_t > 0.0 else 3.0))
 	_tick_time(real)
@@ -118,6 +130,18 @@ func kill_cam(at: Vector2, sec: float = 1.5) -> void:
 	slowmo(sec, 0.22)
 	aberration += 0.6
 	Sfx.play_ui("slowmo", -2.0)
+
+
+## Ralenti à la demande : jauge pleine, hors ligne seulement (le temps doit rester le même pour tous en ligne).
+func use_focus() -> bool:
+	if gauge < 1.0 or net != null:
+		return false
+	gauge = 0.0
+	slowmo(GAUGE_TIME, 0.4)
+	focus_used.emit()
+	aberration += 0.5
+	Sfx.play_ui("slowmo", -4.0)
+	return true
 
 
 func notify(text: String) -> void:

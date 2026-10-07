@@ -40,6 +40,7 @@ func _keyboard(f: Node2D) -> Dictionary:
 		"select": -1 if building else _selected(),
 		"cycle": Input.is_action_just_pressed("cycle"),
 		"heal": Input.is_action_just_pressed("heal"),
+		"focus": Input.is_action_just_pressed("focus"),
 		"aiming": Input.is_action_pressed("aim") and not building,
 		"aim": Juice.split.mouse_world(0) if is_instance_valid(Juice.split) else f.get_global_mouse_position(),
 	}

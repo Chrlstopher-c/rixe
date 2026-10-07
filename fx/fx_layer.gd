@@ -23,6 +23,8 @@ class P:
 var parts: Array[P] = []
 var tracers: Array[Dictionary] = []
 var markers: Array[Dictionary] = []
+var numbers: Array[Dictionary] = []
+var _font: Font = ThemeDB.fallback_font
 var _lights: Array[PointLight2D] = []
 var _light_i := 0
 
@@ -48,6 +50,7 @@ func clear() -> void:
 	parts.clear()
 	tracers.clear()
 	markers.clear()
+	numbers.clear()
 
 
 func emit(kind: int, pos: Vector2, vel: Vector2, life: float, size: float, color: Color) -> P:
@@ -78,6 +81,10 @@ func _process(delta: float) -> void:
 	for m in markers:
 		m.life -= real
 	markers = markers.filter(func(m: Dictionary) -> bool: return m.life > 0.0)
+	for n in numbers:
+		n.life -= real
+		n.pos.y -= real * 26.0
+	numbers = numbers.filter(func(n: Dictionary) -> bool: return n.life > 0.0)
 	for l in _lights:
 		l.energy = move_toward(l.energy, 0.0, delta * 30.0)
 	queue_redraw()
@@ -136,6 +143,10 @@ func _draw() -> void:
 	if not thick.is_empty():
 		draw_multiline_colors(thick, thick_c, 1.8)
 	_draw_markers()
+	for n in numbers:
+		var a: float = clampf(n.life / n.max * 2.0, 0.0, 1.0)
+		var col := Color(2.4, 0.5, 0.4, a) if n.head else Color(2.0, 1.9, 1.7, a)
+		draw_string(_font, n.pos + Vector2(-20, 0), str(n.val), HORIZONTAL_ALIGNMENT_CENTER, 40, 8 if n.head else 6, col)
 
 
 ## Croix qui jaillit puis se resserre en s'effaçant (temps réel : lisible même au ralenti).

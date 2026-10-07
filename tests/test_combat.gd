@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["hitzones", "dismember", "headshot_slowmo", "legshot", "hit_markers"]
+	return ["hitzones", "dismember", "headshot_slowmo", "legshot", "hit_markers", "feedback"]
 
 
 func _target(t: Node, is_player: bool = false) -> Fighter:
@@ -99,3 +99,42 @@ func test_hit_markers(t: Node) -> void:
 	t.check(Juice.fx.markers.is_empty(), "les marqueurs s'effacent")
 	shooter.queue_free()
 	bot.queue_free()
+
+
+## Chiffres de dégâts, flèche vers un tireur hors champ, jauge de ralenti, « Intouchable ».
+func test_feedback(t: Node) -> void:
+	var me: Fighter = t.main.spawn_test_fighter(Vector2(300, -10), ScriptBrain.new(), "rifle", true)
+	t.main.follow(me)
+	var a := await _target(t)
+	a.hp = 999.0
+	Juice.fx.numbers.clear()
+	_shoot_at(a, "hip", 10.0, me)
+	t.check(Juice.fx.numbers.size() == 1 and Juice.fx.numbers[0].val == 10, "chiffre de dégâts affiché")
+	Juice.damage_numbers = false
+	_shoot_at(a, "hip", 10.0, me)
+	t.check(Juice.fx.numbers.size() == 1, "option coupée : plus de chiffres")
+	Juice.damage_numbers = true
+	var far: Fighter = t.main.spawn_test_fighter(Vector2(1500, -10), ScriptBrain.new(), "rifle", false)
+	await t.frames(5)
+	Juice.threats.clear()
+	me.hp = 999.0
+	me.take_hit(1.0, Vector2.LEFT, me.global_position + Vector2(0, -20), far, 0.0)
+	t.check(Juice.threats.size() == 1, "touché par un tireur hors champ : flèche au bord de l'écran")
+	Juice.gauge = 0.0
+	var ann: Announcer = t.main.announcer
+	ann.reset()
+	ann.enabled = true
+	for i in 3:
+		var v: Fighter = t.main.spawn_test_fighter(Vector2(400 + i * 30, -10), ScriptBrain.new(), "rifle", false)
+		v.take_hit(999.0, Vector2.RIGHT, v.global_position + Vector2(0, -22), me, 0.0)
+	t.check(Juice.gauge >= 1.0, "trois éliminations : jauge de ralenti pleine (%.2f)" % Juice.gauge)
+	t.check(Juice.use_focus() and Juice._slowmo > 0.0 and Juice.gauge == 0.0, "ralenti à la demande déclenché")
+	for i in 2:
+		var v: Fighter = t.main.spawn_test_fighter(Vector2(500 + i * 30, -10), ScriptBrain.new(), "rifle", false)
+		v.take_hit(999.0, Vector2.RIGHT, v.global_position + Vector2(0, -22), me, 0.0)
+	await t.frames(240)
+	t.check(ann._clean >= 5, "cinq éliminations sans être touché (%d)" % ann._clean)
+	ann.enabled = false
+	Juice.reset()
+	far.queue_free()
+	me.queue_free()

@@ -38,6 +38,10 @@ LINES: dict[str, str] = {
     "last": "Dernier debout !",
     "round_won": "Manche gagnée !",
     "fight": "Combattez !",
+    "flawless": "Intouchable !",
+    "boss": "Le boss arrive !",
+    "boss_down": "Boss vaincu !",
+    "focus": "Ralenti !",
 }
 
 
@@ -65,7 +69,8 @@ def main() -> None:
         raise
     out = TRY_DIR if tries else OUT
     out.mkdir(parents=True, exist_ok=True)
-    for key, text in LINES.items():
+    only = sys.argv[sys.argv.index("--only") + 1].split(",") if "--only" in sys.argv else list(LINES)
+    for key, text in {k: v for k, v in LINES.items() if k in only}.items():
         for n in range(max(tries, 1)):
             wavs, sr = model.generate_voice_design(text=text, instruct=VOICE, language="French")
             x = trim(np.asarray(wavs[0], dtype=np.float32), sr)

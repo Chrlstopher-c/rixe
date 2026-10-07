@@ -44,6 +44,24 @@ static func save_best(best: int) -> void:
 		push_warning("record non enregistré (%d)" % err)
 
 
+## Préférence simple (section, clé) ; `default` si absente.
+static func get_pref(section: String, key: String, default: Variant) -> Variant:
+	var cfg := ConfigFile.new()
+	cfg.load(PATH)
+	return cfg.get_value(section, key, default)
+
+
+static func set_pref(section: String, key: String, value: Variant) -> void:
+	if not persist:
+		return
+	var cfg := ConfigFile.new()
+	cfg.load(PATH)
+	cfg.set_value(section, key, value)
+	var err := cfg.save(PATH)
+	if err != OK:
+		push_warning("préférence non enregistrée (%d)" % err)
+
+
 ## Viseur choisi : {"preset": nom, "custom": réglages du viseur personnalisé}.
 static func load_crosshair() -> Dictionary:
 	var cfg := ConfigFile.new()

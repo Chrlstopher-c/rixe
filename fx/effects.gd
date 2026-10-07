@@ -111,6 +111,14 @@ static func explosion(pos: Vector2, radius: float) -> void:
 	Juice.aberration += 0.4
 
 
+## Chiffre de dégâts qui monte et s'efface (rouge et plus gros à la tête).
+static func damage_number(pos: Vector2, dmg: float, head: bool) -> void:
+	if not Juice.damage_numbers or dmg < 0.5:
+		return
+	Juice.fx.numbers.append({"pos": pos + Vector2(randf_range(-4, 4), -6), "val": int(round(dmg)), "head": head,
+		"life": 0.8, "max": 0.8})
+
+
 ## Marqueur de touche du joueur : croix blanche, rouge à la tête, plus grosse et cerclée sur une élimination.
 static func hit_marker(pos: Vector2, head: bool, kill: bool) -> void:
 	var col := Color(2.2, 0.25, 0.25) if head or kill else Color(2.0, 2.0, 2.0)
