@@ -84,3 +84,28 @@ static func spurt(pos: Vector2, vel: Vector2, amount: int) -> void:
 		var b = fx.emit(1, pos, vel.rotated(randf_range(-0.15, 0.15)) * randf_range(0.8, 1.2), 1.2, 1.4, BLOOD)
 		b.grav = 700.0
 		b.drag = 0.4
+
+
+## Explosion : éclair, boule de feu, fumée qui monte, étincelles, débris, onde de choc, gros tremblement.
+static func explosion(pos: Vector2, radius: float) -> void:
+	var fx: Node2D = Juice.fx
+	fx.emit(3, pos, Vector2.RIGHT, 0.12, radius * 0.5, Color(4.0, 3.2, 2.0))
+	fx.emit(5, pos, Vector2.ZERO, 0.35, radius * 1.3, Color(3.0, 1.6, 0.6, 0.9))
+	for i in 14:
+		var v := Vector2.RIGHT.rotated(randf() * TAU) * randf_range(40, 160)
+		var fire = fx.emit(2, pos, v, randf_range(0.25, 0.5), randf_range(4.0, 7.0), Color(3.0, 1.4, 0.4, 0.8))
+		fire.drag = 5.0
+	for i in 10:
+		var v := Vector2(randf_range(-60, 60), randf_range(-90, -20))
+		var smoke = fx.emit(2, pos, v, randf_range(1.2, 2.2), randf_range(5.0, 9.0), Color(0.18, 0.14, 0.16, 0.55))
+		smoke.drag = 1.5
+	for i in 22:
+		var d := Vector2.RIGHT.rotated(randf() * TAU)
+		var s = fx.emit(0, pos, d * randf_range(200, 520), randf_range(0.2, 0.5), 1.1, Color(4.0, 2.4, 1.0))
+		s.grav = 400.0
+		s.drag = 1.5
+	fx.flash_light(pos, Color(1.0, 0.6, 0.3), 3.0)
+	Juice.shockwave(pos, 1.6)
+	Juice.shake(0.8, pos)
+	Juice.zoom_punch = maxf(Juice.zoom_punch, 0.06)
+	Juice.aberration += 0.4

@@ -5,7 +5,7 @@ extends RefCounted
 
 enum State { ENGAGE, RUSH, RETREAT, LOOT, SEARCH, HIGH }
 
-const RANK := {"rifle": 1, "shotgun": 2, "railgun": 3}
+const RANK := {"pistol": 0, "smg": 1, "rifle": 1, "shotgun": 2, "launcher": 2, "katana": 2, "sniper": 3, "railgun": 3}
 const THINK_EVERY := 0.25
 
 var p: Personality
@@ -159,8 +159,17 @@ func _combat(f: Node2D, delta: float, it: Dictionary) -> void:
 		it.fire = true
 		if f.gun.cd <= 0.0:
 			aim.shot()
-	if from.distance_to(chest) < 30.0 and randf() < delta * (1.0 + 6.0 * p.melee):
+	if from.distance_to(chest) < 30.0 and randf() < delta * (1.0 + 6.0 * p.melee) and f.gun.kind() != "blade":
 		it.melee = true
+	var d := from.distance_to(chest)
+	if f.gun.kind() == "projectile":
+		var flight: float = d / float(f.gun.def.speed)
+		it.aim = (it.aim as Vector2) + Vector2(0, -160.0 * flight * flight)
+		if d < 70.0:
+			it.fire = false
+	if f.grenades > 0 and d > 90.0 and d < 320.0 and _unseen < 0.1 and randf() < delta * p.aggression * 0.5:
+		it.aim = chest + Vector2(0, -d * 0.35)
+		it.throw = true
 
 
 ## Esquive : si un adversaire en vue me met en joue, sauter ou dasher (selon prudence et mobilité).

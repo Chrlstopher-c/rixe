@@ -46,7 +46,7 @@ func _try_grab() -> void:
 		if not f.alive or f.body.arms_left() == 0:
 			continue
 		var same: bool = f.gun.id == weapon_id
-		if same and (f.gun.reserve >= int(f.gun.def.reserve) * 2 or mag + reserve <= 0):
+		if same and (f.gun.infinite() or f.gun.reserve >= int(f.gun.def.reserve) * 2 or mag + reserve <= 0):
 			continue
 		if f == immune and immune_t > 0.0:
 			continue

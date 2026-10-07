@@ -15,6 +15,8 @@ var reload_t := 0.0
 ## Remontée du canon accumulée par les tirs (radians), à compenser à la souris.
 var climb := 0.0
 var _since_shot := 99.0
+## Coup de lame en cours (0 → 1) pour l'animation.
+var swing := 0.0
 
 
 func _init(holder: Node2D, weapon_id: String) -> void:
@@ -23,6 +25,14 @@ func _init(holder: Node2D, weapon_id: String) -> void:
 	def = Arsenal.WEAPONS[weapon_id]
 	mag = int(def.mag)
 	reserve = int(def.reserve)
+
+
+func kind() -> String:
+	return def.get("kind", "hitscan")
+
+
+func infinite() -> bool:
+	return int(def.mag) <= 0
 
 
 func reloading() -> bool:
@@ -36,6 +46,7 @@ func reload_progress() -> float:
 
 func tick(delta: float, trigger: bool, reload_pressed: bool = false) -> void:
 	cd -= delta
+	swing = maxf(swing - delta * 4.0, 0.0)
 	_since_shot += delta
 	if _since_shot > 0.18:
 		climb = move_toward(climb, 0.0, Arsenal.RECOVER * delta)
@@ -47,6 +58,10 @@ func tick(delta: float, trigger: bool, reload_pressed: bool = false) -> void:
 	if reload_pressed:
 		start_reload()
 	if not trigger or cd > 0.0:
+		return
+	if infinite():
+		cd = def.rate
+		_slash()
 		return
 	if mag <= 0:
 		cd = 0.3
@@ -60,7 +75,7 @@ func tick(delta: float, trigger: bool, reload_pressed: bool = false) -> void:
 
 
 func start_reload() -> bool:
-	if reload_t > 0.0 or mag >= int(def.mag) or reserve <= 0:
+	if infinite() or reload_t > 0.0 or mag >= int(def.mag) or reserve <= 0:
 		return false
 	reload_t = def.reload
 	Sfx.play("reload_out", owner.global_position, -4.0, 0.05)
@@ -86,8 +101,11 @@ func _fire() -> void:
 	var dir := shot_dir()
 	var muzzle: Vector2 = owner.rig.muzzle_global()
 	var spread := _spread()
-	for i in def.pellets:
-		_pellet(muzzle, dir.rotated(randf_range(-spread, spread)))
+	if kind() == "projectile":
+		_launch(muzzle, dir.rotated(randf_range(-spread, spread)))
+	else:
+		for i in def.pellets:
+			_pellet(muzzle, dir.rotated(randf_range(-spread, spread)))
 	climb = minf(climb + float(def.climb) * (0.4 if owner.get("aiming") else 1.0), 0.6)
 	owner.rig.recoil = def.recoil
 	owner.velocity -= dir * def.kick
@@ -104,12 +122,39 @@ func _fire() -> void:
 
 
 func _spread() -> float:
-	var s: float = def.spread
+	var s: float = def.get("ads_spread", def.spread * 0.4) if owner.get("aiming") else def.spread
 	if owner.body.arms_left() < 2:
 		s = s * 2.5 + 0.04
-	if owner.get("aiming"):
-		s *= 0.4
 	return s
+
+
+func _launch(from: Vector2, dir: Vector2) -> void:
+	var gren := Grenade.new()
+	Juice.world.add_child(gren)
+	gren.global_position = from
+	gren.setup(owner, dir * float(def.speed) + owner.velocity * 0.3, 3.0, true, def.dmg, def.radius)
+	gren.gravity = 320.0
+
+
+## Coup de lame : arc devant soi, touche le membre le plus proche, tranche le décor.
+func _slash() -> void:
+	swing = 1.0
+	var dir := shot_dir()
+	var origin: Vector2 = owner.global_position + Vector2(0, -24)
+	Sfx.play("slash", origin, -2.0, 0.12)
+	var landed := false
+	for o in owner.get_tree().get_nodes_in_group("fighters"):
+		if o == owner or not o.alive:
+			continue
+		var hit_at := Melee._closest_joint(o, origin)
+		var to := hit_at - origin
+		if to.length() <= float(def.range) and absf(to.angle_to(dir)) <= 1.1:
+			o.take_hit(def.dmg, dir, hit_at, owner, def.knock)
+			landed = true
+	Juice.arena.damage(origin + dir * float(def.range), def.terrain_dmg, def.terrain_radius)
+	if landed:
+		Juice.hitstop(0.05)
+		Juice.shake(0.2, origin)
 
 
 func _pellet(from: Vector2, dir: Vector2) -> void:

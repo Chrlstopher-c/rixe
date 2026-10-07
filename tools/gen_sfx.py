@@ -171,6 +171,49 @@ def dry() -> np.ndarray:
     return env(bp(noise(0.05), 2500, 8000), 0.0002, 0.006) * 0.8
 
 
+def pistol() -> np.ndarray:
+    crack = env(hp(noise(0.08), 1500), 0.0005, 0.012)
+    body = env(lp(noise(0.2), 2200), 0.001, 0.035)
+    return tail(lp(drive(mix(crack * 0.6, body, env(sweep(0.12, 220, 90), 0.001, 0.03)), 2.2), 6000), 0.25, 0.18)
+
+
+def smg() -> np.ndarray:
+    body = env(lp(noise(0.12), 2600), 0.0005, 0.022)
+    return lp(drive(mix(body, env(hp(noise(0.05), 2500), 0.0003, 0.008) * 0.5), 2.0), 7000)
+
+
+def sniper() -> np.ndarray:
+    crack = env(hp(noise(0.2), 1800), 0.0003, 0.02)
+    boom = env(lp(noise(0.9), 700), 0.002, 0.25)
+    thump = env(sweep(0.5, 120, 40), 0.001, 0.12)
+    return tail(lp(drive(mix(crack * 0.7, boom * 1.3, thump * 1.4), 2.8), 5000), 0.9, 0.4)
+
+
+def launcher() -> np.ndarray:
+    thump = env(sweep(0.3, 160, 50), 0.001, 0.08)
+    puff = env(bp(noise(0.25), 200, 1500), 0.002, 0.06)
+    return tail(mix(thump * 1.3, puff), 0.3, 0.2)
+
+
+def explosion() -> np.ndarray:
+    boom = env(lp(noise(1.6), 500), 0.002, 0.45)
+    crack = env(hp(noise(0.25), 1200), 0.0005, 0.04)
+    sub = env(sweep(1.0, 70, 25), 0.002, 0.35)
+    debris = env(bp(noise(1.2), 1500, 5000), 0.05, 0.3) * 0.25
+    return tail(drive(mix(boom * 1.5, crack * 0.6, sub * 1.4, debris), 2.5), 1.0, 0.4)
+
+
+def slash() -> np.ndarray:
+    n = int(SR * 0.18)
+    whoosh = bp(noise(0.18), 1500, 8000) * np.sin(np.linspace(0, np.pi, n)) ** 4
+    ring = env(sum(np.sin(2 * np.pi * f * t(0.4)) * a for f, a in [(2400, 1), (3700, 0.5)]), 0.01, 0.12) * 0.25
+    return mix(whoosh, ring)
+
+
+def tink() -> np.ndarray:
+    return env(sum(np.sin(2 * np.pi * f * t(0.1)) * a for f, a in [(1900, 1), (2900, 0.5)]), 0.0005, 0.02) * 0.6
+
+
 def round_start() -> np.ndarray:
     tt = t(0.9)
     chord = sum(np.sin(2 * np.pi * f * tt) for f in [110, 165, 220, 330])
@@ -181,7 +224,8 @@ SOUNDS = {
     "rifle": rifle, "shotgun": shotgun, "railgun": railgun, "impact": impact, "flesh": flesh, "gore": gore,
     "jump": jump, "air_jump": air_jump, "land": land, "dash": dash, "shell": shell, "swing": swing,
     "punch": punch, "slowmo": slowmo, "pickup": pickup, "round": round_start, "ricochet": ricochet,
-    "reload_out": reload_out, "reload_in": reload_in, "dry": dry,
+    "reload_out": reload_out, "reload_in": reload_in, "dry": dry, "pistol": pistol, "smg": smg,
+    "sniper": sniper, "launcher": launcher, "explosion": explosion, "slash": slash, "tink": tink,
 }
 
 

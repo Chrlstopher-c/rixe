@@ -9,11 +9,11 @@ const ARCHETYPES := {
 		"height": 0.0},
 	"tireur": {"color": Color(0.75, 0.4, 1.0),
 		"name": "Tireur", "aggression": 0.25, "range": 1.6, "accuracy": 0.85, "reaction": 0.3,
-		"mobility": 0.3, "caution": 0.6, "melee": 0.1, "greed": 0.7, "burst": 2, "weapon": "railgun",
+		"mobility": 0.3, "caution": 0.6, "melee": 0.1, "greed": 0.7, "burst": 2, "weapon": "sniper",
 		"height": 0.9},
 	"acrobate": {"color": Color(0.6, 1.0, 0.3),
 		"name": "Acrobate", "aggression": 0.6, "range": 0.9, "accuracy": 0.55, "reaction": 0.28,
-		"mobility": 0.95, "caution": 0.4, "melee": 0.4, "greed": 0.5, "burst": 5, "weapon": "rifle",
+		"mobility": 0.95, "caution": 0.4, "melee": 0.4, "greed": 0.5, "burst": 5, "weapon": "smg",
 		"height": 0.5},
 	"renard": {"color": Color(1.0, 0.6, 0.15),
 		"name": "Renard", "aggression": 0.45, "range": 1.1, "accuracy": 0.65, "reaction": 0.35,
@@ -21,7 +21,7 @@ const ARCHETYPES := {
 		"height": 0.4},
 	"fou": {"color": Color(1.0, 0.3, 0.8),
 		"name": "Fou", "aggression": 0.85, "range": 0.7, "accuracy": 0.3, "reaction": 0.22,
-		"mobility": 0.7, "caution": 0.15, "melee": 0.5, "greed": 0.2, "burst": 9, "weapon": "rifle",
+		"mobility": 0.7, "caution": 0.15, "melee": 0.5, "greed": 0.2, "burst": 9, "weapon": "launcher",
 		"height": 0.2},
 }
 

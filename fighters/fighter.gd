@@ -39,6 +39,8 @@ var _since_hit := 99.0
 var intent := {}
 ## Visée précise (clic droit) : dispersion et remontée réduites, déplacement ralenti, caméra qui glisse.
 var aiming := false
+var grenades := Arsenal.GRENADES
+var _throw_cd := 0.0
 var aim_point := Vector2.ZERO
 var body := BodyParts.new()
 var melee := Melee.new(self)
@@ -95,6 +97,9 @@ func _physics_process(delta: float) -> void:
 	if not was_floor and is_on_floor():
 		_land(vy)
 	melee.tick(delta, intent.get("melee", false))
+	_throw_cd -= delta
+	if intent.get("throw", false):
+		throw_grenade()
 	gun.tick(delta, intent.fire and body.arms_left() > 0 and not melee.active(), intent.get("reload", false))
 	_bleed_stumps(delta)
 
@@ -191,6 +196,20 @@ func _step_up() -> void:
 	var up := global_transform.translated(Vector2(0, -9))
 	if not test_move(up, Vector2(dir * 3.0, 0)) and not test_move(global_transform, Vector2(0, -9)):
 		position += Vector2(dir * 2.0, -9.0)
+
+
+func throw_grenade() -> void:
+	if grenades <= 0 or _throw_cd > 0.0 or body.arms_left() == 0:
+		return
+	grenades -= 1
+	_throw_cd = 0.6
+	var g := Grenade.new()
+	Juice.world.add_child(g)
+	g.global_position = rig.to_global(rig.j.hand1)
+	var d: Dictionary = Arsenal.GRENADE
+	var v := (aim_dir + Vector2(0, -0.25)).normalized() * float(d.throw) + velocity * 0.5
+	g.setup(self, v, d.fuse, false, d.dmg, d.radius)
+	Sfx.play("swing", global_position, -6.0, 0.1)
 
 
 func leg_factor() -> float:

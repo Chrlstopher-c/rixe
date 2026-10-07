@@ -273,20 +273,51 @@ func _seg(a: Vector2, b: Vector2, col: Color, w: float) -> void:
 
 func _draw_gun() -> void:
 	var d: Dictionary = fighter.gun.def
+	var look: String = d.get("look", "")
+	draw_set_transform(j.pivot, gun_dir.angle(), Vector2(1, fighter.facing))
+	if look == "blade":
+		_draw_blade(d)
+	else:
+		_draw_firearm(d, look)
+	draw_set_transform(Vector2.ZERO)
+
+
+func _draw_firearm(d: Dictionary, look: String) -> void:
 	var L: float = d.length
 	var t: float = d.thick
-	draw_set_transform(j.pivot, gun_dir.angle(), Vector2(1, fighter.facing))
 	var metal := Color(0.13, 0.12, 0.17)
 	draw_rect(Rect2(-3.5, -t * 0.5, L - 1.0, t), metal)
 	draw_rect(Rect2(L - 4.5, -0.45, 4.5, 0.9), metal)
 	draw_rect(Rect2(-5.5, -0.3, 2.5, t + 0.6), metal)
 	draw_rect(Rect2(0.5, t * 0.5, 1.6, 2.4), metal)
 	draw_rect(Rect2(1.0, -t * 0.5, L - 7.0, 0.6), fighter.team_color * 1.6)
+	match look:
+		"scope":
+			draw_rect(Rect2(0.5, -t * 0.5 - 2.0, 5.0, 1.6), metal)
+			draw_rect(Rect2(5.0, -t * 0.5 - 2.0, 0.8, 1.6), Color(0.6, 1.6, 2.4))
+		"tube":
+			draw_circle(Vector2(1.5, t * 0.6), 2.2, metal)
+			draw_rect(Rect2(L - 3.0, -t * 0.5 - 0.3, 1.0, t + 0.6), Color(2.4, 1.0, 0.4))
 	if fighter.gun.id == "railgun":
 		var pulse := 2.5 + sin(_t * 18.0) * 1.0
 		for i in 3:
-			draw_rect(Rect2(2.0 + i * 3.0, -t * 0.5 - 0.4, 1.2, t + 0.8), Color(0.4, 1.4, 2.6) * pulse * 0.5)
-	draw_set_transform(Vector2.ZERO)
+			draw_rect(Rect2(2.0 + i * 3.0, -d.thick * 0.5 - 0.4, 1.2, d.thick + 0.8), Color(0.4, 1.4, 2.6) * pulse * 0.5)
+
+
+## Katana : poignée, garde, lame brillante ; le coup balaie un arc avec une traînée.
+func _draw_blade(d: Dictionary) -> void:
+	var sw: float = fighter.gun.swing
+	var ang := lerpf(1.3, -1.1, 1.0 - sw) if sw > 0.0 else -0.35
+	draw_set_transform(j.pivot, gun_dir.angle() - ang * fighter.facing, Vector2(1, fighter.facing))
+	var L: float = d.length
+	draw_rect(Rect2(-3.5, -0.6, 4.0, 1.2), Color(0.2, 0.08, 0.08))
+	draw_rect(Rect2(0.3, -1.4, 0.8, 2.8), Color(0.5, 0.45, 0.3))
+	draw_line(Vector2(1.2, 0), Vector2(L, -0.6), Color(2.2, 2.4, 2.8), 1.1, Juice.hd)
+	if sw > 0.0:
+		for i in 5:
+			var a := -0.25 * i
+			var c := Color(2.0, 2.4, 3.0, 0.25 * sw * (1.0 - i / 5.0))
+			draw_line(Vector2(L * 0.5, 0).rotated(a), Vector2(L, -0.6).rotated(a), c, 1.6)
 
 
 func _draw_scarf() -> void:

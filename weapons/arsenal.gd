@@ -23,7 +23,46 @@ const WEAPONS := {
 		"thick": 1.8, "terrain_dmg": 90.0, "terrain_radius": 12.0,
 		"ricochet": 0.9, "bounces": 1, "mag": 4, "reserve": 8, "reload": 2.2, "climb": 0.16,
 	},
+	"pistol": {
+		"name": "Pistolet", "rate": 0.2, "dmg": 14.0, "pellets": 1, "spread": 0.03, "range": 420.0,
+		"knock": 50.0, "kick": 6.0, "recoil": 2.5, "shake": 0.08, "tracer": Color(3.6, 2.6, 1.4),
+		"width": 1.0, "length": 7.0, "pierce": false, "shell": true, "flash": 3.5, "ideal": 150.0,
+		"thick": 1.3, "terrain_dmg": 10.0, "terrain_radius": 3.0,
+		"ricochet": 0.5, "bounces": 1, "mag": 12, "reserve": 48, "reload": 1.0, "climb": 0.05,
+	},
+	"smg": {
+		"name": "Mitraillette", "rate": 0.055, "dmg": 6.0, "pellets": 1, "spread": 0.08, "range": 330.0,
+		"knock": 28.0, "kick": 5.0, "recoil": 1.6, "shake": 0.05, "tracer": Color(4.0, 3.0, 1.2),
+		"width": 0.9, "length": 9.0, "pierce": false, "shell": true, "flash": 3.0, "ideal": 120.0,
+		"thick": 1.6, "terrain_dmg": 7.0, "terrain_radius": 3.0,
+		"ricochet": 0.45, "bounces": 1, "mag": 40, "reserve": 120, "reload": 1.6, "climb": 0.012,
+	},
+	"sniper": {
+		"name": "Fusil de précision", "rate": 1.0, "dmg": 95.0, "pellets": 1, "spread": 0.07, "ads_spread": 0.002,
+		"range": 1300.0, "knock": 220.0, "kick": 60.0, "recoil": 5.0, "shake": 0.3, "tracer": Color(4.5, 4.5, 4.0),
+		"width": 1.6, "length": 16.0, "pierce": false, "shell": true, "flash": 5.0, "ideal": 380.0,
+		"thick": 1.5, "terrain_dmg": 30.0, "terrain_radius": 5.0,
+		"ricochet": 0.2, "bounces": 1, "mag": 5, "reserve": 15, "reload": 2.4, "climb": 0.2, "look": "scope",
+	},
+	"launcher": {
+		"name": "Lance-grenades", "kind": "projectile", "rate": 0.9, "dmg": 70.0, "pellets": 1, "spread": 0.02,
+		"range": 600.0, "knock": 0.0, "kick": 70.0, "recoil": 5.0, "shake": 0.3, "tracer": Color(4.0, 1.6, 0.6),
+		"width": 1.0, "length": 12.0, "pierce": false, "shell": false, "flash": 5.0, "ideal": 220.0,
+		"thick": 2.8, "terrain_dmg": 0.0, "terrain_radius": 0.0, "speed": 430.0, "radius": 46.0,
+		"ricochet": 0.0, "bounces": 0, "mag": 4, "reserve": 12, "reload": 2.0, "climb": 0.12, "look": "tube",
+	},
+	"katana": {
+		"name": "Katana", "kind": "blade", "rate": 0.38, "dmg": 46.0, "pellets": 1, "spread": 0.0, "range": 36.0,
+		"knock": 160.0, "kick": -120.0, "recoil": 0.0, "shake": 0.15, "tracer": Color(3.0, 3.4, 4.0),
+		"width": 0.0, "length": 15.0, "pierce": false, "shell": false, "flash": 0.0, "ideal": 26.0,
+		"thick": 0.9, "terrain_dmg": 18.0, "terrain_radius": 6.0,
+		"ricochet": 0.0, "bounces": 0, "mag": 0, "reserve": 0, "reload": 0.1, "climb": 0.0, "look": "blade",
+	},
 }
+
+## Grenades à main par vie, puissance et retard.
+const GRENADES := 2
+const GRENADE := {"dmg": 80.0, "radius": 52.0, "fuse": 1.7, "throw": 360.0}
 
 
 ## Remontée du canon : retour à zéro (rad/s) quand on cesse de tirer.

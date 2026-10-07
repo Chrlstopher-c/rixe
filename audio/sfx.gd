@@ -4,7 +4,7 @@ extends Node
 const POOL := 24
 const SOUNDS := ["rifle", "shotgun", "railgun", "impact", "flesh", "gore", "jump", "air_jump", "land", "dash",
 	"shell", "swing", "punch", "slowmo", "pickup", "round", "ricochet",
-	"reload_out", "reload_in", "dry"]
+	"reload_out", "reload_in", "dry", "pistol", "smg", "sniper", "launcher", "explosion", "slash", "tink"]
 
 var streams := {}
 var _players: Array[AudioStreamPlayer2D] = []

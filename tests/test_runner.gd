@@ -9,7 +9,7 @@ var _suites: Array = []
 
 func _init(game: Node, names: String) -> void:
 	main = game
-	for n in ["movement", "combat", "audio", "melee", "pickup", "menu", "themes", "score", "modes", "terrain", "ai", "weapons", "showcase"]:
+	for n in ["movement", "combat", "audio", "melee", "pickup", "menu", "themes", "score", "modes", "terrain", "ai", "weapons", "arsenal", "showcase"]:
 		var path := "res://tests/test_%s.gd" % n
 		var suite: Object = load(path).new()
 		_suites.append(suite)

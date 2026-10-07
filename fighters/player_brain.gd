@@ -13,6 +13,7 @@ func think(f: Node2D, _delta: float) -> Dictionary:
 		"fire": Input.is_action_pressed("fire"),
 		"melee": Input.is_action_just_pressed("melee"),
 		"reload": Input.is_action_just_pressed("reload"),
+		"throw": Input.is_action_just_pressed("throw"),
 		"aiming": Input.is_action_pressed("aim"),
 		"aim": f.get_global_mouse_position(),
 	}

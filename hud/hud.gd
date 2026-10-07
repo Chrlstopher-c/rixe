@@ -132,12 +132,16 @@ func _draw_ammo() -> void:
 		return
 	var g: Gun = player.gun
 	var size := _canvas.size
-	var empty := g.mag == 0
+	var empty := g.mag == 0 and not g.infinite()
 	var col := Color(2.0, 0.5, 0.5) if empty or g.mag <= int(g.def.mag) / 5 else Color(1.6, 1.55, 1.5)
 	var x := size.x - 140.0
-	_canvas.draw_string(_font, Vector2(x, size.y - 16), "%d" % g.mag, HORIZONTAL_ALIGNMENT_RIGHT, 60, 22, col)
-	_canvas.draw_string(_font, Vector2(x + 64, size.y - 16), "/ %d" % g.reserve, HORIZONTAL_ALIGNMENT_LEFT, -1, 11,
-		Color(1, 0.9, 0.95, 0.7))
+	var count := "—" if g.infinite() else "%d" % g.mag
+	_canvas.draw_string(_font, Vector2(x, size.y - 16), count, HORIZONTAL_ALIGNMENT_RIGHT, 60, 22, col)
+	if not g.infinite():
+		_canvas.draw_string(_font, Vector2(x + 64, size.y - 16), "/ %d" % g.reserve, HORIZONTAL_ALIGNMENT_LEFT, -1, 11,
+			Color(1, 0.9, 0.95, 0.7))
+	for i in player.grenades:
+		_canvas.draw_circle(Vector2(x - 8 - i * 9, size.y - 22), 3.0, Color(0.5, 0.9, 0.4))
 	_canvas.draw_string(_font, Vector2(x, size.y - 40), String(g.def.name).to_upper(), HORIZONTAL_ALIGNMENT_RIGHT,
 		124, 8, Color(1, 0.9, 0.95, 0.6))
 	if g.reloading():
