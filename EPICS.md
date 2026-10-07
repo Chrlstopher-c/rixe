@@ -22,10 +22,10 @@ Chaque story : intention — VERIFY exécutable. Tests de jeu = `godot --headles
 
 ## E6 — Boucle arcade
 - [x] E6.S1 — les armes tombent à la mort, ramassage en passant dessus (échange) — VERIFY: `--tests=pickup`
-- [ ] E6.S2 — retour visuel des dégâts du joueur (bord d'écran rouge discret), viseur précis souris — VERIFY: capture relue
+- [x] E6.S2 — retour visuel des dégâts du joueur (bord d'écran rouge discret), viseur précis souris — VERIFY: capture relue
 
 ## E7 — Pigment MCP
-- [ ] E7.S1 — serveur MCP stdio (textures pixel/low poly/ciel/normal map → fichier PNG), test client de bout en bout, enregistré au niveau utilisateur — VERIFY: `pigment/tests/e2e_mcp.py` OK, chaque outil < 2 s
+- [x] E7.S1 — serveur MCP stdio (textures pixel/low poly/ciel/normal map → fichier PNG), test client de bout en bout, enregistré au niveau utilisateur — VERIFY: `pigment/tests/e2e_mcp.py` OK, chaque outil < 2 s
 
 ## E8 — Performance
 - [ ] E8.S1 — 60 i/s stables en 1080p à 6 combattants sur la tour — VERIFY: `tools/perf.sh` (moyenne ≥ 60, 1 % bas ≥ 50)

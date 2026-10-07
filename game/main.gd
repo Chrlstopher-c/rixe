@@ -14,6 +14,10 @@ var _camera: Camera2D
 var _restart_in := -1.0
 var _rng := RandomNumberGenerator.new()
 var _tests := ""
+var _perf_left := -1.0
+var _off: PackedStringArray = []
+var _last_tick := 0
+var _frame_times: Array[float] = []
 
 
 func _ready() -> void:
@@ -38,6 +42,13 @@ func _parse_args() -> void:
 			_shot(a.get_slice("=", 1))
 		elif a.begins_with("--tests="):
 			_tests = a.get_slice("=", 1)
+		elif a.begins_with("--off="):
+			_off = a.get_slice("=", 1).split(",")
+		elif a.begins_with("--round="):
+			round_no = int(a.get_slice("=", 1))
+		elif a.begins_with("--perf="):
+			_perf_left = float(a.get_slice("=", 1))
+			RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 		elif a.begins_with("--seed="):
 			seed_base = int(a.get_slice("=", 1))
 
@@ -54,13 +65,14 @@ func _build() -> void:
 	var env := WorldEnvironment.new()
 	env.environment = Environment.new()
 	env.environment.background_mode = Environment.BG_CANVAS
-	env.environment.glow_enabled = true
+	env.environment.glow_enabled = not ("glow" in _off)
 	env.environment.glow_intensity = 0.55
 	env.environment.glow_strength = 0.9
 	env.environment.glow_hdr_threshold = 1.0
 	env.environment.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
 	add_child(env)
-	add_child(preload("res://arena/backdrop.gd").new())
+	if not ("backdrop" in _off):
+		add_child(preload("res://arena/backdrop.gd").new())
 	Juice.world = Node2D.new()
 	add_child(Juice.world)
 	Juice.arena = _child(Juice.world, preload("res://arena/arena.gd").new())
@@ -74,7 +86,8 @@ func _build() -> void:
 	_camera.limit_bottom = 44
 	add_child(_camera)
 	Juice.camera = _camera
-	add_child(preload("res://fx/post.gd").new())
+	if not ("post" in _off):
+		add_child(preload("res://fx/post.gd").new())
 	_hud = preload("res://hud/hud.gd").new()
 	_hud.show_crosshair = not demo
 	add_child(_hud)
@@ -86,6 +99,8 @@ func _child(parent: Node, node: Node) -> Node:
 
 
 func _start_round() -> void:
+	if OS.has_environment("RIXE_SPIKES"):
+		print("ROUND t=%.1f" % (Time.get_ticks_msec() / 1000.0))
 	Juice.reset()
 	for c in _fighters.get_children():
 		c.queue_free()
@@ -174,6 +189,29 @@ func _on_killed(victim: Node2D, killer: Node2D) -> void:
 		_restart_in = 3.0
 
 
+## Mesure de perf : temps de frame réels après 2 s de chauffe ; imprime moyenne et 1 % bas puis quitte.
+func _measure(real: float) -> void:
+	if real > 0.03 and OS.has_environment("RIXE_SPIKES"):
+		print("SPIKE %.0fms t=%.1f parts=%d ts=%.2f" % [real * 1000.0, Time.get_ticks_msec() / 1000.0, Juice.fx.parts.size(), Engine.time_scale])
+	_perf_left -= real
+	if Time.get_ticks_msec() > 2000:
+		_frame_times.append(real)
+	if _perf_left > 0.0 or _frame_times.is_empty():
+		return
+	var sorted := _frame_times.duplicate()
+	sorted.sort()
+	var avg: float = _frame_times.size() / sorted.reduce(func(a: float, b: float) -> float: return a + b, 0.0)
+	var low_n := maxi(1, sorted.size() / 100)
+	var worst: Array = sorted.slice(sorted.size() - low_n)
+	var low: float = low_n / worst.reduce(func(a: float, b: float) -> float: return a + b, 0.0)
+	var rid := get_viewport().get_viewport_rid()
+	var gpu := RenderingServer.viewport_get_measured_render_time_gpu(rid)
+	var cpu := RenderingServer.viewport_get_measured_render_time_cpu(rid)
+	print("PERF fps_moyen=%.1f fps_1pct_bas=%.1f rendu_gpu_ms=%.2f rendu_cpu_ms=%.2f combattants=%d frames=%d"
+		% [avg, low, gpu, cpu, _fighters.get_child_count(), sorted.size()])
+	get_tree().quit()
+
+
 func _alive_bots() -> int:
 	var n := 0
 	for f in _fighters.get_children():
@@ -183,6 +221,11 @@ func _alive_bots() -> int:
 
 
 func _process(delta: float) -> void:
+	if _perf_left > 0.0:
+		var now := Time.get_ticks_usec()
+		if _last_tick > 0:
+			_measure((now - _last_tick) / 1000000.0)
+		_last_tick = now
 	if _restart_in >= 0.0:
 		_restart_in -= Juice.real_delta(delta)
 		if _restart_in < 0.0:
@@ -204,5 +247,5 @@ func _set_hd(on: bool) -> void:
 	Juice.hd = on
 	var w := get_window()
 	w.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS if on else Window.CONTENT_SCALE_MODE_VIEWPORT
-	get_viewport().msaa_2d = Viewport.MSAA_4X if on else Viewport.MSAA_DISABLED
+	get_viewport().msaa_2d = Viewport.MSAA_4X if on and not ("msaa" in _off) else Viewport.MSAA_DISABLED
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN if not demo else Input.MOUSE_MODE_VISIBLE
