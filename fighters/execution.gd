@@ -38,7 +38,7 @@ static func target_for(f: Node2D) -> Node2D:
 	var best: Node2D = null
 	var best_d := REACH
 	for o in f.get_tree().get_nodes_in_group("fighters"):
-		if o == f or not staggered(o) or o.get("held") or o.get("remote"):
+		if o == f or not staggered(o) or o.get("held"):
 			continue
 		if f.team != "" and o.team == f.team:
 			continue
@@ -56,6 +56,8 @@ func start(v: Node2D) -> void:
 	_step = 0
 	v.held = true
 	v.velocity = Vector2.ZERO
+	if v.remote and Juice.net:
+		Juice.net.remote_execution(v, owner)
 	owner.velocity = Vector2.ZERO
 	var side := signf(owner.global_position.x - v.global_position.x)
 	owner.global_position.x = v.global_position.x + (side if side != 0.0 else -1.0) * 15.0

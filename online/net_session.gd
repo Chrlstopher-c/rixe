@@ -118,6 +118,28 @@ func prop_event(prop: Node2D, kind: String, dir: Vector2 = Vector2.ZERO) -> void
 	world.prop_event(prop, kind, dir)
 
 
+## Exécution d'une marionnette (bot de l'hôte) par l'invité : l'hôte immobilise le bot et le laisse en vie jusqu'au
+## coup de grâce (arraché de tête ou de torse), que l'invité lui transmet comme une touche normale.
+func remote_execution(victim: Fighter, by: Fighter) -> void:
+	send_event({"t": "exec", "id": victim.net_id, "l": victim.net_life, "by": by.net_id})
+
+
+func _on_exec(msg: Dictionary) -> void:
+	var v: Fighter = fighters._local(String(msg.id), int(msg.l))
+	if v == null or v.held:
+		return
+	v.held = true
+	v.executed = true
+	var hp0 := v.hp
+	v.hp = maxf(v.hp, 500.0)
+	v.velocity = Vector2.ZERO
+	await get_tree().create_timer(2.5, true, false, true).timeout
+	if is_instance_valid(v) and v.alive:
+		v.held = false
+		v.executed = false
+		v.hp = hp0
+
+
 func item_born(item: Node2D) -> void:
 	world.item_born(item)
 
@@ -259,6 +281,8 @@ func _on_message(msg: Dictionary) -> void:
 			fighters.on_died(msg)
 		"spawn":
 			main.follow(spawn_guest(msg.pos))
+		"exec":
+			_on_exec(msg)
 		"need_map":
 			send_event({"t": "map", "pack": Juice.arena.terrain.pack_cells(), "h": Juice.arena.terrain.checksum()})
 		"map":

@@ -123,3 +123,21 @@ autoritaire sur son propre combattant ; « qui provoque l'effet calcule ses dég
   objets — VERIFY: `tools/online_test.sh match`
 - [x] E26.S4 — menu En ligne (héberger / rejoindre par code), HUD et fin de partie de l'invité — VERIFY: tests menu + capture
 - [x] E26.S5 — déploiement du Worker (adresse workers.dev fixe, hors dépôt) + release — VERIFY: `tools/online_test.sh match` contre le Worker déployé
+
+## E27 — Exécution par l'invité en ligne
+- [x] E27.S1 — l'invité exécute un bot de l'hôte (l'hôte l'immobilise, le coup de grâce arrive comme une touche) — VERIFY: `tools/online_test.sh exec`
+
+## E28 — Pseudo
+- [ ] E28.S1 — pseudo par défaut « anon » + nombre, modifiable au menu, utilisé partout (fil, en ligne, fins de partie, classements) — VERIFY: tests menu + online match
+
+## E29 — Classement mondial
+- [ ] E29.S1 — Worker : envoi et lecture des meilleurs scores par mode, validation, limitation — VERIFY: `cd relay && pnpm test`
+- [ ] E29.S2 — jeu : envoi en fin de partie, onglet MONDIAL au classement — VERIFY: test contre relais local
+
+## E30 — En ligne à 4
+- [ ] E30.S1 — relais : salon jusqu'à 4 places (hôte + 3 invités), messages diffusés avec l'expéditeur — VERIFY: `cd relay && pnpm test`
+- [ ] E30.S2 — session à N invités (J2, J3, J4), marionnettes de chacun chez chacun — VERIFY: `tools/online_test.sh` à 3 et 4 jeux
+
+## E31 — Parties personnalisées
+- [ ] E31.S1 — réglages de partie : mode, durée/objectif, carte, équipes, nombre et niveau des bots, armes, joueurs max — VERIFY: tests
+- [ ] E31.S2 — salon en ligne clair : joueurs (pseudos, équipes), réglages de l'hôte visibles, choix de son équipe — VERIFY: tests + capture

@@ -9,7 +9,8 @@ var _round_hashes := []
 
 func names() -> Array[String]:
 	return ["online_link_host", "online_link_guest", "online_match_host", "online_match_guest", "online_show_host",
-		"online_show_guest", "online_checks_host", "online_checks_guest", "online_version_host", "online_version_guest"]
+		"online_show_guest", "online_checks_host", "online_checks_guest", "online_version_host", "online_version_guest",
+		"online_exec_host", "online_exec_guest"]
 
 
 func _link(t: Node, role: String) -> NetLink:
@@ -319,3 +320,65 @@ func test_online_version_guest(t: Node) -> void:
 		await t.frames(60)
 	t.check(not why.is_empty() and String(why[0]).contains("toi 0.0.0"), "invité : refus clair (%s)" % [why])
 	t.check(Juice.net == null, "invité : partie en ligne fermée, jamais connecté")
+
+
+# Exécution d'un bot de l'hôte par l'invité.
+
+func test_online_exec_host(t: Node) -> void:
+	var main: Node = t.main
+	main.live_rules = true
+	var s := NetSession.begin(main, "host", OS.get_environment("RIXE_ROOM"))
+	var box := _inbox(s)
+	t.check(await t.until(func() -> bool: return s.connected(), 7200), "l'invité a rejoint")
+	main._on_start("arcade", 0)
+	_tough(main.player)
+	await t.until(func() -> bool: return not _fighters(main, true, true).is_empty(), 1200)
+	await t.frames(240)
+	var guest: Fighter = _fighters(main, true, true)[0]
+	var bots := _fighters(main, false, false)
+	var bot: Fighter = bots[0]
+	for other in bots.slice(1):
+		other.queue_free()
+	bot.brain = ScriptBrain.new()
+	bot.shield = 0.0
+	bot.hp = 20.0
+	bot.global_position = guest.global_position + Vector2(22, -4)
+	_say(s, "bot", bot.net_id)
+	var ref: WeakRef = weakref(bot)
+	var dead: bool = await t.until(func() -> bool: return ref.get_ref() == null or not ref.get_ref().alive, 1800)
+	t.check(dead, "le bot meurt chez l'hôte")
+	t.check(main.match_state.kills_of("J2") >= 1, "l'élimination revient à l'invité")
+	t.check(bot == null or ref.get_ref() == null or ref.get_ref().executed, "comptée comme exécution")
+	await _heard(t, box, "bye", 600)
+	s.leave()
+
+
+func test_online_exec_guest(t: Node) -> void:
+	var main: Node = t.main
+	main.live_rules = true
+	var s := await _join(t, main)
+	var box := _inbox(s)
+	await t.until(func() -> bool: return is_instance_valid(main.player) and s.started, 1200)
+	var me: Fighter = main.player
+	var brain := ScriptBrain.new()
+	me.brain = brain
+	_tough(me)
+	var id: Variant = await _heard(t, box, "bot", 2400)
+	var found: bool = await t.until(func() -> bool:
+		var b: Variant = s.fighters.puppets.get(String(id))
+		return is_instance_valid(b) and Execution.staggered(b), 600)
+	t.check(found, "bot vacillant visible chez l'invité")
+	var b: Fighter = s.fighters.puppets.get(String(id))
+	me.global_position = b.global_position + Vector2(-20, 0)
+	await t.frames(20)
+	t.check(Execution.target_for(me) == b, "l'invité peut l'exécuter")
+	brain.press_melee()
+	await t.frames(3)
+	t.check(me.execution.running(), "exécution lancée chez l'invité")
+	var ref: WeakRef = weakref(b)
+	var gone: bool = await t.until(func() -> bool: return ref.get_ref() == null or not ref.get_ref().alive, 1200)
+	t.check(gone, "le bot tombe chez l'invité")
+	await t.frames(60)
+	_say(s, "bye")
+	await t.frames(30)
+	s.leave()
