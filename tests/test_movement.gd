@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["movement", "movement_keys", "movement_hold"]
+	return ["movement", "movement_keys", "movement_hold", "roll", "slide", "wall_jump", "parry"]
 
 
 func test_movement(t: Node) -> void:
@@ -65,3 +65,75 @@ func test_movement_hold(t: Node) -> void:
 	brain.press_jump()
 	await t.frames(360)
 	t.check(ground[0] >= 3, "touche maintenue = rebonds enchaînés (obtenu %d en 3 s)" % ground[0])
+
+
+func _on_floor(t: Node, f: Fighter) -> void:
+	await t.until(func() -> bool: return f.is_on_floor(), 120)
+	await t.frames(5)
+
+
+func test_roll(t: Node) -> void:
+	var brain := ScriptBrain.new()
+	var f: Fighter = t.main.spawn_test_fighter(Vector2(500, -10), brain)
+	await _on_floor(t, f)
+	brain.press_dash()
+	await t.frames(3)
+	t.check(f.moves.dodging(), "dash au sol = roulade invulnérable")
+	var hp0 := f.hp
+	f.take_hit(30.0, Vector2.RIGHT, f.global_position + Vector2(0, -20), f, 0.0)
+	t.check(f.hp == hp0, "une balle pendant la roulade est esquivée")
+	await t.frames(60)
+	f.take_hit(30.0, Vector2.RIGHT, f.global_position + Vector2(0, -20), f, 0.0)
+	t.check(f.hp < hp0, "après la roulade, on reprend des dégâts")
+
+
+func test_slide(t: Node) -> void:
+	var brain := ScriptBrain.new()
+	var f: Fighter = t.main.spawn_test_fighter(Vector2(300, -10), brain)
+	await _on_floor(t, f)
+	brain.move = 1.0
+	await t.frames(40)
+	brain.drop = true
+	await t.frames(3)
+	brain.drop = false
+	var cap: CapsuleShape2D = f._shape.shape
+	t.check(f.moves.slide_t > 0.0 and cap.height < 30.0, "bas en pleine course = glissade, silhouette basse")
+	t.check(absf(f.velocity.x) > Fighter.RUN, "la glissade va plus vite que la course")
+	await t.frames(90)
+	brain.move = 0.0
+	t.check(f.moves.slide_t <= 0.0 and cap.height == 34.0, "fin de glissade : on se relève")
+
+
+func test_wall_jump(t: Node) -> void:
+	var brain := ScriptBrain.new()
+	var f: Fighter = t.main.spawn_test_fighter(Vector2(40, -10), brain)
+	await _on_floor(t, f)
+	brain.move = -1.0
+	brain.press_jump()
+	await t.frames(12)
+	brain.jump_held = false
+	f._air_jumps = 0
+	await t.until(func() -> bool: return f.is_on_wall(), 60)
+	brain.press_jump()
+	await t.frames(3)
+	t.check(f.velocity.x > 100.0 and f.velocity.y < 0.0, "contre le mur, sauter repart dans l'autre sens (%s)" % f.velocity)
+	brain.move = 0.0
+
+
+func test_parry(t: Node) -> void:
+	var ab := ScriptBrain.new()
+	var db := ScriptBrain.new()
+	var a: Fighter = t.main.spawn_test_fighter(Vector2(600, -10), ab)
+	var d: Fighter = t.main.spawn_test_fighter(Vector2(618, -10), db)
+	await t.until(func() -> bool: return a.is_on_floor() and d.is_on_floor(), 120)
+	await t.frames(10)
+	ab.aim = d.global_position + Vector2(0, -20)
+	db.aim = a.global_position + Vector2(0, -20)
+	await t.frames(2)
+	var hp0 := d.hp
+	db.press_melee()
+	await t.frames(2)
+	ab.press_melee()
+	await t.frames(30)
+	t.check(d.hp == hp0, "parade : pas de dégâts")
+	t.check(a.moves.stunned() or a.moves.stun_t > 0.0 or absf(a.velocity.x) > 50.0, "l'attaquant est repoussé et étourdi")

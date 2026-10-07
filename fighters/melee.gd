@@ -32,6 +32,7 @@ func progress() -> float:
 func tick(delta: float, pressed: bool) -> void:
 	_cd -= delta
 	if pressed and _cd <= 0.0 and t <= 0.0:
+		owner.moves.open_parry()
 		t = DURATION
 		_cd = COOLDOWN
 		_struck = false
@@ -53,6 +54,8 @@ func _strike() -> void:
 			continue
 		var target := _closest_joint(o, origin)
 		var to := target - origin
+		if to.length() <= RANGE and absf(to.angle_to(dir)) <= ARC and o.moves.parries(owner):
+			continue
 		if to.length() <= RANGE and absf(to.angle_to(dir)) <= ARC:
 			o.take_hit(DAMAGE, (dir + Vector2(0, -0.35)).normalized(), target, owner, KNOCK)
 			landed = true

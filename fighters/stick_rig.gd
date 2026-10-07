@@ -30,6 +30,8 @@ var _scarf: Array[Vector2] = []
 var _scarf_prev: Array[Vector2] = []
 var _ghosts: Array[Dictionary] = []
 var _ghost_tick := false
+## Rotation de la roulade (accumulée tant qu'elle dure).
+var _spin := 0.0
 
 
 static func ik(a: Vector2, b: Vector2, l1: float, l2: float, bend: float) -> Vector2:
@@ -61,8 +63,25 @@ func _process(delta: float) -> void:
 	_pose_arms()
 	_update_scarf(delta)
 	_update_ghosts(delta)
+	_pose_moves(delta)
 	if Juice.on_screen(global_position, 80.0) or not Juice.camera:
 		queue_redraw()
+
+
+## Roulade : le corps tourne sur lui-même autour du bassin ; glissade : penché en arrière, au ras du sol.
+func _pose_moves(delta: float) -> void:
+	var m: Moves = fighter.moves
+	var goal := 0.0
+	if m.roll_t > 0.0:
+		_spin += delta * 21.0 * fighter.facing
+		goal = _spin
+	else:
+		_spin = 0.0
+		if m.slide_t > 0.0:
+			goal = -0.75 * fighter.facing
+	rotation = goal if m.roll_t > 0.0 else lerp_angle(rotation, goal, minf(delta * 18.0, 1.0))
+	var pivot := Vector2(0, -15.0 * scale.y)
+	position = pivot - pivot.rotated(rotation) + (Vector2(0, 4) if m.slide_t > 0.0 else Vector2.ZERO)
 
 
 func _springs(delta: float) -> void:
@@ -225,6 +244,8 @@ func _draw() -> void:
 		draw_line(to_local(_kick_trail[i - 1]), to_local(_kick_trail[i]), Color(2.4, 2.2, 2.1, a * 0.8), 2.5 * a, Juice.hd)
 	if Execution.staggered(fighter):
 		_draw_stagger()
+	if fighter.moves.stunned():
+		_draw_stun()
 	if fighter.is_player and not Fighter.local_human(fighter) and not fighter.brain is BotBrain:
 		_draw_name()
 	if fighter.shield > 0.0:
@@ -243,6 +264,15 @@ func _draw_stagger() -> void:
 	draw_polyline(pts, col, 1.3, Juice.hd)
 	if can:
 		draw_arc(top + Vector2(0, -1.5) * s, 5.5 * s, 0.0, TAU, 24, Color(col, 0.35 * beat), 1.0, Juice.hd)
+
+
+## Étourdi (parade subie) : trois étoiles qui tournent au-dessus de la tête.
+func _draw_stun() -> void:
+	var c: Vector2 = (j.head if has("head") else j.shoulder) + Vector2(0, -6)
+	for i in 3:
+		var a := _t * 6.0 + i * TAU / 3.0
+		var p := c + Vector2(cos(a) * 5.0, sin(a) * 1.8)
+		draw_circle(p, 0.9, Color(2.4, 2.2, 0.6, 0.9))
 
 
 ## Pseudo au-dessus des autres joueurs humains (en ligne, écran partagé).

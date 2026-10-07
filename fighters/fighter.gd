@@ -47,6 +47,8 @@ var _throw_cd := 0.0
 var aim_point := Vector2.ZERO
 var body := BodyParts.new()
 var melee := Melee.new(self)
+var moves := Moves.new(self)
+var _shape: CollisionShape2D
 var execution := Execution.new(self)
 ## Tenu pendant qu'on l'exécute : ne bouge plus, ne pense plus.
 var held := false
@@ -84,13 +86,13 @@ func _ready() -> void:
 	collision_layer = Juice.MASK_FIGHTERS
 	collision_mask = Juice.MASK_WORLD | Juice.MASK_PLATFORMS | (0 if is_player else Juice.MASK_DOORS)
 	floor_snap_length = 4.0
-	var shape := CollisionShape2D.new()
+	_shape = CollisionShape2D.new()
 	var cap := CapsuleShape2D.new()
 	cap.radius = 6.0
 	cap.height = 34.0
-	shape.shape = cap
-	shape.position = Vector2(0, -17)
-	add_child(shape)
+	_shape.shape = cap
+	_shape.position = Vector2(0, -17)
+	add_child(_shape)
 	rig = StickRig.new()
 	rig.fighter = self
 	rig.scale = Vector2.ONE * 1.22
@@ -119,9 +121,13 @@ func _physics_process(delta: float) -> void:
 		move_and_slide()
 		return
 	intent = brain.think(self, delta)
+	if moves.stunned():
+		intent = {"move": 0.0, "jump": false, "jump_held": false, "drop": false, "dash": false, "fire": false,
+			"aim": intent.aim}
 	_aim()
 	_timers(delta)
 	_move(delta)
+	moves.tick(delta)
 	_jump()
 	_dash()
 	var was_floor := is_on_floor()
@@ -206,6 +212,11 @@ func _move(delta: float) -> void:
 		if int(dash_t * 120.0) % 3 == 0:
 			Effects.dust(global_position + Vector2(0, -2), 1, 0.3)
 		return
+	if moves.slide_t > 0.0:
+		velocity.y = minf(velocity.y + GRAVITY * delta, 520.0)
+		return
+	if intent.drop and is_on_floor() and not _on_platform() and moves.try_slide(intent.move):
+		return
 	var goal: float = intent.move * RUN * leg_factor() * (0.6 if aiming else 1.0)
 	if Execution.staggered(self):
 		goal *= 0.55
@@ -230,6 +241,8 @@ func _jump() -> void:
 		Effects.dust(global_position, 5)
 		jumped.emit(false)
 		Sfx.play("jump", global_position, -6.0)
+	elif moves.try_wall_jump():
+		jumped.emit(true)
 	elif _air_jumps > 0:
 		_air_jumps -= 1
 		velocity.y = -AIR_JUMP
@@ -249,6 +262,8 @@ func _dash() -> void:
 	var dir := Vector2(signf(intent.move) if absf(intent.move) > 0.1 else float(facing), 0)
 	velocity = dir * DASH
 	dash_t = DASH_TIME
+	if is_on_floor():
+		moves.start_roll()
 	_dash_cd = 0.55
 	Effects.dust(global_position, 6, 1.6)
 	Sfx.play("dash", global_position, -4.0)
@@ -306,6 +321,13 @@ func _land(vy: float) -> void:
 		Juice.shake(vy / 4000.0, global_position)
 
 
+## Hauteur réduite pendant la glissade (les tirs à hauteur de tête passent au-dessus).
+func set_low(on: bool) -> void:
+	var cap: CapsuleShape2D = _shape.shape
+	cap.height = 20.0 if on else 34.0
+	_shape.position = Vector2(0, -10.0 if on else -17.0)
+
+
 func _on_platform() -> bool:
 	for i in get_slide_collision_count():
 		var c := get_slide_collision(i).get_collider()
@@ -324,6 +346,9 @@ func take_hit(dmg: float, dir: Vector2, at: Vector2, from: Variant, knock: float
 		return
 	if shield > 0.0:
 		Effects.impact(at, -dir, team_color * 2.0)
+		return
+	if moves.dodging() and is_instance_valid(from):
+		Juice.fx.emit(5, at, Vector2.ZERO, 0.15, 8.0, Color(team_color * 2.0, 0.6))
 		return
 	if is_player:
 		dmg *= PLAYER_DAMAGE_TAKEN
@@ -393,7 +418,7 @@ func _die(dir: Vector2, killer: Variant, dmg: float) -> void:
 	Juice.world.add_child(corpse)
 	var cut := [["shoulder", "hip"]] if death_cause == "split" else []
 	var bleed: Array = _spurt.keys() + (["shoulder", "hip"] if not cut.is_empty() else [])
-	corpse.setup(_corpse_points(), velocity, dir * (220.0 + dmg * 3.0), bleed, team_color, cut)
+	corpse.setup(Remains.corpse_points(self), velocity, dir * (220.0 + dmg * 3.0), bleed, team_color, cut)
 	var chest := global_position + Vector2(0, -26)
 	Effects.blood(chest, dir, 24)
 	if death_cause == "split":
@@ -409,8 +434,8 @@ func _die(dir: Vector2, killer: Variant, dmg: float) -> void:
 		drop_weapon(Vector2(dir.x * 80.0, -200.0))
 		var spare := inventory.other()
 		if spare:
-			_drop_gun(spare, Vector2(-dir.x * 60.0, -180.0))
-		_drop_loot()
+			Remains.drop_gun(self, spare, Vector2(-dir.x * 60.0, -180.0))
+		Remains.drop_loot(self)
 	Juice.fighter_killed.emit(self, killer if is_instance_valid(killer) else null)
 	queue_free()
 
@@ -429,46 +454,7 @@ func _kill_time_fx(killer: Variant, at: Vector2) -> void:
 
 
 func drop_weapon(v: Vector2) -> void:
-	_drop_gun(gun, v)
-
-
-func _drop_gun(g: Gun, v: Vector2) -> void:
-	var p := WeaponPickup.new()
-	Juice.world.add_child(p)
-	p.global_position = rig.to_global(rig.j.pivot)
-	p.setup(g.id, v, self, g.mag, g.reserve, g.attachments)
-
-
-## Butin laissé à la mort : munitions souvent, soin et grenade parfois, plus les accessoires du sac.
-func _drop_loot() -> void:
-	var drops: Array[String] = []
-	if randf() < 0.65:
-		drops.append("ammo")
-	if randf() < 0.35 or inventory.medkits > 0:
-		drops.append("medkit")
-	if randf() < 0.3 or grenades > 0:
-		drops.append("grenade")
-	for k in drops:
-		var l := Loot.new()
-		Juice.world.add_child(l)
-		l.global_position = global_position + Vector2(0, -16)
-		l.setup(k, Vector2(randf_range(-110, 110), randf_range(-240, -140)))
-	for att in inventory.bag:
-		var a := AttachmentPickup.new()
-		Juice.world.add_child(a)
-		a.global_position = global_position + Vector2(0, -16)
-		a.setup(att, Vector2(randf_range(-90, 90), randf_range(-220, -140)), self)
-
-
-func _corpse_points() -> Dictionary:
-	var pts := rig.global_joints()
-	for part in body.missing:
-		if part == "torso":
-			continue
-		var keys: Array = BodyParts.DETACH[part]
-		for i in range(1, keys.size()):
-			pts.erase(keys[i])
-	return pts
+	Remains.drop_gun(self, gun, v)
 
 
 func _bleed_stumps(delta: float) -> void:
