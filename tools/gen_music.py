@@ -1,4 +1,8 @@
-"""Synthétise la musique de combat en boucle parfaite (numpy/scipy) → assets/music/combat.wav (mono 44,1 kHz)."""
+"""Synthétise la musique en trois couches synchrones, en boucle parfaite (numpy/scipy) → assets/music/*.wav.
+
+calme (nappe, basse tenue, shaker), combat (batterie, basse, arpège), tension (dernier debout : pulsation,
+roulements, stabs). Les couches partagent tempo et longueur ; le jeu les mélange selon l'action.
+"""
 from pathlib import Path
 
 import numpy as np
@@ -83,6 +87,38 @@ def bass_and_arp(track: np.ndarray) -> None:
                 place(track, saw(f, BEAT * 0.22, 2600) * 0.12, b0 + step * BEAT * 0.25)
 
 
+def bass_hold(track: np.ndarray) -> None:
+    t_bar = np.arange(int(SR * 4 * BEAT)) / SR
+    for bar in range(BARS):
+        root, _ = CHORDS[bar % 4]
+        env = np.minimum(t_bar / 0.08, 1) * np.minimum((t_bar[-1] - t_bar) / 0.2, 1)
+        tone = np.sin(2 * np.pi * root * t_bar) + 0.3 * np.sin(2 * np.pi * root * 2 * t_bar)
+        place(track, lp(tone * env, 400) * 0.22, bar * 4 * BEAT)
+
+
+def shaker(track: np.ndarray) -> None:
+    for bar in range(BARS):
+        for step in range(8):
+            place(track, hat() * (0.35 if step % 2 else 0.18), bar * 4 * BEAT + step * BEAT * 0.5)
+
+
+def pulse(track: np.ndarray) -> None:
+    """Dernier debout : doubles croches graves, roulements de caisse, stabs aigus dissonants à contretemps."""
+    for bar in range(BARS):
+        root, intervals = CHORDS[bar % 4]
+        b0 = bar * 4 * BEAT
+        for step in range(16):
+            acc = 1.0 if step % 4 == 0 else 0.55
+            place(track, saw(root * 2, BEAT * 0.2, 900 + 300 * (step % 4)) * 0.22 * acc, b0 + step * BEAT * 0.25)
+        for beat in (1.5, 3.5):
+            f = root * 8 * 2 ** (intervals[1] / 12)
+            stab = saw(f, BEAT * 0.3, 4200) + saw(f * 2 ** (1 / 12), BEAT * 0.3, 4200) * 0.6
+            place(track, stab * 0.1, b0 + beat * BEAT)
+        if bar % 2 == 1:
+            for k in range(8):
+                place(track, snare() * (0.12 + 0.05 * k), b0 + (2 + k * 0.25) * BEAT)
+
+
 def pad(track: np.ndarray) -> None:
     t_bar = np.arange(int(SR * 4 * BEAT)) / SR
     for bar in range(BARS):
@@ -93,21 +129,33 @@ def pad(track: np.ndarray) -> None:
         place(track, lp(chord * env, 1800) * 0.07, bar * 4 * BEAT)
 
 
-def main() -> None:
-    OUT.mkdir(parents=True, exist_ok=True)
+LAYERS = {
+    "calme": [pad, bass_hold, shaker],
+    "combat": [drums, bass_and_arp],
+    "tension": [pulse],
+}
+
+
+def render(parts: list) -> np.ndarray:
     total = BARS * 4 * BEAT
     track = np.zeros(int(SR * total) + SR)
-    drums(track)
-    bass_and_arp(track)
-    pad(track)
+    for fn in parts:
+        fn(track)
     n = int(SR * total)
     tail = track[n:]
     track = track[:n]
     track[: len(tail)] += tail
-    track = np.tanh(track * 1.2)
-    track = track / np.abs(track).max() * 0.85
-    wavfile.write(OUT / "combat.wav", SR, (track * 32767).astype(np.int16))
-    print(f"musique {total:.1f}s -> {OUT / 'combat.wav'}")
+    return track
+
+
+def main() -> None:
+    OUT.mkdir(parents=True, exist_ok=True)
+    layers = {name: render(parts) for name, parts in LAYERS.items()}
+    gain = 0.85 / np.abs(np.tanh(sum(layers.values()) * 1.2)).max()
+    for name, x in layers.items():
+        y = np.tanh(x * 1.2) * gain
+        wavfile.write(OUT / f"{name}.wav", SR, (np.clip(y, -1, 1) * 32767).astype(np.int16))
+    print(f"musique {BARS * 4 * BEAT:.1f}s, couches {list(layers)} -> {OUT}")
 
 
 if __name__ == "__main__":

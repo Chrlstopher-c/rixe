@@ -288,7 +288,7 @@ func _on_platform() -> bool:
 
 
 ## `part` force la zone touchée (exécutions) ; vide = calculée depuis la ligne de tir.
-func take_hit(dmg: float, dir: Vector2, at: Vector2, from: Node2D, knock: float, part: String = "") -> void:
+func take_hit(dmg: float, dir: Vector2, at: Vector2, from: Variant, knock: float, part: String = "") -> void:
 	if not alive:
 		return
 	if shield > 0.0:
@@ -305,6 +305,7 @@ func take_hit(dmg: float, dir: Vector2, at: Vector2, from: Node2D, knock: float,
 	recent_hit = 0.6
 	Effects.blood(at, dir, int(2 + res.dmg * 0.3))
 	Sfx.play("flesh", at, -3.0, 0.2)
+	Sfx.add_heat(0.3 if is_player else (0.1 if Juice.on_screen(at) else 0.0))
 	_hit_feedback(from, res.dmg)
 	if res.broke:
 		_sever(last_zone, dir, res.dmg)
@@ -317,7 +318,7 @@ func take_hit(dmg: float, dir: Vector2, at: Vector2, from: Node2D, knock: float,
 		_die(dir, from, res.dmg)
 
 
-func _hit_feedback(from: Node2D, dmg: float) -> void:
+func _hit_feedback(from: Variant, dmg: float) -> void:
 	var player_involved: bool = is_player or (is_instance_valid(from) and from.get("is_player"))
 	if player_involved and dmg >= 20.0:
 		Juice.hitstop(0.04)
@@ -348,7 +349,7 @@ func _sever(part: String, dir: Vector2, dmg: float) -> void:
 	Sfx.play("gore", pts[keys[0]], 2.0)
 
 
-func _die(dir: Vector2, killer: Node2D, dmg: float) -> void:
+func _die(dir: Vector2, killer: Variant, dmg: float) -> void:
 	alive = false
 	if death_cause == "":
 		death_cause = "headshot" if last_zone == "head" else "shot"
@@ -371,12 +372,12 @@ func _die(dir: Vector2, killer: Node2D, dmg: float) -> void:
 	if spare:
 		_drop_gun(spare, Vector2(-dir.x * 60.0, -180.0))
 	_drop_loot()
-	Juice.fighter_killed.emit(self, killer)
+	Juice.fighter_killed.emit(self, killer if is_instance_valid(killer) else null)
 	queue_free()
 
 
 ## Ralenti réservé aux morts par la tête (à l'écran ou impliquant le joueur) ; sinon simple à-coup.
-func _kill_time_fx(killer: Node2D, at: Vector2) -> void:
+func _kill_time_fx(killer: Variant, at: Vector2) -> void:
 	var player_involved: bool = is_player or (is_instance_valid(killer) and killer.get("is_player"))
 	var head_kill := death_cause == "headshot" or death_cause == "decap"
 	if head_kill and (player_involved or Juice.on_screen(at)):

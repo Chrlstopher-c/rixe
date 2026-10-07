@@ -124,6 +124,8 @@ func _fire() -> void:
 	owner.velocity -= dir * def.kick
 	Effects.muzzle(muzzle, dir, def.tracer, def.flash)
 	Sfx.play(id, muzzle, 0.0 if owner.is_player else -4.0)
+	if Juice.on_screen(muzzle):
+		Sfx.add_heat(0.05)
 	if def.shell:
 		Effects.shell(owner.rig.ejection_global(), dir)
 		Sfx.play("shell", muzzle, -14.0, 0.2)

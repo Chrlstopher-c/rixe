@@ -1,10 +1,12 @@
 extends Node
-## Autoload Sfx : joue les bruitages en 2D (atténuation à distance, variation de hauteur), suit le ralenti.
+## Autoload Sfx : joue les bruitages en 2D (atténuation à distance, variation de hauteur), suit le ralenti,
+## et mélange la musique en couches synchrones (calme, combat, tension) selon l'action.
 
 const POOL := 24
 const SOUNDS := ["rifle", "shotgun", "railgun", "impact", "flesh", "gore", "jump", "air_jump", "land", "dash",
 	"shell", "swing", "punch", "slowmo", "pickup", "round", "ricochet",
-	"reload_out", "reload_in", "dry", "pistol", "smg", "sniper", "launcher", "explosion", "slash", "tink", "hit", "headshot"]
+	"reload_out", "reload_in", "dry", "pistol", "smg", "sniper", "launcher", "explosion", "slash", "tink",
+	"hit", "headshot"]
 
 var streams := {}
 var _players: Array[AudioStreamPlayer2D] = []
@@ -12,6 +14,17 @@ var _flat: Array[AudioStreamPlayer] = []
 var _flat_i := 0
 var music: AudioStreamPlayer
 const MUSIC_DB := -11.0
+const LAYERS := ["calme", "combat", "tension"]
+## Silence d'une couche éteinte (dB).
+const MUTE_DB := -50.0
+## Intensité de l'action (0-1) : tirs à l'écran, coups reçus ; retombe seule.
+var heat := 0.0
+## Dernier debout (un seul bot, vie basse, fin de chrono) : couche tension.
+var tension := false
+var _sync := AudioStreamSynchronized.new()
+var _layer_db: Array[float] = [0.0, MUTE_DB, MUTE_DB]
+var _lowpass := AudioEffectLowPassFilter.new()
+var _music_bus := -1
 var _next := 0
 
 
@@ -29,11 +42,26 @@ func _ready() -> void:
 		var f := AudioStreamPlayer.new()
 		add_child(f)
 		_flat.append(f)
+	_setup_music()
+
+
+func _setup_music() -> void:
+	_sync.stream_count = LAYERS.size()
+	for i in LAYERS.size():
+		var track: AudioStreamWAV = load("res://assets/music/%s.wav" % LAYERS[i])
+		track.loop_mode = AudioStreamWAV.LOOP_FORWARD
+		track.loop_end = int(track.get_length() * track.mix_rate)
+		_sync.set_sync_stream(i, track)
+		_sync.set_sync_stream_volume(i, _layer_db[i])
+	AudioServer.add_bus()
+	_music_bus = AudioServer.bus_count - 1
+	AudioServer.set_bus_name(_music_bus, "Music")
+	AudioServer.set_bus_send(_music_bus, "Master")
+	_lowpass.cutoff_hz = 20000.0
+	AudioServer.add_bus_effect(_music_bus, _lowpass)
 	music = AudioStreamPlayer.new()
-	var track: AudioStreamWAV = load("res://assets/music/combat.wav")
-	track.loop_mode = AudioStreamWAV.LOOP_FORWARD
-	track.loop_end = int(track.get_length() * track.mix_rate)
-	music.stream = track
+	music.stream = _sync
+	music.bus = "Music"
 	music.volume_db = MUSIC_DB
 	add_child(music)
 
@@ -65,7 +93,21 @@ func start_music() -> void:
 		music.play()
 
 
+## Chauffe la musique (tir à l'écran ≈ 0,06, coup reçu ≈ 0,25).
+func add_heat(amount: float) -> void:
+	heat = minf(heat + amount, 1.0)
+
+
 func _process(delta: float) -> void:
+	var real: float = Juice.real_delta(delta)
 	AudioServer.playback_speed_scale = clampf(Engine.time_scale, 0.45, 1.0)
-	var goal := MUSIC_DB - (9.0 if Engine.time_scale < 0.6 else 0.0)
-	music.volume_db = move_toward(music.volume_db, goal, delta * 40.0)
+	heat = maxf(heat - real * 0.08, 0.0)
+	var slow := Engine.time_scale < 0.6
+	var fight := lerpf(MUTE_DB, 0.0, clampf(heat * 2.5, 0.0, 1.0))
+	var goals: Array[float] = [-4.0 * heat, fight, 4.0 if tension else MUTE_DB]
+	for i in LAYERS.size():
+		var speed := 60.0 if goals[i] > _layer_db[i] else 14.0
+		_layer_db[i] = move_toward(_layer_db[i], goals[i], real * speed)
+		_sync.set_sync_stream_volume(i, _layer_db[i])
+	_lowpass.cutoff_hz = move_toward(_lowpass.cutoff_hz, 700.0 if slow else 20000.0, real * 200000.0)
+	music.volume_db = move_toward(music.volume_db, MUSIC_DB - (4.0 if slow else 0.0), real * 40.0)

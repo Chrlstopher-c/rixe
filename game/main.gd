@@ -263,6 +263,17 @@ func _rounds_after_kill(victim: Node2D) -> void:
 		_restart_in = 3.0
 
 
+## Couche musicale de tension : dernier bot de la manche, vie basse, fin de chrono.
+func _last_stand() -> bool:
+	if _scoreboard.visible or not is_instance_valid(player) or not player.alive:
+		return false
+	if player.hp < 30.0:
+		return true
+	if game_mode == "chrono" and match_state:
+		return match_state.time_left < 15.0
+	return game_mode == "arcade" and _hud.bots_left == 1
+
+
 func _alive_bots() -> int:
 	var n := 0
 	for f in _fighters.get_children():
@@ -315,6 +326,8 @@ func _process(delta: float) -> void:
 		if _end_in < 0.0:
 			_end_match()
 		return
+	if _tests == "" or live_rules:
+		Sfx.tension = _last_stand()
 	if attract or demo or match_state == null or not Modes.respawns(game_mode) or _scoreboard.visible:
 		return
 	for entry in match_state.tick(real):
