@@ -16,6 +16,6 @@ souris : viser · clic gauche : tirer · Maj/clic droit : dash · E/clic molette
 - `tools/perf.sh [s]` : mesure 1080p sur sway headless GPU (moyenne ≥ 60, 1 % bas ≥ 50)
 - `godot --path . -- --tests=showcase` : démo scriptée du gore (à filmer avec `tools/capture.sh 13 --tests=showcase`)
 - `tools/gen_music.py` : musique de combat synthétisée
-- `tools/gen_assets.py` : textures via Pigment (`/mnt/projects/pigment`) ; `tools/gen_sfx.py` : bruitages synthétisés
+- `tools/gen_assets.py` : textures via Pigment (dépôt voisin `../pigment` ou `PIGMENT_PATH`) ; `tools/gen_sfx.py` : bruitages synthétisés
 
 Aucun port réseau.

@@ -1,8 +1,10 @@
 """Génère les textures du jeu avec Pigment (local) → assets/textures/<thème>/ (ciel, 4 montagnes, tuiles)."""
+import os
 import sys
 from pathlib import Path
 
-sys.path.insert(0, "/mnt/projects/pigment")
+# Pigment : dépôt voisin par défaut (../pigment), ou chemin donné par PIGMENT_PATH.
+sys.path.insert(0, os.environ.get("PIGMENT_PATH", str(Path(__file__).resolve().parents[2] / "pigment")))
 from pigment import lowpoly, pixel_tiles, sky  # noqa: E402
 
 OUT = Path(__file__).resolve().parent.parent / "assets" / "textures"
