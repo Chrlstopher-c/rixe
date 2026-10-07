@@ -22,6 +22,7 @@ func test_movement(t: Node) -> void:
 
 func _air_jumps(t: Node, f: Fighter, brain: ScriptBrain) -> void:
 	var air := [0]
+	var flipped := [false]
 	f.jumped.connect(func(in_air: bool) -> void: air[0] += int(in_air))
 	brain.press_jump()
 	await t.frames(12)
@@ -29,8 +30,10 @@ func _air_jumps(t: Node, f: Fighter, brain: ScriptBrain) -> void:
 	for i in 4:
 		brain.press_jump()
 		await t.frames(2)
+		flipped[0] = flipped[0] or (f.moves.flip_t > 0.0 and absf(f.rig.rotation) > 0.05)
 		brain.jump_held = false
 		await t.frames(8)
+	t.check(flipped[0], "double saut en salto")
 	t.check(air[0] == 2, "exactement 2 sauts en l'air (obtenu %d)" % air[0])
 
 
@@ -118,6 +121,7 @@ func test_wall_jump(t: Node) -> void:
 	await t.frames(3)
 	t.check(f.velocity.x > 100.0 and f.velocity.y < 0.0,
 		"contre le mur, sauter repart dans l'autre sens (%s)" % f.velocity)
+	t.check(f.moves.flip_t > 0.0 and f.moves.flip_dir > 0.0, "saut mural en salto, dans le sens du rebond")
 	brain.move = 0.0
 
 

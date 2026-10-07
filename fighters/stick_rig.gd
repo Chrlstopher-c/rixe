@@ -68,13 +68,22 @@ func _process(delta: float) -> void:
 		queue_redraw()
 
 
-## Roulade : le corps tourne sur lui-même autour du bassin ; glissade : penché en arrière, au ras du sol.
+## Roulade : le corps tourne sur lui-même autour du bassin ; salto (double saut, saut mural) ; coup de pied sauté :
+## penché en arrière ; glissade : penché en arrière, au ras du sol.
 func _pose_moves(delta: float) -> void:
 	var m: Moves = fighter.moves
 	var goal := 0.0
 	if m.roll_t > 0.0:
 		_spin += delta * 21.0 * fighter.facing
 		goal = _spin
+	elif m.flip_t > 0.0:
+		var k := 1.0 - m.flip_t / Moves.FLIP_TIME
+		rotation = m.flip_dir * TAU * k * k * (3.0 - 2.0 * k)
+		position = Vector2(0, -15.0 * scale.y) - Vector2(0, -15.0 * scale.y).rotated(rotation)
+		return
+	elif fighter.melee.active() and fighter.melee.step >= Melee.STEPS.size():
+		goal = -fighter.facing * 0.6 * sin(fighter.melee.progress() * PI)
+		_spin = 0.0
 	else:
 		_spin = 0.0
 		if m.slide_t > 0.0:

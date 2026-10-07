@@ -13,6 +13,7 @@ const F_ROLL := 8
 const F_SLIDE := 16
 const F_STUN := 32
 const F_BOSS := 64
+const F_FLIP := 128
 
 var s: Node
 ## Marionnettes par identifiant réseau.
@@ -61,6 +62,7 @@ func snapshot() -> Dictionary:
 		var flags := (F_AIMING if f.aiming else 0) | (F_PLAYER if f.is_player else 0) | (F_SHIELD if f.shield > 0.0 else 0)
 		flags |= (F_ROLL if f.moves.roll_t > 0.0 else 0) | (F_SLIDE if f.moves.slide_t > 0.0 else 0)
 		flags |= (F_STUN if f.moves.stunned() else 0) | (F_BOSS if f.boss else 0)
+		flags |= F_FLIP if f.moves.flip_t > 0.0 else 0
 		rows.append([f.net_id, f.net_life, f.global_position, f.velocity, f.aim_dir, f.hp, f.gun.id,
 			f.gun.attachments, f.body.missing.duplicate(), f.team, f.team_color, flags, f.melee.t, f.dash_t, f.outfit,
 			f.melee.step])
@@ -133,6 +135,8 @@ func drive(f: Fighter, _delta: float) -> void:
 func _sync_moves(f: Fighter, flags: int) -> void:
 	f.moves.roll_t = Moves.ROLL_TIME * 0.5 if flags & F_ROLL else 0.0
 	f.moves.stun_t = 0.3 if flags & F_STUN else 0.0
+	if flags & F_FLIP and f.moves.flip_t <= 0.0:
+		f.moves.start_flip()
 	var sliding := (flags & F_SLIDE) != 0
 	if sliding != (f.moves.slide_t > 0.0):
 		f.set_low(sliding)

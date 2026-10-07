@@ -1,7 +1,7 @@
 class_name Moves
 extends RefCounted
 ## Mouvements avancés d'un combattant : roulade d'esquive (dash au sol, invulnérable un court instant), glissade
-## (bas en pleine course : plus bas, plus vite), saut contre un mur, parade (coup de pied au bon moment contre un
+## (bas en pleine course : plus bas, plus vite), saut contre un mur (en salto, comme le double saut), parade (coup de pied au bon moment contre un
 ## coup de pied adverse : l'attaquant est repoussé et étourdi).
 
 const ROLL_TIME := 0.32
@@ -14,12 +14,16 @@ const WALL_PUSH := 250.0
 const WALL_JUMP := 360.0
 const PARRY_WINDOW := 0.2
 const STUN_TIME := 0.7
+const FLIP_TIME := 0.42
 
 var f: Node2D
 var roll_t := 0.0
 var slide_t := 0.0
 var parry_t := 0.0
 var stun_t := 0.0
+var flip_t := 0.0
+## Sens du salto (1 = horaire) : celui du déplacement.
+var flip_dir := 1.0
 var _slide_cd := 0.0
 var _slide_dir := 1.0
 
@@ -32,6 +36,7 @@ func tick(delta: float) -> void:
 	roll_t = maxf(roll_t - delta, 0.0)
 	parry_t = maxf(parry_t - delta, 0.0)
 	stun_t = maxf(stun_t - delta, 0.0)
+	flip_t = maxf(flip_t - delta, 0.0)
 	_slide_cd -= delta
 	if slide_t > 0.0:
 		slide_t -= delta
@@ -48,6 +53,12 @@ func dodging() -> bool:
 
 func stunned() -> bool:
 	return stun_t > 0.0
+
+
+## Double saut ou saut mural : salto dans le sens du déplacement.
+func start_flip() -> void:
+	flip_t = FLIP_TIME
+	flip_dir = signf(f.velocity.x) if absf(f.velocity.x) > 40.0 else float(f.facing)
 
 
 ## Dash au sol = roulade.

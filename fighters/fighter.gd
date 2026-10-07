@@ -251,10 +251,12 @@ func _jump() -> void:
 		jumped.emit(false)
 		Sfx.play("jump", global_position, -6.0)
 	elif moves.try_wall_jump():
+		moves.start_flip()
 		jumped.emit(true)
 	elif _air_jumps > 0:
 		_air_jumps -= 1
 		velocity.y = -AIR_JUMP
+		moves.start_flip()
 		jumped.emit(true)
 		Sfx.play("air_jump", global_position, -5.0)
 		Juice.fx.emit(5, global_position, Vector2.ZERO, 0.25, 9.0, Color(team_color, 0.8))
