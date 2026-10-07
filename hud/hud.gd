@@ -18,6 +18,8 @@ var _font: Font = ThemeDB.fallback_font
 var _hp_shown := 100.0
 var _toasts: Array[Dictionary] = []
 var _exec_t := 99.0
+## Invité en ligne : ligne d'information calculée par l'hôte.
+var remote_info := ""
 
 
 func _ready() -> void:
@@ -135,24 +137,39 @@ func _draw_crosshair(m: Vector2) -> void:
 
 
 func _info_line() -> String:
+	if remote_info != "":
+		return remote_info
+	return info_for("Toi")
+
+
+## Ligne d'information vue par un combattant (l'hôte la calcule aussi pour son invité en ligne).
+func info_for(me: String) -> String:
 	if Juice.survival:
 		var s: Survival = Juice.survival
 		var phase := "NUIT" if s.night else "JOUR"
 		return "JOUR %d   ·   %s %s   ·   NUITS TENUES %d" % [s.day, phase, s.clock(), s.nights_survived]
 	if mode == "arcade" or match_state == null:
-		return "MANCHE %d   ·   BOTS %d   ·   ÉLIMINATIONS %d   ·   RECORD %d" % [round_no, bots_left, kills, best]
+		var k := kills if me == "Toi" or match_state == null else match_state.kills_of(me)
+		return "MANCHE %d   ·   BOTS %d   ·   ÉLIMINATIONS %d   ·   RECORD %d" % [round_no, bots_left, k, best]
 	var rows := match_state.ranking()
 	var place := 1
 	for i in rows.size():
-		if rows[i].name == "Toi":
+		if rows[i].name == me:
 			place = i + 1
-	var lead: String = rows[0].name if not rows.is_empty() else "-"
+	var lead: String = _seen_as(rows[0].name, me) if not rows.is_empty() else "-"
 	var lead_k: int = rows[0].kills if not rows.is_empty() else 0
-	var mine := match_state.kills_of("Toi")
+	var mine := match_state.kills_of(me)
 	if mode == "objectif":
 		var goal := Modes.option_value(mode, match_state.option)
 		return "ÉLIMINATIONS %d / %d   ·   RANG %d   ·   EN TÊTE : %s (%d)" % [mine, goal, place, lead, lead_k]
 	return "ÉLIMINATIONS %d   ·   RANG %d / %d   ·   EN TÊTE : %s (%d)" % [mine, place, rows.size(), lead, lead_k]
+
+
+## Nom tel que le voit `me` (l'invité en ligne s'appelle « Toi » chez lui, l'hôte « Hôte »).
+static func _seen_as(name: String, me: String) -> String:
+	if me == "Toi":
+		return name
+	return "Toi" if name == me else ("Hôte" if name == "Toi" else name)
 
 
 func _draw_mode_center() -> void:

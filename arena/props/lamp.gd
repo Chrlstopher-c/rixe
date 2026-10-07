@@ -46,6 +46,8 @@ func take_hit(_dmg: float, dir: Vector2, at: Vector2, _from: Node2D, _knock: flo
 		return
 	_falling = true
 	_vel = dir * 40.0
+	if Juice.net:
+		Juice.net.prop_event(self, "fall", dir)
 	Effects.impact(at, -dir, Color(2.4, 1.8, 1.0))
 	Sfx.play("tink", at, -2.0, 0.1)
 

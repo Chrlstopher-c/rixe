@@ -9,6 +9,7 @@ var vel := Vector2.ZERO
 var immune: Node2D
 var immune_t := 0.0
 var _t := 0.0
+var net_item := -1
 
 
 func setup(id: String, v: Vector2, dropper: Node2D = null) -> void:
@@ -33,9 +34,14 @@ func _physics_process(delta: float) -> void:
 	queue_redraw()
 
 
+func _ready() -> void:
+	if Juice.net:
+		Juice.net.item_born(self)
+
+
 func _try_grab() -> void:
 	for f in get_tree().get_nodes_in_group("fighters"):
-		if not f.alive or (f == immune and immune_t > 0.0):
+		if not f.alive or f.remote or (f == immune and immune_t > 0.0):
 			continue
 		if not Arsenal.accepts(f.gun.id) and f.inventory.bag.size() >= Inventory.BAG:
 			continue
@@ -43,6 +49,8 @@ func _try_grab() -> void:
 			continue
 		if f.global_position.distance_to(global_position + Vector2(0, 8)) < 24.0:
 			_mount(f)
+			if Juice.net:
+				Juice.net.item_changed(self)
 			return
 
 

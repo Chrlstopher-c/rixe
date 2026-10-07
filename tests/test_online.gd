@@ -4,7 +4,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["online_link_host", "online_link_guest"]
+	return ["online_link_host", "online_link_guest", "online_match_host", "online_match_guest"]
 
 
 func _link(t: Node, role: String) -> NetLink:
@@ -50,3 +50,174 @@ func test_online_link_guest(t: Node) -> void:
 	wrong.open("QQQQ", "guest")
 	await t.until(func() -> bool: return not reasons.is_empty(), 1200)
 	t.check(reasons == ["Aucune partie avec ce code"], "code inconnu : message clair (%s)" % [reasons])
+
+
+# Partie complète : hôte et invité jouent la même manche d'arcade contre les bots.
+
+static func terrain_hash() -> int:
+	var h := 0
+	var cells: Dictionary = Juice.arena.terrain.kind
+	for c in cells:
+		h ^= hash([c, cells[c]])
+	return h ^ cells.size()
+
+
+func _inbox(s: NetSession) -> Array:
+	var box := []
+	s.link.received.connect(func(m: Dictionary) -> void:
+		if m.get("t") == "test":
+			box.append(m))
+	return box
+
+
+func _say(s: NetSession, step: String, data: Variant = null) -> void:
+	s.link.send({"t": "test", "step": step, "data": data})
+
+
+func _heard(t: Node, box: Array, step: String, frames: int = 1200) -> Variant:
+	var found := []
+	await t.until(func() -> bool:
+		for m in box:
+			if m.step == step:
+				found.append(m.data)
+				return true
+		return false, frames)
+	return found[0] if not found.is_empty() else "∅"
+
+
+func _fighters(main: Node, remote: bool, human: bool) -> Array:
+	return main._fighters.get_children().filter(func(f: Node) -> bool:
+		return f is Fighter and f.alive and f.remote == remote and f.is_player == human)
+
+
+func test_online_match_host(t: Node) -> void:
+	var main: Node = t.main
+	main.live_rules = true
+	var s := NetSession.begin(main, "host", OS.get_environment("RIXE_ROOM"))
+	var box := _inbox(s)
+	t.check(await t.until(func() -> bool: return s.connected(), 3000), "l'invité a rejoint")
+	main._on_start("arcade", 0)
+	var born_hash := terrain_hash()
+	main.player.brain = ScriptBrain.new()
+	_tough(main.player)
+	var puppet_up: bool = await t.until(func() -> bool: return not _fighters(main, true, true).is_empty(), 600)
+	t.check(puppet_up, "le combattant de l'invité apparaît chez l'hôte")
+	var guest_hash: Variant = await _heard(t, box, "hash")
+	t.check(guest_hash == born_hash, "même décor des deux côtés")
+	var items := get_items(main)
+	_say(s, "items", items)
+	var p2: Fighter = _fighters(main, true, true)[0] if puppet_up else null
+	var x0: float = p2.global_position.x if p2 else 0.0
+	await _heard(t, box, "moved")
+	await t.frames(30)
+	t.check(p2 != null and p2.global_position.x > x0 + 40.0, "l'invité se déplace chez l'hôte (%.0f px)" % [
+		(p2.global_position.x - x0) if p2 else 0.0])
+	var target_id: Variant = await _heard(t, box, "hit_bot")
+	await t.frames(30)
+	var bot := _bot_named(main, String(target_id))
+	t.check(bot == null or bot.hp < Fighter.MAX_HP, "une balle de l'invité blesse le bot chez l'hôte")
+	await _heard(t, box, "fired")
+	t.check(main.match_state.stats.has("J2"), "l'invité compte au classement")
+	p2 = _fighters(main, true, true)[0] if not _fighters(main, true, true).is_empty() else null
+	if p2:
+		p2.take_hit(99999.0, Vector2.RIGHT, p2.global_position + Vector2(0, -22), main.player, 0.0)
+	var gone: bool = await t.until(func() -> bool: return _fighters(main, true, true).is_empty(), 600)
+	t.check(gone and main.match_state.stats.J2.deaths == 1, "l'hôte tue l'invité : mort rejouée, comptée")
+	t.check(not main._scoreboard.visible, "l'hôte encore debout : la partie continue")
+	for b in _fighters(main, false, false):
+		b.shield = 0.0
+		b.take_hit(999.0, Vector2.RIGHT, b.global_position + Vector2(0, -22), main.player, 0.0)
+	var next: bool = await t.until(func() -> bool: return main.round_no == 2 and main._restart_in < 0.0, 900)
+	t.check(next, "tous les bots tombés : manche 2")
+	var born2 := terrain_hash()
+	var hash2: Variant = await _heard(t, box, "hash2")
+	t.check(hash2 == born2, "manche 2 : même décor des deux côtés")
+	t.check(await t.until(func() -> bool: return not _fighters(main, true, true).is_empty(), 600),
+		"l'invité réapparaît à la manche 2")
+	await _heard(t, box, "bye", 600)
+	s.leave()
+
+
+## Les bots tirent pour de vrai : les joueurs du test doivent tenir jusqu'à l'étape où on les tue exprès.
+static func _tough(f: Fighter) -> void:
+	f.shield = 0.0
+	f.hp = 5000.0
+	for part in f.body.hp:
+		f.body.hp[part] = 5000.0
+
+
+func get_items(main: Node) -> int:
+	return Juice.world.get_children().filter(func(n: Node) -> bool:
+		return n is WeaponPickup or n is AttachmentPickup).size()
+
+
+func _bot_named(main: Node, id: String) -> Fighter:
+	for f in main._fighters.get_children():
+		if f is Fighter and f.net_id == id:
+			return f
+	return null
+
+
+## L'invité peut arriver avant que l'hôte ait ouvert le salon : il réessaie tant que le code est inconnu.
+func _join(t: Node, main: Node) -> NetSession:
+	for i in 20:
+		var s := NetSession.begin(main, "guest", OS.get_environment("RIXE_ROOM"))
+		var why := []
+		s.ended.connect(func(r: String) -> void: why.append(r))
+		await t.until(func() -> bool: return s.connected() or not why.is_empty(), 600)
+		if s.connected():
+			return s
+		s.leave()
+		await t.frames(60)
+	return NetSession.begin(main, "guest", OS.get_environment("RIXE_ROOM"))
+
+
+func test_online_match_guest(t: Node) -> void:
+	var main: Node = t.main
+	main.live_rules = true
+	var s := await _join(t, main)
+	var box := _inbox(s)
+	var hashes := []
+	s.link.received.connect(func(m: Dictionary) -> void:
+		if m.get("t") == "round":
+			hashes.append(terrain_hash()))
+	var in_game: bool = await t.until(func() -> bool: return is_instance_valid(main.player) and s.started, 1200)
+	t.check(in_game, "l'invité entre dans la manche de l'hôte")
+	var me: Fighter = main.player
+	var brain := ScriptBrain.new()
+	me.brain = brain
+	_tough(me)
+	_say(s, "hash", hashes[0] if not hashes.is_empty() else 0)
+	var host_items: Variant = await _heard(t, box, "items")
+	await t.frames(30)
+	t.check(int(host_items) > 0 and get_items(main) == int(host_items), "mêmes objets au sol (%s / %d)" % [
+		host_items, get_items(main)])
+	t.check(await t.until(func() -> bool: return not _fighters(main, true, false).is_empty(), 600),
+		"les bots de l'hôte apparaissent chez l'invité")
+	t.check(not _fighters(main, true, true).is_empty(), "l'hôte apparaît chez l'invité")
+	brain.move = 1.0
+	await t.frames(90)
+	brain.move = 0.0
+	_say(s, "moved")
+	await t.frames(300)
+	var bots := _fighters(main, true, false)
+	if not bots.is_empty():
+		var b: Fighter = bots[0]
+		b.take_hit(12.0, Vector2.RIGHT, b.global_position + Vector2(0, -22), me, 0.0)
+		_say(s, "hit_bot", b.net_id)
+	brain.aim = me.global_position + Vector2(200, -20)
+	brain.fire = true
+	await t.frames(30)
+	brain.fire = false
+	_say(s, "fired")
+	var me_ref: WeakRef = weakref(me)
+	var died: bool = await t.until(func() -> bool: return me_ref.get_ref() == null or not me_ref.get_ref().alive, 600)
+	t.check(died, "tué par l'hôte : l'invité tombe chez lui")
+	var round2: bool = await t.until(func() -> bool:
+		return main.round_no == 2 and is_instance_valid(main.player) and main.player.alive, 1500)
+	t.check(round2, "manche 2 reçue, l'invité réapparaît")
+	_say(s, "hash2", hashes[1] if hashes.size() > 1 else 0)
+	await t.frames(60)
+	_say(s, "bye")
+	await t.frames(30)
+	s.leave()

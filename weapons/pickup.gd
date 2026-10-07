@@ -15,6 +15,8 @@ var mag := -1
 var reserve := -1
 var attachments := {}
 var _t := 0.0
+## En ligne : numéro partagé de l'objet (l'hôte le donne).
+var net_item := -1
 
 
 func setup(id: String, v: Vector2, dropper: Node2D = null, ammo_mag: int = -1, ammo_reserve: int = -1,
@@ -44,9 +46,14 @@ func _physics_process(delta: float) -> void:
 	queue_redraw()
 
 
+func _ready() -> void:
+	if Juice.net:
+		Juice.net.item_born(self)
+
+
 func _try_grab() -> void:
 	for f in get_tree().get_nodes_in_group("fighters"):
-		if not f.alive or f.body.arms_left() == 0:
+		if not f.alive or f.remote or f.body.arms_left() == 0:
 			continue
 		var same: bool = f.gun.id == weapon_id
 		var held: Gun = f.inventory.other()
@@ -61,6 +68,8 @@ func _try_grab() -> void:
 				_take_ammo(f)
 			else:
 				_swap(f)
+			if Juice.net:
+				Juice.net.item_changed(self)
 			return
 
 

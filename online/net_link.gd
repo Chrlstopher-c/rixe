@@ -8,6 +8,8 @@ signal received(msg: Dictionary)
 signal failed(reason: String)
 
 const PING_EVERY := 3.0
+## Nouvelles tentatives si la connexion tombe avant l'accueil du relais (réseau qui hoquette).
+const RETRIES := 3
 const REASONS := {4001: "Ce code est déjà pris", 4002: "La partie est complète", 4004: "Aucune partie avec ce code"}
 
 var role := ""
@@ -19,6 +21,9 @@ var _open := false
 var _done := false
 var _ping_t := 0.0
 var _ping_sent := 0
+var _base := ""
+var _tries := 0
+var _retry_t := -1.0
 
 
 func _ready() -> void:
@@ -28,9 +33,15 @@ func _ready() -> void:
 func open(room: String, as_role: String, base: String = RelayConfig.url()) -> void:
 	code = room.to_upper()
 	role = as_role
+	_base = base
+	_connect()
+
+
+func _connect() -> void:
+	_ws = WebSocketPeer.new()
 	_ws.inbound_buffer_size = 1 << 20
 	_ws.outbound_buffer_size = 1 << 20
-	var err := _ws.connect_to_url("%s/room/%s?role=%s" % [base, code, role])
+	var err := _ws.connect_to_url("%s/room/%s?role=%s" % [_base, code, role])
 	if err != OK:
 		push_warning("connexion au relais impossible : %s" % error_string(err))
 		_fail("Relais injoignable")
@@ -57,6 +68,11 @@ func close() -> void:
 func _process(delta: float) -> void:
 	if _done:
 		return
+	if _retry_t >= 0.0:
+		_retry_t -= delta
+		if _retry_t < 0.0:
+			_connect()
+		return
 	_ws.poll()
 	match _ws.get_ready_state():
 		WebSocketPeer.STATE_OPEN:
@@ -64,6 +80,11 @@ func _process(delta: float) -> void:
 			_keepalive(delta)
 		WebSocketPeer.STATE_CLOSED:
 			var c := _ws.get_close_code()
+			if not _open and not REASONS.has(c) and _tries < RETRIES:
+				_tries += 1
+				_retry_t = 0.5 * _tries
+				push_warning("relais : connexion coupée avant l'accueil (code %d), nouvel essai" % c)
+				return
 			_fail(REASONS.get(c, "Connexion perdue" if _open else "Relais injoignable"))
 
 

@@ -27,3 +27,21 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm test
+  online:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Godot 4.7.2
+        run: |
+          curl -sL -o g.zip https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          unzip -q g.zip && sudo mv Godot_v4.7.2-stable_linux.x86_64 /usr/local/bin/godot
+      - run: cd relay && pnpm install --frozen-lockfile
+      - run: timeout 180 godot --headless --path . --import > /dev/null 2>&1 || true
+      - name: Partie en ligne (relais local + deux jeux)
+        run: tools/online_test.sh link && tools/online_test.sh match

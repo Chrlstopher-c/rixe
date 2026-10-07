@@ -87,7 +87,8 @@ func _start_round() -> void:
 	Juice.wind = w[1]
 	Juice.weather.set_kind(w[0])
 	var b := _populate_survival() if game_mode == "survie" and not attract else _populate()
-	spawner.spawn_pickups()
+	if not _net_guest():
+		spawner.spawn_pickups()
 	if duo and not attract:
 		duo.enter()
 		duo.bind()
@@ -100,6 +101,8 @@ func _start_round() -> void:
 	for f in _fighters.get_children():
 		if f is Fighter and not f.is_queued_for_deletion():
 			match_state.register(f)
+	if Juice.net and not attract:
+		Juice.net.round_started()
 	var head := "MANCHE %d" % round_no if game_mode == "arcade" or attract else Modes.label(game_mode)
 	_hud.banner("%s  ·  %s" % [head, Maps.ALL[map_type].label])
 	Sfx.play_ui("round", -6.0)
@@ -123,11 +126,19 @@ func _populate() -> int:
 	var spots: Array = Juice.arena.spawn_points(n + 1, _rng)
 	var mine := _rng.randi_range(0, spots.size() - 1)
 	var taken := -1
+	if _net_guest():
+		player = Juice.net.spawn_guest(Juice.net.guest_spot)
+		return 0
 	if duo and not attract:
 		taken = duo.populate(spots, mine)
 	else:
 		var brain: RefCounted = BotBrain.new(1.0, "acrobate") if demo or attract else PlayerBrain.new()
 		player = _spawn_player(spots[mine], brain)
+	if Juice.net and not attract:
+		taken = (mine + 1) % spots.size()
+		Juice.net.guest_spot = spots[taken]
+		if game_mode == "arcade":
+			player.team = "joueurs"
 	spawner.clear_names()
 	var b := 0
 	for i in spots.size():
@@ -199,6 +210,8 @@ func _spawn_bot(pos: Vector2, name: String) -> Fighter:
 
 func _respawn(entry: Dictionary) -> void:
 	var pos := spawner.far_spawn()
+	if Juice.net and Juice.net.respawn(entry, pos):
+		return
 	if duo and duo.respawn(entry, pos):
 		pass
 	elif entry.player:
@@ -232,6 +245,8 @@ func _process(delta: float) -> void:
 		Sfx.tension = rules.last_stand()
 	if attract or demo or match_state == null or not Modes.respawns(game_mode) or _scoreboard.visible:
 		return
+	if _net_guest():
+		return
 	for entry in match_state.tick(real):
 		_respawn(entry)
 	_hud.respawn_t = match_state.respawn_in("Toi")
@@ -264,7 +279,12 @@ func _unhandled_input(event: InputEvent) -> void:
 					_toggle_inventory()
 
 
-func _on_start(mode: String, option: int) -> void:
+## Invité d'une partie en ligne : la partie (manches, bots, objets) est menée par l'hôte.
+func _net_guest() -> bool:
+	return Juice.net != null and not Juice.net.is_host() and not attract
+
+
+func _on_start(mode: String, option: int, first_round: int = 1) -> void:
 	_leave_survival()
 	var two: bool = _menu.players == 2 and mode != "survie"
 	if two and duo == null:
@@ -275,7 +295,7 @@ func _on_start(mode: String, option: int) -> void:
 	game_mode = mode
 	game_option = option
 	attract = false
-	round_no = 1
+	round_no = first_round
 	_restart_in = -1.0
 	_menu.close()
 	_scoreboard.close()
@@ -336,7 +356,7 @@ func _toggle_inventory() -> void:
 	elif is_instance_valid(player) and player.alive:
 		_inventory.open(player)
 		_hud.visible = false
-		get_tree().paused = true
+		get_tree().paused = Juice.net == null
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 

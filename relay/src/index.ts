@@ -51,7 +51,7 @@ export class Room extends DurableObject<Env> {
     const other = this.peer(role);
     if (other) send(other, { t: "peer", on: false });
     try {
-      ws.close(code === 1005 ? 1000 : code, "fin");
+      ws.close(code === 1000 || (code >= 3000 && code < 5000) ? code : 1000, "fin");
     } catch (err) {
       console.log("fermeture déjà faite", err);
     }

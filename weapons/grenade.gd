@@ -14,6 +14,8 @@ var thrower: Node2D
 var _spin := 0.0
 var _armed := 0.08
 var _t := 0.0
+## En ligne : copie visuelle d'une grenade lancée chez l'autre joueur (ni dégâts ni trou dans le décor).
+var cosmetic := false
 
 
 func setup(from: Node2D, v: Vector2, fuse_s: float, on_impact: bool, damage: float, blast: float) -> void:
@@ -71,6 +73,11 @@ func _hits_fighter() -> bool:
 
 func explode() -> void:
 	var at := global_position
+	if cosmetic:
+		Effects.explosion(at, radius)
+		Sfx.play("explosion", at, 3.0, 0.1)
+		queue_free()
+		return
 	for f in get_tree().get_nodes_in_group("fighters"):
 		if not f.alive:
 			continue

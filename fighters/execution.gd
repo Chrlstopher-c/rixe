@@ -38,7 +38,7 @@ static func target_for(f: Node2D) -> Node2D:
 	var best: Node2D = null
 	var best_d := REACH
 	for o in f.get_tree().get_nodes_in_group("fighters"):
-		if o == f or not staggered(o) or o.get("held"):
+		if o == f or not staggered(o) or o.get("held") or o.get("remote"):
 			continue
 		if f.team != "" and o.team == f.team:
 			continue

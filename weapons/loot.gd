@@ -13,6 +13,7 @@ var kind := "ammo"
 var vel := Vector2.ZERO
 var life := 30.0
 var _t := 0.0
+var net_item := -1
 
 
 func setup(k: String, v: Vector2) -> void:
@@ -20,6 +21,11 @@ func setup(k: String, v: Vector2) -> void:
 	vel = v
 	z_index = 8
 	add_to_group("loot")
+
+
+func _ready() -> void:
+	if Juice.net:
+		Juice.net.item_born(self)
 
 
 func _physics_process(delta: float) -> void:
@@ -35,10 +41,13 @@ func _physics_process(delta: float) -> void:
 	else:
 		global_position = next
 	for f in get_tree().get_nodes_in_group("fighters"):
-		if f.alive and f.global_position.distance_to(global_position + Vector2(0, 6)) < 20.0 and _apply(f):
+		var near: bool = f.global_position.distance_to(global_position + Vector2(0, 6)) < 20.0
+		if f.alive and not f.remote and near and _apply(f):
 			Sfx.play("pickup", global_position, -4.0, 0.15)
 			Juice.fx.emit(5, global_position, Vector2.ZERO, 0.2, 8.0, Color(KINDS[kind].color, 0.7))
 			queue_free()
+			if Juice.net:
+				Juice.net.item_changed(self)
 			return
 	queue_redraw()
 

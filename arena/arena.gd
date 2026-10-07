@@ -98,6 +98,8 @@ func _add_solid(r: Rect2, kind: String) -> void:
 
 ## Dégâts au décor (impacts, explosions) ; renvoie le nombre de cellules détruites.
 func damage(at: Vector2, dmg: float, radius: float, by: Variant = null) -> int:
+	if Juice.net:
+		Juice.net.terrain_hit(at, dmg, radius)
 	var n := terrain.damage(at, dmg, radius, by)
 	if n > 0:
 		queue_redraw()

@@ -16,7 +16,7 @@ if [ -z "${RIXE_RELAY:-}" ]; then
   for _ in $(seq 1 120); do grep -q "Ready on" "$LOGS/relay.log" && break; sleep 0.5; done
   export RIXE_RELAY="ws://127.0.0.1:$PORT"
 fi
-export RIXE_ROOM="$(head -c 64 /dev/urandom | tr -dc 'A-Z' | head -c 4)"
+export RIXE_ROOM="$(tr -dc 'A-Z' < /dev/urandom | head -c 4)"
 export RIXE_REALTIME=1
 timeout 180 godot --headless --path . --max-fps 120 -- --tests="online_${SCEN}_host" > "$LOGS/host.log" 2>&1 &
 HPID=$!

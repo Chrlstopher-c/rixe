@@ -53,6 +53,10 @@ var held := false
 var executed := false
 ## > 0 : un joueur peut l'exécuter maintenant (repère au-dessus de la tête).
 var mark_t := 0.0
+## En ligne : identifiant partagé, vie en cours (chaque réapparition l'incrémente), marionnette d'un autre joueur.
+var net_id := ""
+var net_life := 0
+var remote := false
 var last_zone := ""
 var death_cause := ""
 var _spurt := {}
@@ -93,6 +97,10 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if not alive:
+		return
+	if remote:
+		if Juice.net:
+			Juice.net.drive(self, delta)
 		return
 	if global_position.y > Juice.arena.void_y:
 		death_cause = "fall"
@@ -263,6 +271,8 @@ func throw_grenade() -> void:
 	var d: Dictionary = Arsenal.GRENADE
 	var v := (aim_dir + Vector2(0, -0.25)).normalized() * float(d.throw) + velocity * 0.5
 	g.setup(self, v, d.fuse, false, d.dmg, d.radius)
+	if Juice.net:
+		Juice.net.grenade_thrown(g)
 	Sfx.play("swing", global_position, -6.0, 0.1)
 
 
@@ -291,6 +301,10 @@ func _on_platform() -> bool:
 func take_hit(dmg: float, dir: Vector2, at: Vector2, from: Variant, knock: float, part: String = "") -> void:
 	if not alive:
 		return
+	if remote:
+		if Juice.net:
+			Juice.net.puppet_hit(self, dmg, dir, at, from, knock, part)
+		return
 	if shield > 0.0:
 		Effects.impact(at, -dir, team_color * 2.0)
 		return
@@ -312,14 +326,19 @@ func take_hit(dmg: float, dir: Vector2, at: Vector2, from: Variant, knock: float
 		if last_zone == "head" or last_zone == "torso":
 			death_cause = "decap" if last_zone == "head" else "split"
 			hp = 0.0
-	if is_instance_valid(from) and from.get("is_player") and from != self:
+	if local_human(from) and from != self:
 		Effects.hit_marker(at, last_zone == "head", hp <= 0.0)
 	if hp <= 0.0:
 		_die(dir, from, res.dmg)
 
 
+## Joueur humain de cette machine (pas la marionnette d'un joueur distant).
+static func local_human(n: Variant) -> bool:
+	return is_instance_valid(n) and n.get("is_player") and not n.get("remote")
+
+
 func _hit_feedback(from: Variant, dmg: float) -> void:
-	var player_involved: bool = is_player or (is_instance_valid(from) and from.get("is_player"))
+	var player_involved: bool = local_human(self) or local_human(from)
 	if player_involved and dmg >= 20.0:
 		Juice.hitstop(0.04)
 	if brain and brain.has_method("rumble"):
@@ -367,18 +386,21 @@ func _die(dir: Vector2, killer: Variant, dmg: float) -> void:
 	Juice.zoom_punch = 0.08
 	Juice.shake(0.4, chest)
 	_kill_time_fx(killer, chest)
-	drop_weapon(Vector2(dir.x * 80.0, -200.0))
-	var spare := inventory.other()
-	if spare:
-		_drop_gun(spare, Vector2(-dir.x * 60.0, -180.0))
-	_drop_loot()
+	if Juice.net and not remote:
+		Juice.net.local_death(self, dir, killer, dmg)
+	if Juice.net == null or Juice.net.is_host():
+		drop_weapon(Vector2(dir.x * 80.0, -200.0))
+		var spare := inventory.other()
+		if spare:
+			_drop_gun(spare, Vector2(-dir.x * 60.0, -180.0))
+		_drop_loot()
 	Juice.fighter_killed.emit(self, killer if is_instance_valid(killer) else null)
 	queue_free()
 
 
 ## Ralenti réservé aux morts par la tête (à l'écran ou impliquant le joueur) ; sinon simple à-coup.
 func _kill_time_fx(killer: Variant, at: Vector2) -> void:
-	var player_involved: bool = is_player or (is_instance_valid(killer) and killer.get("is_player"))
+	var player_involved: bool = local_human(self) or local_human(killer)
 	var head_kill := death_cause == "headshot" or death_cause == "decap"
 	if head_kill and (player_involved or Juice.on_screen(at)):
 		Juice.hitstop(0.06)

@@ -34,11 +34,16 @@ func take_hit(dmg: float, _dir: Vector2, at: Vector2, from: Node2D, _knock: floa
 		explode(from)
 
 
-func explode(by: Node2D = null) -> void:
+## `remote` : explosion reçue de l'autre joueur en ligne (le décor arrive à part).
+func explode(by: Node2D = null, remote: bool = false) -> void:
 	if _done:
 		return
 	_done = true
+	if Juice.net and not remote:
+		Juice.net.prop_event(self, "boom")
 	var at := global_position + Vector2(0, -7)
+	if Juice.net:
+		Juice.net.local_only = true
 	for f in get_tree().get_nodes_in_group("fighters"):
 		if not f.alive:
 			continue
@@ -50,8 +55,11 @@ func explode(by: Node2D = null) -> void:
 			f.take_hit(DAMAGE * (0.3 + 0.7 * k), dir, chest - dir * 6.0, by, 300.0 * k + 80.0)
 	for b in get_tree().get_nodes_in_group("barrels"):
 		if b != self and b.global_position.distance_to(at) < RADIUS * 0.8:
-			b.call_deferred("explode", by)
-	Juice.arena.damage(at, 160.0, RADIUS * 0.5)
+			b.call_deferred("explode", by, remote)
+	if Juice.net:
+		Juice.net.local_only = false
+	if not remote:
+		Juice.arena.damage(at, 160.0, RADIUS * 0.5)
 	Effects.explosion(at, RADIUS)
 	Sfx.play("explosion", at, 4.0, 0.1)
 	queue_free()

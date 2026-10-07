@@ -19,6 +19,8 @@ var _since_shot := 99.0
 var swing := 0.0
 ## Accessoires montés (emplacement → identifiant).
 var attachments := {}
+## Segments du dernier tir [début, fin, 0 rien / 1 décor / 2 cible] : rejoués chez l'autre joueur en ligne.
+var segs: Array = []
 
 
 func _init(holder: Node2D, weapon_id: String, mods: Dictionary = {}) -> void:
@@ -111,6 +113,7 @@ func shot_dir() -> Vector2:
 
 
 func _fire() -> void:
+	segs.clear()
 	var dir := shot_dir()
 	var muzzle: Vector2 = owner.rig.muzzle_global()
 	var spread := _spread()
@@ -134,6 +137,8 @@ func _fire() -> void:
 		Juice.shockwave(muzzle, 0.6)
 		if owner.is_player:
 			Juice.aberration += 0.6
+	if Juice.net:
+		Juice.net.shot_fired(owner, muzzle, dir)
 
 
 func _spread() -> float:
@@ -149,6 +154,8 @@ func _launch(from: Vector2, dir: Vector2) -> void:
 	gren.global_position = from
 	gren.setup(owner, dir * float(def.speed) + owner.velocity * 0.3, 3.0, true, def.dmg, def.radius)
 	gren.gravity = 320.0
+	if Juice.net:
+		Juice.net.grenade_thrown(gren)
 
 
 ## Coup de lame : arc devant soi, touche le membre le plus proche, tranche le décor.
@@ -157,6 +164,8 @@ func _slash() -> void:
 	var dir := shot_dir()
 	var origin: Vector2 = owner.global_position + Vector2(0, -24)
 	Sfx.play("slash", origin, -2.0, 0.12)
+	if Juice.net:
+		Juice.net.slashed(owner)
 	var landed := false
 	for o in owner.get_tree().get_nodes_in_group("fighters"):
 		if o == owner or not o.alive:
@@ -201,6 +210,8 @@ func _trace(from: Vector2, dir: Vector2, reach: float, dmg: float, bounces: int,
 			hit = {}
 		break
 	Effects.tracer(from, end, def.tracer, def.width, 0.16 if def.pierce else 0.08)
+	var ends := 0 if hit.is_empty() else (2 if hit.collider.has_method("take_hit") else 1)
+	segs.append([from, end, ends])
 	if hit.is_empty() or hit.collider.has_method("take_hit"):
 		return
 	_hit_world(end, dir, hit.normal, dmg, bounces, reach - from.distance_to(end))

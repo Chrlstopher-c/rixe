@@ -132,7 +132,7 @@ func end_match() -> void:
 	var nights: int = director.state.nights_survived if is_instance_valid(director) else 0
 	var texts := EndTexts.make(m.game_mode, rows, m.match_state, m.round_no, nights)
 	if Juice.net:
-		Juice.net.send_event({"t": "end", "title": texts[0], "sub": texts[1], "rows": rows, "mode": m.game_mode})
+		Juice.net.send_end()
 	show_end(texts[0], texts[1], rows, Leaderboard.entries(key), rank)
 
 
