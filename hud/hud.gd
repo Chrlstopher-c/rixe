@@ -66,6 +66,8 @@ func _draw_hud() -> void:
 	_draw_mode_center()
 	_draw_ammo()
 	_draw_toasts()
+	if Juice.survival:
+		_draw_survival(Juice.survival)
 	if show_crosshair:
 		_draw_crosshair(_canvas.get_local_mouse_position())
 
@@ -103,6 +105,10 @@ func _draw_crosshair(m: Vector2) -> void:
 
 
 func _info_line() -> String:
+	if Juice.survival:
+		var s: Survival = Juice.survival
+		var phase := "NUIT" if s.night else "JOUR"
+		return "JOUR %d   ·   %s %s   ·   NUITS TENUES %d" % [s.day, phase, s.clock(), s.nights_survived]
 	if mode == "arcade" or match_state == null:
 		return "MANCHE %d   ·   BOTS %d   ·   ÉLIMINATIONS %d   ·   RECORD %d" % [round_no, bots_left, kills, best]
 	var rows := match_state.ranking()
@@ -188,3 +194,36 @@ func _draw_toasts() -> void:
 		_canvas.draw_rect(Rect2(_canvas.size.x * 0.5 - 90, y - 11, 180, 15), Color(0.02, 0.08, 0.04, 0.6 * a))
 		_canvas.draw_string(_font, Vector2(0, y), t.text, HORIZONTAL_ALIGNMENT_CENTER, _canvas.size.x, 10,
 			Color(0.6, 2.0, 0.9, a))
+
+
+## Survie : faim sous la vie, ressources, panneau de construction.
+func _draw_survival(s: Survival) -> void:
+	var r := Rect2(12, 38, 120, 3)
+	_canvas.draw_rect(r.grow(1), Color(0, 0, 0, 0.6))
+	var food_col := Color(1.6, 1.1, 0.3) if s.hunger > 25.0 else Color(2.0, 0.4, 0.3)
+	_canvas.draw_rect(Rect2(r.position, Vector2(r.size.x * s.hunger / 100.0, r.size.y)), food_col)
+	_canvas.draw_string(_font, Vector2(138, 42), "FAIM", HORIZONTAL_ALIGNMENT_LEFT, -1, 7, Color(1, 0.9, 0.95, 0.6))
+	var parts := []
+	for k in Survival.RES:
+		parts.append("%s %d" % [Survival.NAMES[k], s.res[k]])
+	_canvas.draw_string(_font, Vector2(12, 56), "   ·   ".join(parts), HORIZONTAL_ALIGNMENT_LEFT, -1, 8,
+		Color(1.4, 1.3, 1.0, 0.85))
+	var b: Builder = s.get_parent().builder
+	var hint := "B : construire   ·   C : manger   ·   Tab : fabriquer"
+	if b.active:
+		hint = "CONSTRUCTION  ·  1-5 ou molette : bloc  ·  clic : poser  ·  clic droit : démonter  ·  B : quitter"
+		_draw_blocks(b, s)
+	_canvas.draw_string(_font, Vector2(0, _canvas.size.y - 8), hint, HORIZONTAL_ALIGNMENT_CENTER, _canvas.size.x, 7,
+		Color(1, 0.9, 0.95, 0.5))
+
+
+func _draw_blocks(b: Builder, s: Survival) -> void:
+	for i in Builder.BLOCKS.size():
+		var blk: Dictionary = Builder.BLOCKS[i]
+		var r := Rect2(12, 70 + i * 15, 190, 13)
+		var on := i == b.selected
+		_canvas.draw_rect(r, Color(0.3, 0.9, 1.0, 0.2) if on else Color(0, 0, 0, 0.35))
+		var ok := s.can_afford(blk.cost)
+		var line := "%d  %s  (%s)" % [i + 1, blk.name, Recipes.cost_text(blk.cost)]
+		_canvas.draw_string(_font, r.position + Vector2(4, 10), line, HORIZONTAL_ALIGNMENT_LEFT, -1, 8,
+			Color(1.4, 1.4, 1.3) if ok else Color(1, 0.5, 0.5, 0.7))

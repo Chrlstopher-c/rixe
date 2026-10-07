@@ -8,6 +8,8 @@ signal notified(text: String)
 const MASK_WORLD := 1
 const MASK_FIGHTERS := 2
 const MASK_PLATFORMS := 4
+## Portes construites : bloquent les pillards et leurs balles, pas le joueur.
+const MASK_DOORS := 8
 
 var fx: Node2D
 var stains: Node2D
@@ -18,6 +20,8 @@ var hd := true
 ## Vent de la manche (px/s, positif vers la droite) : pluie, neige, fumée, écharpes, grenades.
 var wind := 0.0
 var weather: Node2D
+## Partie de survie en cours (ressources, faim, jour/nuit) ; null en arène.
+var survival: Node
 ## Interrupteurs de profilage (--off=…), jamais utilisés en jeu normal.
 var off: PackedStringArray = []
 var trauma := 0.0

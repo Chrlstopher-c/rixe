@@ -50,3 +50,7 @@
   `arena/falling_chunk.gd` ; montants de plateformes = appuis). Apparitions dans `game/spawner.gd`.
   Perf : dessins regroupés (multiline), fantômes allégés, rien n'est redessiné hors écran → 1080p ~195 i/s, 1 % bas 67-88.
   Outil : `core/prof.gd` (RIXE_PROF=1) pour profiler une section (Prof.begin/end) avec tools/perf.sh.
+- V2.0 (07/10) : mode Survie (`survival/` : état, directeur, construction, recettes), arène de largeur variable
+  (`arena.W`), cellules WOOD + `terrain.built` + signal `cell_broken(c, k, by)` pour la récolte, arbres/buissons/
+  portes/pointes (`arena/props/`), équipes (`Fighter.team`, couche de collision des portes `MASK_DOORS`),
+  fond de décor en région répétée (montagnes Pigment `tileable`).

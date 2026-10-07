@@ -5,7 +5,9 @@ const ALL := {
 	"plateformes": {"label": "PLATEFORMES", "weight": 2},
 	"toits": {"label": "TOITS", "weight": 1},
 	"mine": {"label": "MINE", "weight": 1},
+	"survie": {"label": "TERRES SAUVAGES", "weight": 0},
 }
+const SURVIVAL_W := 6000.0
 ## Profondeur à partir de laquelle une chute tue, sur les cartes sans sol.
 const VOID_Y := 240.0
 
@@ -28,6 +30,10 @@ static func build(arena: Node2D, map: String, rng: RandomNumberGenerator) -> voi
 			_roofs(arena, rng)
 		"mine":
 			_mine(arena, rng)
+		"survie":
+			_wilds(arena, rng)
+			arena.terrain.flush()
+			return
 		_:
 			_platforms(arena, rng)
 	arena.terrain.flush()
@@ -140,3 +146,39 @@ static func _level(arena: Node2D, rng: RandomNumberGenerator, y: float, gap_min:
 static func _struts(arena: Node2D, r: Rect2) -> void:
 	for x in [r.position.x + 6.0, r.end.x - 6.0]:
 		arena.terrain.anchors[Terrain.cell_of(Vector2(x, r.position.y + 1.0))] = true
+
+
+## Terres sauvages (survie) : collines de terre sur roche, arbres, rochers, buissons, carcasses de métal.
+static func _wilds(arena: Node2D, rng: RandomNumberGenerator) -> void:
+	arena.add_bedrock()
+	var phase := [rng.randf() * TAU, rng.randf() * TAU, rng.randf() * TAU]
+	var heights := {}
+	var x := 0.0
+	while x < arena.W:
+		var h := 40.0 * sin(x / 610.0 + phase[0]) + 22.0 * sin(x / 230.0 + phase[1]) + 8.0 * sin(x / 90.0 + phase[2])
+		var top := snappedf(clampf(-60.0 + h, -140.0, -8.0), 8.0)
+		heights[x] = top
+		arena.terrain.fill(Rect2(x, top, 8, 32), Terrain.K.DIRT)
+		arena.terrain.fill(Rect2(x, top + 32, 8, arena.DIRT_DEPTH - top - 32), Terrain.K.ROCK)
+		x += 8.0
+	_dress_wilds(arena, rng, heights)
+
+
+static func _dress_wilds(arena: Node2D, rng: RandomNumberGenerator, heights: Dictionary) -> void:
+	var x := 120.0
+	while x < arena.W - 120.0:
+		var top: float = heights[snappedf(x, 8.0)]
+		var roll := rng.randf()
+		if roll < 0.45:
+			var tree := WildTree.new()
+			arena.add_child(tree)
+			tree.setup(Vector2(x, top + 1.0), rng.randi_range(6, 10), rng)
+		elif roll < 0.62:
+			arena.terrain.fill(Rect2(x, top - 16, 24, 16), Terrain.K.ROCK)
+		elif roll < 0.8:
+			var bush := Bush.new()
+			bush.position = Vector2(x, top)
+			arena.add_child(bush)
+		elif roll < 0.9:
+			arena.terrain.fill(Rect2(x, top - 16, 32, 16), Terrain.K.CRATE)
+		x += snappedf(rng.randf_range(70, 190), 8.0)

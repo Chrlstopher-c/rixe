@@ -83,6 +83,12 @@ func _draw_cell(c: Vector2i, k: int) -> void:
 			draw_texture_rect_region(terrain.tex.bricks, r, src, mod * tint)
 			if open_top:
 				draw_line(r.position, Vector2(r.end.x, r.position.y), terrain.rim * 0.6, 1.0)
+		Terrain.K.WOOD:
+			var plank := Color(0.42, 0.26, 0.13).darkened(wear * 0.4)
+			draw_rect(r, plank)
+			draw_line(r.position + Vector2(2.5, 0), r.position + Vector2(2.5, 8), plank.darkened(0.35), 1.0)
+			if terrain.built.has(c):
+				draw_rect(r, Color(0.25, 0.15, 0.08), false, 1.0)
 		Terrain.K.DIRT:
 			var depth: int = c.y - int(terrain.surface.get(c.x, c.y))
 			if depth <= 3:

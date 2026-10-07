@@ -1,3 +1,4 @@
+class_name Weather
 extends Node2D
 ## Météo autour de la caméra : pluie (gouttes inclinées par le vent, éclaboussures), neige (flocons qui dérivent).
 
@@ -11,6 +12,18 @@ var _t := 0.0
 
 func _ready() -> void:
 	z_index = 25
+
+
+## Météo d'une manche : pluie sur les toits (et parfois ailleurs), neige sur l'acier, rien sous terre ; [type, vent].
+static func pick(map_type: String, theme_name: String, rng: RandomNumberGenerator) -> Array:
+	var w := ""
+	if map_type == "toits" or (map_type == "plateformes" and rng.randf() < 0.3):
+		w = "rain"
+	if theme_name == "acier" and map_type != "toits":
+		w = "snow"
+	if map_type == "mine":
+		w = ""
+	return [w, rng.randf_range(-70.0, 70.0) if w != "" else rng.randf_range(-20.0, 20.0)]
 
 
 func set_kind(k: String) -> void:

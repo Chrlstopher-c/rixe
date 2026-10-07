@@ -4,19 +4,26 @@ extends RefCounted
 
 
 func think(f: Node2D, _delta: float) -> Dictionary:
+	var building: bool = Juice.survival != null and Juice.survival.get_parent().builder.active
 	return {
 		"move": Input.get_axis("left", "right"),
 		"jump": Input.is_action_just_pressed("jump"),
 		"jump_held": Input.is_action_pressed("jump"),
 		"drop": Input.is_action_pressed("down"),
 		"dash": Input.is_action_just_pressed("dash"),
-		"fire": Input.is_action_pressed("fire"),
+		"fire": Input.is_action_pressed("fire") and not building,
 		"melee": Input.is_action_just_pressed("melee"),
 		"reload": Input.is_action_just_pressed("reload"),
 		"throw": Input.is_action_just_pressed("throw"),
-		"select": 0 if Input.is_action_just_pressed("weapon1") else (1 if Input.is_action_just_pressed("weapon2") else -1),
+		"select": -1 if building else _selected(),
 		"cycle": Input.is_action_just_pressed("cycle"),
 		"heal": Input.is_action_just_pressed("heal"),
-		"aiming": Input.is_action_pressed("aim"),
+		"aiming": Input.is_action_pressed("aim") and not building,
 		"aim": f.get_global_mouse_position(),
 	}
+
+
+func _selected() -> int:
+	if Input.is_action_just_pressed("weapon1"):
+		return 0
+	return 1 if Input.is_action_just_pressed("weapon2") else -1

@@ -164,7 +164,7 @@ func _slash() -> void:
 		if to.length() <= float(def.range) and absf(to.angle_to(dir)) <= 1.1:
 			o.take_hit(def.dmg, dir, hit_at, owner, def.knock)
 			landed = true
-	Juice.arena.damage(origin + dir * float(def.range), def.terrain_dmg, def.terrain_radius)
+	Juice.arena.damage(origin + dir * float(def.range), def.terrain_dmg, def.terrain_radius, owner)
 	if landed:
 		Juice.hitstop(0.05)
 		Juice.shake(0.2, origin)
@@ -179,6 +179,8 @@ func _trace(from: Vector2, dir: Vector2, reach: float, dmg: float, bounces: int,
 	var space: PhysicsDirectSpaceState2D = owner.get_world_2d().direct_space_state
 	var to: Vector2 = from + dir * reach
 	var mask := Juice.MASK_WORLD | Juice.MASK_FIGHTERS | Juice.MASK_PLATFORMS
+	if not owner.is_player:
+		mask |= Juice.MASK_DOORS
 	var end := to
 	var hit := {}
 	for hop in (6 if def.pierce else 1):
@@ -203,7 +205,7 @@ func _trace(from: Vector2, dir: Vector2, reach: float, dmg: float, bounces: int,
 
 
 func _hit_world(at: Vector2, dir: Vector2, normal: Vector2, dmg: float, bounces: int, left: float) -> void:
-	Juice.arena.damage(at - normal * 2.0, def.terrain_dmg * dmg / def.dmg, def.terrain_radius)
+	Juice.arena.damage(at - normal * 2.0, def.terrain_dmg * dmg / def.dmg, def.terrain_radius, owner)
 	var graze := 1.0 - absf(dir.dot(normal))
 	if bounces > 0 and left > 30.0 and randf() < float(def.ricochet) * (0.25 + graze):
 		var jitter: float = def.get("ricochet_spread", 0.12)

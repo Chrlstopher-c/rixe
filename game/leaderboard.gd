@@ -42,4 +42,6 @@ static func insert(list: Array, score: float, lower_better: bool) -> int:
 static func format_score(mode: String, score: float) -> String:
 	if Modes.lower_is_better(mode):
 		return "%d:%04.1f" % [int(score) / 60, fmod(score, 60.0)]
+	if mode == "survie":
+		return "%d nuit%s" % [int(score), "s" if int(score) > 1 else ""]
 	return "%d élim." % int(score)

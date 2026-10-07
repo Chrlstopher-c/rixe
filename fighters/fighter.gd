@@ -22,6 +22,8 @@ const REGEN_DELAY := 3.0
 const REGEN_RATE := 12.0
 
 var display_name := "?"
+## Équipe ("" = chacun pour soi) : les bots d'une même équipe ne se visent pas.
+var team := ""
 var team_color := Color.WHITE
 var is_player := false
 var brain: RefCounted
@@ -67,7 +69,7 @@ func setup(nm: String, color: Color, think: RefCounted, weapon_id: String, playe
 func _ready() -> void:
 	add_to_group("fighters")
 	collision_layer = Juice.MASK_FIGHTERS
-	collision_mask = Juice.MASK_WORLD | Juice.MASK_PLATFORMS
+	collision_mask = Juice.MASK_WORLD | Juice.MASK_PLATFORMS | (0 if is_player else Juice.MASK_DOORS)
 	floor_snap_length = 4.0
 	var shape := CollisionShape2D.new()
 	var cap := CapsuleShape2D.new()
@@ -129,7 +131,8 @@ func _timers(delta: float) -> void:
 		var low := clampf(1.0 - hp / 45.0, 0.0, 1.0) * 0.45
 		Juice.hurt = maxf(move_toward(Juice.hurt, 0.0, delta * 1.2), low)
 	_since_hit += delta
-	if _since_hit > REGEN_DELAY and hp < MAX_HP:
+	var fed: bool = Juice.survival == null or Juice.survival.hunger > 30.0
+	if _since_hit > REGEN_DELAY and hp < MAX_HP and fed:
 		hp = minf(hp + REGEN_RATE * delta * (1.0 if is_player else 0.6), MAX_HP)
 	recent_hit -= delta
 	_dash_cd -= delta

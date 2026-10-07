@@ -2,7 +2,7 @@ extends Node
 ## Banc de tests headless : lance les scénarios demandés (--tests=a,b ou all), affiche PASS/FAIL, quitte avec un code.
 
 const SUITES := ["movement", "combat", "audio", "melee", "pickup", "menu", "themes", "score", "modes", "terrain",
-	"ai", "weapons", "arsenal", "armory", "loot", "maps", "props", "showcase"]
+	"ai", "weapons", "arsenal", "armory", "loot", "maps", "props", "survival", "showcase"]
 
 var main: Node
 var _failures: Array[String] = []

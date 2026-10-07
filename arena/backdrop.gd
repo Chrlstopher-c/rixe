@@ -39,12 +39,23 @@ func set_theme(name: String) -> void:
 	_ember = cfg.ember
 
 
+## Calque répété horizontalement : on fait défiler sa région plutôt que de le déplacer (cartes de toute largeur).
 func _sprite(tex: Texture2D) -> Sprite2D:
 	var s := Sprite2D.new()
 	s.texture = tex
 	s.centered = false
+	s.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+	s.region_enabled = true
+	s.region_rect = Rect2(0, 0, 900, 360)
 	add_child(s)
 	return s
+
+
+## Teinte jour/nuit appliquée au ciel, aux montagnes et aux brumes.
+func set_tint(c: Color) -> void:
+	for s in get_children():
+		if s is Sprite2D:
+			s.modulate = c
 
 
 func _haze_texture(haze: Color) -> GradientTexture2D:
@@ -66,8 +77,10 @@ func _process(delta: float) -> void:
 		c = Juice.camera.get_screen_center_position()
 	for i in _sprites.size():
 		var f: float = LAYERS[i][0]
-		var pos := Vector2(-(c.x - 320.0) * f - 80.0, LAYERS[i][1] - (c.y + 110.0) * f * 0.6)
+		var pos := Vector2(-80.0, LAYERS[i][1] - (c.y + 110.0) * f * 0.6)
+		var scroll := roundf((c.x - 320.0) * f)
 		_sprites[i].position = pos.round()
+		_sprites[i].region_rect.position.x = scroll
 		if i < _hazes.size():
 			_hazes[i].position = pos.round() + Vector2(0, 40)
 	_embers.queue_redraw()

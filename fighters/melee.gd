@@ -57,6 +57,7 @@ func _strike() -> void:
 			o.take_hit(DAMAGE, (dir + Vector2(0, -0.35)).normalized(), target, owner, KNOCK)
 			landed = true
 	Juice.fx.emit(5, origin + dir * 14.0, Vector2.ZERO, 0.12, 12.0, Color(2.5, 2.3, 2.2, 0.7))
+	Juice.arena.damage(origin + dir * 20.0, 14.0, 4.0, owner)
 	if landed:
 		Sfx.play("punch", origin, 2.0)
 		Juice.shake(0.25, origin)

@@ -87,3 +87,20 @@ Chaque story : intention — VERIFY exécutable. Tests de jeu = `godot --headles
 
 ## E19 — Effondrement
 - [x] E19.S1 — les morceaux de décor qui ne tiennent plus à rien tombent, écrasent et blessent — VERIFY: `--tests=collapse`
+
+# V2.0 — Survie
+
+## E20 — Monde et cycle
+- [x] E20.S1 — mode Survie : terres sauvages de 6000 px (collines, arbres, rochers, buissons, carcasses), fond répété sans fin, taches adaptées — VERIFY: `--tests=survival`
+- [x] E20.S2 — cycle jour (2 min 30) / nuit (1 min 30) avec crépuscule et aube, teinte du monde et du fond, torche du joueur — VERIFY: capture relue
+
+## E21 — Ressources et construction
+- [x] E21.S1 — récolte : la pioche (2e arme), les coups et les tirs du joueur donnent bois / pierre / métal ; buissons = nourriture — VERIFY: `--tests=survival`
+- [x] E21.S2 — construction (B) : murs bois/pierre, plateforme, porte (le joueur passe, pas les pillards), pointes ; démontage remboursé à moitié — VERIFY: `--tests=survival`
+
+## E22 — Faim et fabrication
+- [x] E22.S1 — faim (6 min pour mourir de faim, plus de régénération si affamé), manger (C) — VERIFY: `--tests=survival`
+- [x] E22.S2 — fabrication dans l'inventaire : munitions, trousse, grenade — VERIFY: `--tests=survival`
+
+## E23 — Vagues
+- [x] E23.S1 — pillards (équipe, visent le joueur, forcent murs et portes) : vague à chaque nuit (2 + 2 × jour), rôdeurs le jour ; mort = fin, score = nuits tenues, classement — VERIFY: `--tests=survival`

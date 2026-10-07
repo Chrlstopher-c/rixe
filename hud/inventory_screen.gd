@@ -75,6 +75,8 @@ func click(h: Dictionary) -> void:
 				_picked = -1
 			else:
 				inv.select(h.index)
+		"craft":
+			Recipes.craft(h.id, Juice.survival, fighter)
 		"slot":
 			if _picked >= 0:
 				inv.mount(_picked, h.index)
@@ -95,8 +97,11 @@ func _draw_screen() -> void:
 	for w in inv.guns.size():
 		_draw_weapon(inv, w, Rect2(70 + w * 260, 64, 240, 130))
 	_draw_bag(inv, Rect2(70, 210, 500, 46))
+	if Juice.survival:
+		_draw_crafting(Rect2(70, 300, 500, 20))
 	var extra := "Soins : %d (H)   ·   Grenades : %d (G)" % [inv.medkits, fighter.grenades]
-	_canvas.draw_string(_font, Vector2(0, 286), extra, HORIZONTAL_ALIGNMENT_CENTER, size.x, 10, Color(1, 0.92, 0.95, 0.8))
+	var y := 286 if not Juice.survival else 352
+	_canvas.draw_string(_font, Vector2(0, y), extra, HORIZONTAL_ALIGNMENT_CENTER, size.x, 10, Color(1, 0.92, 0.95, 0.8))
 	var help := "Clic sur un accessoire du sac puis sur une arme pour le monter · clic sur un monté pour le ranger"
 	_canvas.draw_string(_font, Vector2(0, size.y - 30), help, HORIZONTAL_ALIGNMENT_CENTER, size.x, 8,
 		Color(1, 0.9, 0.95, 0.55))
@@ -145,3 +150,22 @@ func _draw_bag(inv: Inventory, box: Rect2) -> void:
 			_canvas.draw_string(_font, r.position + Vector2(0, 22), name, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 9,
 				Color(0.6, 1.8, 0.9))
 			_hot.append({"kind": "bag", "index": i, "rect": r})
+
+
+## Fabrication (survie) : une ligne par recette, cliquable si les ressources suffisent.
+func _draw_crafting(box: Rect2) -> void:
+	var s: Survival = Juice.survival
+	_canvas.draw_string(_font, box.position + Vector2(0, -4), "FABRIQUER", HORIZONTAL_ALIGNMENT_LEFT, -1, 9,
+		Color(1, 0.9, 0.95, 0.6))
+	for k in Recipes.ALL.size():
+		var rc: Dictionary = Recipes.ALL[k]
+		var r := Rect2(box.position + Vector2(k * 168, 4), Vector2(160, 30))
+		var ok := s.can_afford(rc.cost)
+		_canvas.draw_rect(r, Color(0.3, 0.9, 0.5, 0.15) if ok else Color(1, 1, 1, 0.04))
+		_canvas.draw_rect(r, Color(ACCENT, 0.3), false, 1.0)
+		_canvas.draw_string(_font, r.position + Vector2(0, 13), rc.name, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 8,
+			Color(0.6, 1.8, 0.9) if ok else Color(1, 0.9, 0.95, 0.45))
+		var cost := Recipes.cost_text(rc.cost)
+		_canvas.draw_string(_font, r.position + Vector2(0, 25), cost, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 7,
+			Color(1, 0.9, 0.95, 0.55))
+		_hot.append({"kind": "craft", "id": rc.id, "rect": r})

@@ -2,9 +2,11 @@ extends Node2D
 ## Taches de sang persistantes, gravées une seule fois dans une texture (SubViewport jamais effacé) :
 ## coût constant quel que soit le nombre de taches.
 
-const SCALE := 2.0
 const ORIGIN := Vector2(-300, -720)
-const SIZE := Vector2(2200, 760)
+
+var _scale := 2.0
+var _size := Vector2(2200, 760)
+var _view := Sprite2D.new()
 
 var _vp := SubViewport.new()
 var _pen := Node2D.new()
@@ -15,7 +17,7 @@ var _eraser := ShaderMaterial.new()
 
 func _ready() -> void:
 	z_index = 5
-	_vp.size = Vector2i(SIZE * SCALE)
+	_vp.size = Vector2i(_size * _scale)
 	_vp.transparent_bg = true
 	_vp.disable_3d = true
 	_vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
@@ -31,12 +33,24 @@ func _ready() -> void:
 	_vp.add_child(rubber)
 	_vp.add_child(_pen)
 	add_child(_vp)
-	var view := Sprite2D.new()
-	view.texture = _vp.get_texture()
-	view.centered = false
-	view.position = ORIGIN
-	view.scale = Vector2.ONE / SCALE
-	add_child(view)
+	_view.texture = _vp.get_texture()
+	_view.centered = false
+	_view.position = ORIGIN
+	_view.scale = Vector2.ONE / _scale
+	add_child(_view)
+
+
+## Adapte la texture à la largeur de carte (moins fine sur les très grandes cartes).
+func configure(width: float) -> void:
+	var size := Vector2(width + 600.0, 760)
+	var scale := 2.0 if width <= 2000.0 else 1.0
+	if size == _size and scale == _scale:
+		return
+	_size = size
+	_scale = scale
+	_vp.size = Vector2i(_size * _scale)
+	_view.scale = Vector2.ONE / _scale
+	clear()
 
 
 func add(pos: Vector2, r: float, color: Color) -> void:
@@ -52,7 +66,7 @@ func erase(r: Rect2) -> void:
 
 func _draw_erase(rubber: Node2D) -> void:
 	for r in _erase:
-		rubber.draw_rect(Rect2((r.position - ORIGIN) * SCALE, r.size * SCALE).grow(2.0), Color(0, 0, 0, 0))
+		rubber.draw_rect(Rect2((r.position - ORIGIN) * _scale, r.size * _scale).grow(2.0), Color(0, 0, 0, 0))
 	_erase.clear()
 
 
@@ -69,7 +83,7 @@ func _process(_delta: float) -> void:
 
 func _draw_pending() -> void:
 	for s in _pending:
-		_pen.draw_set_transform((s.p - ORIGIN) * SCALE, 0.0, Vector2(1.6, 0.55) * SCALE)
+		_pen.draw_set_transform((s.p - ORIGIN) * _scale, 0.0, Vector2(1.6, 0.55) * _scale)
 		_pen.draw_circle(Vector2.ZERO, s.r, s.c)
 	_pen.draw_set_transform(Vector2.ZERO)
 	_pending.clear()

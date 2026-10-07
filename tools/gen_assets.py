@@ -25,7 +25,7 @@ def theme(name: str, cfg: dict) -> None:
     sky.gradient(640, 360, palette=cfg["pal"], t0=t0, t1=t1, sun=sun).save(out / "sky.png")
     for i, (seed, tone, peak, spread, amp) in enumerate(MOUNTAINS):
         img = lowpoly.mountains(1800, 360, seed=seed + len(name), palette=cfg["pal"], tone=tone, peak=peak,
-                                spread=spread, amp=amp, density=520)
+                                spread=spread, amp=amp, density=520, tileable=True)
         img.save(out / f"mtn{i}.png")
     bricks, metal, soil, top = cfg["tiles"]
     pixel_tiles.bricks(32, seed=3, palette=bricks).save(out / "bricks.png")

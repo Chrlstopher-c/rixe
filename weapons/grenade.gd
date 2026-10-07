@@ -81,7 +81,7 @@ func explode() -> void:
 		var k := 1.0 - d / radius
 		var dir := (chest - at).normalized() if d > 1.0 else Vector2.UP
 		f.take_hit(dmg * (0.35 + 0.65 * k), dir, chest - dir * 6.0, thrower, 260.0 * k + 80.0)
-	Juice.arena.damage(at, 140.0, radius * 0.55)
+	Juice.arena.damage(at, 140.0, radius * 0.55, thrower)
 	Effects.explosion(at, radius)
 	Sfx.play("explosion", at, 3.0, 0.1)
 	queue_free()

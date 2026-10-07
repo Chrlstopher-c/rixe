@@ -58,6 +58,13 @@ const WEAPONS := {
 		"thick": 0.9, "terrain_dmg": 18.0, "terrain_radius": 6.0,
 		"ricochet": 0.0, "bounces": 0, "mag": 0, "reserve": 0, "reload": 0.1, "climb": 0.0, "look": "blade",
 	},
+	"pickaxe": {
+		"name": "Pioche", "kind": "blade", "rate": 0.42, "dmg": 18.0, "pellets": 1, "spread": 0.0, "range": 30.0,
+		"knock": 90.0, "kick": -60.0, "recoil": 0.0, "shake": 0.08, "tracer": Color(2.4, 2.2, 2.0),
+		"width": 0.0, "length": 11.0, "pierce": false, "shell": false, "flash": 0.0, "ideal": 24.0,
+		"thick": 1.2, "terrain_dmg": 70.0, "terrain_radius": 5.0, "tool": true,
+		"ricochet": 0.0, "bounces": 0, "mag": 0, "reserve": 0, "reload": 0.1, "climb": 0.0, "look": "blade",
+	},
 }
 
 ## Accessoires : un par emplacement ; leurs effets multiplient les caractéristiques de l'arme.
@@ -98,5 +105,6 @@ const GRENADE := {"dmg": 80.0, "radius": 52.0, "fuse": 1.7, "throw": 360.0}
 const RECOVER := 1.6
 
 
+## Armes de combat (les outils comme la pioche n'apparaissent pas au hasard).
 static func ids() -> Array:
-	return WEAPONS.keys()
+	return WEAPONS.keys().filter(func(w: String) -> bool: return not WEAPONS[w].get("tool", false))

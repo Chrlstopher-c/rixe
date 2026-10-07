@@ -1,13 +1,15 @@
 class_name Modes
 ## Modes de jeu : règles affichées au menu, option réglable (durée ou objectif), clé de classement.
 
-const ORDER := ["arcade", "chrono", "objectif"]
+const ORDER := ["arcade", "chrono", "objectif", "survie"]
 const ALL := {
 	"arcade": {"label": "ARCADE", "desc": "Manches de plus en plus dures · une seule vie", "options": []},
 	"chrono": {"label": "CHRONO", "desc": "Un max d'éliminations avant la fin du temps · réapparitions",
 		"options": [60, 120, 180, 300, 600], "default": 2},
 	"objectif": {"label": "OBJECTIF", "desc": "Le premier à N éliminations gagne · réapparitions",
 		"options": [5, 10, 20, 30], "default": 1},
+	"survie": {"label": "SURVIE", "desc": "Récolte, construis, mange et tiens la nuit face aux pillards",
+		"options": []},
 }
 
 
@@ -49,4 +51,4 @@ static func lower_is_better(mode: String) -> bool:
 
 
 static func respawns(mode: String) -> bool:
-	return mode != "arcade"
+	return mode == "chrono" or mode == "objectif"

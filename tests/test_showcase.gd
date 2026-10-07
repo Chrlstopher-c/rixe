@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["showcase", "showcase_end", "showcase_armory", "showcase_inventory"]
+	return ["showcase", "showcase_end", "showcase_armory", "showcase_inventory", "showcase_survival"]
 
 
 func _fire_at(t: Node, brain: ScriptBrain, target: Variant, joint: String, frames: int) -> void:
@@ -90,3 +90,23 @@ func test_showcase_inventory(t: Node) -> void:
 	main._toggle_inventory()
 	await t.frames(300)
 	t.check(main._inventory.visible, "inventaire ouvert")
+
+
+func test_showcase_survival(t: Node) -> void:
+	var main: Node = t.main
+	main.live_rules = true
+	main._on_start("survie", 0)
+	await t.frames(10)
+	var s: Survival = Juice.survival
+	var p: Fighter = main.player
+	p.brain = BotBrain.new(1.0, "renard")
+	s.res = {"bois": 14, "pierre": 6, "metal": 3, "nourriture": 4}
+	var b: Builder = main.director.builder
+	b.toggle()
+	for i in 4:
+		var c := Terrain.cell_of(p.global_position + Vector2(36, -8 - i * 8))
+		b.place(c)
+	await t.frames(120)
+	s.t = Survival.DAY - 3.0
+	await t.frames(2400)
+	t.check(true, "vitrine")

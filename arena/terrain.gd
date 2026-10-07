@@ -3,18 +3,24 @@ extends Node2D
 ## Décor destructible en cellules de 8 px (sol, plateformes, caisses) : vie par cellule, collisions et rendu par
 ## tronçons de 16 colonnes reconstruits seulement quand ils changent.
 
-enum K { NONE, DIRT, PLAT, CRATE, ROCK, BRICK }
+enum K { NONE, DIRT, PLAT, CRATE, ROCK, BRICK, WOOD }
 
 const CELL := 8.0
 const CHUNK := 16
-const HP := {K.DIRT: 36.0, K.PLAT: 26.0, K.CRATE: 22.0, K.ROCK: 60.0, K.BRICK: 45.0}
+const HP := {K.DIRT: 36.0, K.PLAT: 26.0, K.CRATE: 22.0, K.ROCK: 60.0, K.BRICK: 45.0, K.WOOD: 30.0}
 const DEBRIS := {K.DIRT: Color(0.38, 0.22, 0.14), K.PLAT: Color(0.45, 0.48, 0.56), K.CRATE: Color(0.5, 0.52, 0.6),
-	K.ROCK: Color(0.3, 0.27, 0.3), K.BRICK: Color(0.55, 0.3, 0.28)}
+	K.ROCK: Color(0.3, 0.27, 0.3), K.BRICK: Color(0.55, 0.3, 0.28), K.WOOD: Color(0.45, 0.28, 0.14)}
+## Ressource rendue par une cellule détruite (survie).
+const YIELD := {K.ROCK: "pierre", K.BRICK: "pierre", K.WOOD: "bois", K.CRATE: "metal", K.PLAT: "metal"}
+
+signal cell_broken(c: Vector2i, k: int, by: Variant)
 
 var kind := {}
 var hp := {}
 ## Cellules par tronçon (index → {cellule: true}) : un tronçon ne parcourt que les siennes.
 var by_chunk := {}
+## Cellules posées par le joueur (survie) : remboursables, cibles des pillards.
+var built := {}
 ## Cellules qui tiennent toutes seules (montants des plateformes) ; le reste doit toucher un appui.
 var anchors := {}
 ## Ligne de surface (rangée de cellule) par colonne au moment de la génération : l'herbe se dessine dessus.
@@ -30,6 +36,7 @@ func clear() -> void:
 	by_chunk.clear()
 	surface.clear()
 	anchors.clear()
+	built.clear()
 	for c in _chunks.values():
 		c.free()
 	_chunks.clear()
@@ -80,7 +87,9 @@ func carve(r: Rect2) -> void:
 
 
 ## Dégâts en zone : chaque cellule du rayon perd de la vie (atténuée au bord) ; renvoie le nombre de cellules détruites.
-func damage(center: Vector2, dmg: float, radius: float) -> int:
+func damage(center: Vector2, dmg: float, radius: float, by: Variant = null) -> int:
+	if not is_instance_valid(by):
+		by = null
 	var broken := 0
 	var touched: Array[Vector2i] = []
 	var r := maxf(radius, CELL * 0.5)
@@ -97,6 +106,7 @@ func damage(center: Vector2, dmg: float, radius: float) -> int:
 			hp[c] -= dmg * clampf(1.0 - d / (r + CELL), 0.25, 1.0)
 			_dirty(x)
 			if hp[c] <= 0.0:
+				cell_broken.emit(c, kind[c], by)
 				_break(c)
 				broken += 1
 				for side in [Vector2i.UP, Vector2i.DOWN, Vector2i.LEFT, Vector2i.RIGHT]:
@@ -166,6 +176,7 @@ func _break(c: Vector2i) -> void:
 	var k: int = kind[c]
 	kind.erase(c)
 	hp.erase(c)
+	built.erase(c)
 	_chunk_cells(c.x).erase(c)
 	var center := cell_rect(c).get_center()
 	for i in 2:

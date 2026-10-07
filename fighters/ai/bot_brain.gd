@@ -21,6 +21,9 @@ var _strafe := 1.0
 var _strafe_t := 0.0
 var _dodge_cd := 0.0
 var _loot: Node2D
+## Pillard (survie) : vise le joueur et force les constructions qui le bloquent.
+var raid := false
+var _blocked := 0.0
 var _look := 0.0
 var _threat := 0.0
 ## Perception (lignes de vue, menaces) cadencée : un humain ne réévalue pas tout 120 fois par seconde.
@@ -46,7 +49,23 @@ func think(f: Node2D, delta: float) -> Dictionary:
 	_combat(f, delta, it)
 	_dodge(f, delta, it)
 	_ammo(f, it)
+	if raid:
+		_breach(f, delta, it)
 	return it
+
+
+## Pillard bloqué par une construction : il tire et frappe dedans jusqu'à passer.
+func _breach(f: Node2D, delta: float, it: Dictionary) -> void:
+	_blocked = _blocked + delta if f.is_on_wall() else 0.0
+	if _blocked < 0.4:
+		return
+	var ahead: Vector2 = f.global_position + Vector2(f.facing * 10.0, -14.0)
+	for door in f.get_tree().get_nodes_in_group("doors"):
+		if door.global_position.distance_to(ahead) < 16.0:
+			ahead = door.global_position + Vector2(0, -8)
+	it.aim = ahead
+	it.fire = true
+	it.melee = true
 
 
 ## Recharge à l'abri (hors de vue) ou quand le chargeur est vide ; sans munitions, va au contact ou cherche une arme.
@@ -206,7 +225,7 @@ func _pick(f: Node2D) -> Node2D:
 	var best: Node2D = null
 	var best_d := INF
 	for o in f.get_tree().get_nodes_in_group("fighters"):
-		if o == f or not o.alive:
+		if o == f or not o.alive or (f.team != "" and o.team == f.team):
 			continue
 		var d: float = f.global_position.distance_to(o.global_position) * randf_range(0.7, 1.3)
 		if o.is_player:

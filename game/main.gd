@@ -22,6 +22,7 @@ var forced_map := ""
 var _scoreboard: CanvasLayer
 var _inventory: CanvasLayer
 var spawner: Spawner
+var director: SurvivalDirector
 var player: Fighter
 var _fighters: Node2D
 var _hud: CanvasLayer
@@ -160,11 +161,17 @@ func _start_round() -> void:
 	_clear_world()
 	_rng.seed = seed_base * 1000 + round_no
 	var map_type: String = forced_map if forced_map != "" else Maps.pick(_rng)
+	if game_mode == "survie" and not attract:
+		map_type = "survie"
 	Juice.arena.generate(_rng.seed, map_type)
+	Juice.stains.configure(Juice.arena.W)
+	_camera.limit_right = int(Juice.arena.W) + 20
 	var theme_name: String = Themes.names()[_rng.randi_range(0, Themes.names().size() - 1)]
 	apply_theme(theme_name)
-	_set_weather(map_type, theme_name)
-	var b := _populate()
+	var w: Array = Weather.pick(map_type, theme_name, _rng)
+	Juice.wind = w[1]
+	Juice.weather.set_kind(w[0])
+	var b := _populate_survival() if game_mode == "survie" and not attract else _populate()
 	spawner.spawn_pickups()
 	_camera.target = player
 	_camera.snap_to(player.global_position + Vector2(0, -34))
@@ -206,6 +213,22 @@ func _populate() -> int:
 	return b
 
 
+## Survie : le joueur seul, une pioche en seconde arme ; le directeur gère ressources, nuit et pillards.
+func _populate_survival() -> int:
+	if is_instance_valid(director):
+		director.queue_free()
+	director = SurvivalDirector.new()
+	director.spawn_bot = func(pos: Vector2) -> Node2D: return _spawn_bot(pos, "")
+	director.backdrop = _backdrop
+	add_child(director)
+	var spots: Array = Juice.arena.spawn_points(1, _rng)
+	player = _spawn_player(spots[0] if not spots.is_empty() else Vector2(Juice.arena.W * 0.5, -200), PlayerBrain.new())
+	player.inventory.take(Gun.new(player, "pickaxe"))
+	player.inventory.select(0)
+	director.bind_player(player)
+	return 0
+
+
 func reset_for_test() -> void:
 	Juice.reset()
 	for c in _fighters.get_children():
@@ -218,18 +241,6 @@ func reset_for_test() -> void:
 
 
 ## Pluie sur les toits (et parfois ailleurs), neige sur l'acier, rien sous terre ; vent tiré au sort.
-func _set_weather(map_type: String, theme_name: String) -> void:
-	var w := ""
-	if map_type == "toits" or (map_type == "plateformes" and _rng.randf() < 0.3):
-		w = "rain"
-	if theme_name == "acier" and map_type != "toits":
-		w = "snow"
-	if map_type == "mine":
-		w = ""
-	Juice.wind = _rng.randf_range(-70.0, 70.0) if w != "" else _rng.randf_range(-20.0, 20.0)
-	Juice.weather.set_kind(w)
-
-
 func apply_theme(name: String) -> void:
 	Juice.arena.set_theme(name)
 	if _backdrop:
@@ -283,6 +294,11 @@ func _on_killed(victim: Node2D, killer: Node2D) -> void:
 		var kname: String = killer.display_name if is_instance_valid(killer) else "?"
 		_hud.feed("%s  élimine  %s" % [kname, victim.display_name], victim.team_color)
 	match_state.record_kill(victim, killer)
+	if game_mode == "survie" and not attract:
+		if victim == player and not _scoreboard.visible:
+			match_state.finish_arcade()
+			_end_match()
+		return
 	if is_instance_valid(killer) and killer == player:
 		score.add_kill()
 		_hud.kills = score.kills
@@ -326,38 +342,21 @@ func _end_match() -> void:
 	var lower := Modes.lower_is_better(game_mode)
 	var mine := match_state.kills_of("Toi")
 	var value: float = match_state.elapsed if lower else float(mine)
+	if game_mode == "survie":
+		value = float(director.state.nights_survived) if is_instance_valid(director) else 0.0
 	var counts := not lower or match_state.winner == "Toi"
-	var rank := Leaderboard.submit(key, value, lower) if counts and (lower or mine > 0) else -1
+	var rank := Leaderboard.submit(key, value, lower) if counts and (lower or value > 0.0) else -1
 	score.end_run(game_mode == "arcade")
 	score.reset()
 	_hud.best = score.best
 	_menu.best = score.best
-	var texts := _end_texts(rows)
+	var nights: int = director.state.nights_survived if is_instance_valid(director) else 0
+	var texts := EndTexts.make(game_mode, rows, match_state, round_no, nights)
 	_hud.visible = false
 	_scoreboard.open(texts[0], texts[1], rows, game_mode, Leaderboard.entries(key), rank)
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	Sfx.play_ui("round", -4.0)
-
-
-func _end_texts(rows: Array) -> Array[String]:
-	var place := 1
-	for i in rows.size():
-		if rows[i].name == "Toi":
-			place = i + 1
-	var mine := match_state.kills_of("Toi")
-	match game_mode:
-		"chrono":
-			return ["TEMPS ÉCOULÉ", "Tu finis %s sur %d · %d éliminations" % [_ordinal(place), rows.size(), mine]]
-		"objectif":
-			if match_state.winner == "Toi":
-				return ["VICTOIRE", "Objectif atteint en %s" % Leaderboard.format_score("objectif", match_state.elapsed)]
-			return ["%s GAGNE" % match_state.winner.to_upper(), "Tu finis %s · %d éliminations" % [_ordinal(place), mine]]
-	return ["ÉLIMINÉ", "Manche %d atteinte · %d éliminations" % [round_no, mine]]
-
-
-static func _ordinal(n: int) -> String:
-	return "1er" if n == 1 else "%de" % n
 
 
 func _process(delta: float) -> void:
@@ -383,12 +382,22 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_ESCAPE:
 				if not attract and not demo:
 					_pause()
+			KEY_B:
+				if is_instance_valid(director) and not get_tree().paused:
+					director.builder.toggle()
+			KEY_C:
+				if is_instance_valid(director) and not get_tree().paused:
+					director.state.eat()
+			KEY_1, KEY_2, KEY_3, KEY_4, KEY_5:
+				if is_instance_valid(director) and director.builder.active:
+					director.builder.select(event.physical_keycode - KEY_1)
 			KEY_TAB:
 				if not attract and not demo and not _menu.visible and not _scoreboard.visible:
 					_toggle_inventory()
 
 
 func _on_start(mode: String, option: int) -> void:
+	_leave_survival()
 	game_mode = mode
 	game_option = option
 	attract = false
@@ -407,7 +416,16 @@ func _on_start(mode: String, option: int) -> void:
 	_set_hd(Juice.hd)
 
 
+func _leave_survival() -> void:
+	if is_instance_valid(director):
+		director.queue_free()
+	director = null
+	if _backdrop:
+		_backdrop.set_tint(Color.WHITE)
+
+
 func _to_title() -> void:
+	_leave_survival()
 	_scoreboard.close()
 	get_tree().paused = false
 	attract = true

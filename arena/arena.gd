@@ -1,7 +1,8 @@
 extends Node2D
 ## Arène procédurale : murs et roche indestructibles + décor destructible (sol, caisses, plateformes traversables).
 
-const W := 1600.0
+## Largeur de la carte (1600 en arène, bien plus en survie).
+var W := 1600.0
 const LEVEL_GAP := 74.0
 const PLATFORM_H := 8.0
 ## Épaisseur de sol destructible au-dessus de la roche.
@@ -38,6 +39,7 @@ func set_theme(name: String) -> void:
 
 
 func generate(seed_value: int, map_type: String = "plateformes") -> void:
+	W = Maps.SURVIVAL_W if map_type == "survie" else 1600.0
 	_reset()
 	map = map_type
 	var rng := RandomNumberGenerator.new()
@@ -48,6 +50,7 @@ func generate(seed_value: int, map_type: String = "plateformes") -> void:
 
 
 func generate_flat() -> void:
+	W = 1600.0
 	_reset()
 	add_bedrock()
 	terrain.fill(Rect2(0, 0, W, DIRT_DEPTH), Terrain.K.DIRT)
@@ -94,8 +97,8 @@ func _add_solid(r: Rect2, kind: String) -> void:
 
 
 ## Dégâts au décor (impacts, explosions) ; renvoie le nombre de cellules détruites.
-func damage(at: Vector2, dmg: float, radius: float) -> int:
-	var n := terrain.damage(at, dmg, radius)
+func damage(at: Vector2, dmg: float, radius: float, by: Variant = null) -> int:
+	var n := terrain.damage(at, dmg, radius, by)
 	if n > 0:
 		queue_redraw()
 	return n

@@ -12,6 +12,7 @@ Organisation par domaine de jeu. Chaque dossier a un sens unique :
 | `weapons/` | catalogue d'armes et d'accessoires (`arsenal.gd`), tir/lame/projectile (`gun.gd`), grenades, objets au sol |
 | `fx/` | effets visuels : particules, recettes d'effets, taches, météo, post-traitement |
 | `audio/` | bruitages : lecteur 2D et banque de sons |
+| `survival/` | mode Survie : ressources/faim/jour-nuit (`survival.gd`), orchestration (`director.gd`), construction, recettes |
 | `hud/` | interface : jeu, menus (titre, pause, armurerie, classement), fin de partie, inventaire |
 | `tests/` | banc de tests headless et scénarios |
 | `tools/` | scripts hors jeu (vérification, capture, génération d'assets) |
