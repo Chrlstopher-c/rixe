@@ -94,6 +94,7 @@ func _add_solid(r: Rect2, kind: String) -> void:
 	shape.position = r.get_center()
 	body.add_child(shape)
 	add_child(body)
+	add_child(Shadows.occluder(r))
 
 
 ## Dégâts au décor (impacts, explosions) ; renvoie le nombre de cellules détruites.

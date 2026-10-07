@@ -81,15 +81,15 @@ func _ids() -> Array[String]:
 		return ids
 	if mode == "pause":
 		if online:
-			return ["resume", "volume", "display", "numbers", "title", "quit"]
-		return ["resume", "restart", "volume", "display", "numbers", "title", "quit"]
+			return ["resume", "volume", "display", "shadows", "numbers", "title", "quit"]
+		return ["resume", "restart", "volume", "display", "shadows", "numbers", "title", "quit"]
 	var ids: Array[String] = ["nick", "mode"]
 	if Modes.has_option(game_mode):
 		ids.append("option")
 	if game_mode != "survie":
 		ids.append("players")
 	ids.append_array(["play", "custom", "online", "profile", "armory", "crosshair", "board", "volume", "display",
-		"numbers", "quit"])
+		"shadows", "numbers", "quit"])
 	return ids
 
 
@@ -117,6 +117,8 @@ func _text(id: String) -> String:
 			return "VISEUR"
 		"numbers":
 			return "CHIFFRES DE DÉGÂTS  ‹ %s ›" % ("OUI" if Juice.damage_numbers else "NON")
+		"shadows":
+			return "OMBRES  ‹ %s ›" % ("OUI" if Shadows.enabled else "NON")
 		"custom":
 			return "PARTIE PERSONNALISÉE"
 		"profile":
@@ -215,6 +217,8 @@ func _adjust(id: String, step: int) -> void:
 			options[game_mode] = posmod(options[game_mode] + step, count)
 		"players":
 			players = 2 if players == 1 else 1
+		"shadows":
+			Shadows.set_enabled(get_tree(), not Shadows.enabled)
 		"numbers":
 			Juice.damage_numbers = not Juice.damage_numbers
 			Settings.set_pref("hud", "damage_numbers", Juice.damage_numbers)

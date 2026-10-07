@@ -42,6 +42,7 @@ func _ready() -> void:
 		l.texture = tex
 		l.texture_scale = 2.5
 		l.energy = 0.0
+		Shadows.cast(l)
 		add_child(l)
 		_lights.append(l)
 
@@ -209,6 +210,7 @@ func flash_light(pos: Vector2, color: Color, energy: float) -> void:
 	var l := _lights[_light_i]
 	_light_i = (_light_i + 1) % _lights.size()
 	l.global_position = pos
+	l.shadow_enabled = energy >= 2.0 and Shadows.wanted()
 	var m := maxf(maxf(color.r, color.g), maxf(color.b, 0.001))
 	l.color = Color(color.r / m, color.g / m, color.b / m)
 	l.energy = energy

@@ -37,6 +37,7 @@ func _ready() -> void:
 	_light.texture_scale = 3.0
 	_light.color = Color(1.0, 0.75, 0.45)
 	_light.energy = 0.9
+	_light.shadow_enabled = false
 	add_child(_light)
 	z_index = 7
 

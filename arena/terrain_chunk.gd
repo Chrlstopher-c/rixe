@@ -1,12 +1,14 @@
 class_name TerrainChunk
 extends Node2D
-## Tronçon de 16 colonnes du décor destructible : ses corps de collision (pleins / traversables) et son rendu.
+## Tronçon de 16 colonnes du décor destructible : ses corps de collision (pleins / traversables), ses occulteurs
+## de lumière (les éclairs des tirs et des explosions projettent des ombres) et son rendu.
 
 var terrain: Terrain
 var index := 0
 var dirty := true
 var _solid := StaticBody2D.new()
 var _plat := StaticBody2D.new()
+var _occluders := Node2D.new()
 
 
 func _ready() -> void:
@@ -17,6 +19,7 @@ func _ready() -> void:
 	_plat.add_to_group("platform")
 	add_child(_solid)
 	add_child(_plat)
+	add_child(_occluders)
 
 
 func _physics_process(_delta: float) -> void:
@@ -32,7 +35,7 @@ func _columns() -> Array[int]:
 
 ## Collisions : une forme par suite horizontale de cellules de même famille (pleine ou traversable).
 func rebuild() -> void:
-	for body in [_solid, _plat]:
+	for body in [_solid, _plat, _occluders]:
 		for s in body.get_children():
 			s.free()
 	var rows := {}
@@ -64,6 +67,17 @@ func _shape(x0: int, x1: int, y: int, one_way: bool) -> void:
 	shape.position = Vector2((x0 + x1) * 0.5 * Terrain.CELL, (y + 0.5) * Terrain.CELL)
 	shape.one_way_collision = one_way
 	(_plat if one_way else _solid).add_child(shape)
+	if not one_way and _edge_row(x0, x1, y):
+		_occluders.add_child(Shadows.occluder(Rect2(Vector2(x0, y) * Terrain.CELL,
+			Vector2(x1 - x0, 1) * Terrain.CELL)))
+
+
+## Une suite de cellules touche-t-elle du vide au-dessus ou en dessous ? (seuls les bords projettent des ombres)
+func _edge_row(x0: int, x1: int, y: int) -> bool:
+	for x in range(x0, x1):
+		if not terrain.is_solid_cell(Vector2i(x, y - 1)) or not terrain.is_solid_cell(Vector2i(x, y + 1)):
+			return true
+	return false
 
 
 func _draw() -> void:
