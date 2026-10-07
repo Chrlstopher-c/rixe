@@ -47,6 +47,8 @@ func _type(text: String) -> void:
 
 func test_lobby(t: Node) -> void:
 	var main: Node = t.main
+	var relay := OS.get_environment("RIXE_RELAY")
+	OS.set_environment("RIXE_RELAY", "ws://127.0.0.1:9")
 	main.attract = true
 	main._menu.show_title()
 	await t.frames(3)
@@ -78,3 +80,4 @@ func test_lobby(t: Node) -> void:
 	_key(KEY_ESCAPE)
 	await t.frames(3)
 	t.check(not lobby.visible and main._menu.visible, "retour au menu principal")
+	OS.set_environment("RIXE_RELAY", relay)

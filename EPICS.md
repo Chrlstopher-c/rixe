@@ -122,4 +122,4 @@ autoritaire sur son propre combattant ; « qui provoque l'effet calcule ses dég
 - [x] E26.S3 — partie synchronisée : même carte, marionnettes interpolées, tirs, dégâts, morts, réapparitions,
   objets — VERIFY: `tools/online_test.sh match`
 - [x] E26.S4 — menu En ligne (héberger / rejoindre par code), HUD et fin de partie de l'invité — VERIFY: tests menu + capture
-- [ ] E26.S5 — déploiement du Worker (adresse workers.dev fixe, hors dépôt) + release — VERIFY: `tools/online_test.sh match` contre le Worker déployé
+- [x] E26.S5 — déploiement du Worker (adresse workers.dev fixe, hors dépôt) + release — VERIFY: `tools/online_test.sh match` contre le Worker déployé

@@ -2,11 +2,11 @@
 *Dernière mise à jour : 2026-10-07*
 
 ## Résumé de l'état actuel
-Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lien `~/projects/rixe`). Dernière version publiée : **v3.0.1**.
+Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lien `~/projects/rixe`). Dernière version publiée : **v3.1.0**.
 - Dépôt public : github.com/Chrlstopher-c/rixe. CI verte (40 tests headless).
 - Releases sur GitHub pour Linux (testée), Windows et macOS universel (compilées, jamais lancées sur une vraie machine).
 - Modes : Arcade, Chrono, Objectif, Survie. Écran partagé à deux, manette, et partie à deux en ligne (code de 4 lettres).
-- `main` en avance sur v3.0.1 : ressenti des coups, exécutions, musique en couches, jeu en ligne (relais pas encore déployé).
+- En ligne : relais Cloudflare Worker déployé (wrangler connecté sur la tour, compte de Chris), aller-retour ~11 ms ; adresse dans `online/relay.cfg` (hors dépôt, embarquée dans les builds).
 - Perf 1080p sur la tour : 150 à 210 i/s en moyenne, 1 % bas entre 50 et 100 selon la carte et le nombre de combattants.
 - Textures générées par Pigment (`/mnt/projects/pigment`, dépôt privé, MCP `pigment`).
 
@@ -15,6 +15,7 @@ Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lie
 - Bug corrigé : le temps réel se calculait par delta/time_scale, faux l'image où l'échelle change → une image lente vidait tout un ralenti. Désormais mesuré à l'horloge une fois par image (`Juice.real_delta`), pas fixe en tests headless.
 - Exécutions : bot sous 25 PV vacillant (chevron), corps à corps = exécution en deux temps (membre puis décapitation / coupé en deux / tête en l'air).
 - Musique en trois couches synchrones (calme, combat selon l'action, tension en fin de manche), passe-bas au ralenti.
+- Annonceur vocal (Qwen3-TTS VoiceDesign en local), relais déployé, v3.1.0 publiée.
 - En ligne (E26.S1-S4) : relais Cloudflare Worker + Durable Object (`relay/`), lien et session Godot (`online/`), salon EN LIGNE, test à deux jeux en CI.
 - Règles de manche sorties de `main.gd` dans `game/round_rules.gd`.
 
@@ -56,12 +57,11 @@ Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lie
 - **Export macOS** : nécessite `textures/vram_compression/import_etc2_astc=true`.
 
 ## Prochaines étapes
-1. E26.S5 : connecter wrangler au compte Cloudflare de Chris sur la tour, `pnpm run deploy` dans `relay/`, écrire l'adresse dans `online/relay.cfg`, `RIXE_RELAY=wss://… tools/online_test.sh match` contre le vrai relais, puis release v3.1.0.
-2. Retours de Chris (jeu en ligne entre deux machines, exécutions, musique) et test Mac/Windows réels.
-3. Suite de `IDEES.md` (tenues, éclairage, éditeur de cartes…).
+1. Retours de Chris (jeu en ligne entre deux machines, exécutions, musique) et test Mac/Windows réels.
+2. Suite de `IDEES.md` (tenues, éclairage, éditeur de cartes…).
 
 ## Points en suspens
-- **Connexion Cloudflare sur la tour** : wrangler n'y est pas connecté (il l'est sur le portable). Il faut `wrangler login` par Chris, ou son accord pour reprendre la connexion du portable.
+- Le sous-domaine workers.dev du compte a été créé au premier déploiement (nom = celui du Worker) : il vaut pour tout le compte ; le changer change l'adresse du relais (à re-embarquer dans une release).
 - Builds Windows et macOS jamais lancées sur une vraie machine.
 
 ## Historique
