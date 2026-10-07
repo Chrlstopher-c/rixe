@@ -1,10 +1,11 @@
 # TODO — Rixe
-*Dernière mise à jour : 2026-10-07*
+*Dernière mise à jour : 2026-10-08*
 
 ## En cours
 - [ ] Retours de Chris sur la v3.3.0 (corps à corps, mains nues) et la v3.2.1 (parties perso, en ligne à 4, progression, cartes, éditeur, flaques, wagonnet…)
 
 ## À faire (priorité)
+- [ ] Proposer à Chris les prochains ajouts (il veut « ajouter des choses en plus » après la 3.3.0)
 - [ ] Lancer les builds Windows et macOS sur de vraies machines (Windows testé seulement sous Proton-GE, Mac jamais lancé)
 - [ ] Confirmer le correctif du tir bloqué après un changement de fenêtre (non reproduit ; diagnostic `RIXE_DEBUG_FIRE=1`)
 
@@ -23,6 +24,6 @@
 - [x] v3.1.1 : contrôle de version en ligne, recalage du décor, délai de connexion, tests Linux ↔ Windows (Proton-GE)
 - [x] v3.1.2 : viseur au choix, correctif du focus, curseur dans les menus
 - [x] v3.2.0 : toutes les idées de IDEES.md, parties perso, en ligne à 4, pseudo, classement mondial, exécution par l'invité
-- [x] v3.2.1 : intro animée au lancement (fini le logo Godot), normal maps, flaques, wagonnet, décors animés ; plantage SIGFPE en release corrigé
+- [x] v3.2.1 : intro cinématique au lancement (fini le logo Godot), normal maps, flaques, wagonnet, décors animés ; plantage SIGFPE en release corrigé
 - [x] v3.3.0 : corps à corps en combos, projection, saltos, mode MAINS NUES
 - [x] Dépôt public, CI verte, `IDEES.md`

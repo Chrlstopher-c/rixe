@@ -4,3 +4,4 @@ run/
 logs/
 build/
 online/relay.cfg
+__pycache__/

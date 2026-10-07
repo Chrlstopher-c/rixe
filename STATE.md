@@ -1,22 +1,25 @@
 # STATE — Rixe
-*Dernière mise à jour : 2026-10-07*
+*Dernière mise à jour : 2026-10-08*
 
 ## Résumé de l'état actuel
-Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lien `~/projects/rixe`). Dernière version publiée : **v3.3.0** (v3.1.2 testée en ligne par Chris avec un ami, deux PC Arch Linux, « fluide »).
+Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lien `~/projects/rixe`). Dernière version publiée : **v3.3.0** (corps à corps, mode MAINS NUES). v3.1.2 testée en ligne par Chris avec un ami (deux Arch, « fluide ») ; 3.2.x et 3.3.0 pas encore jouées par Chris.
 - Dépôt public : github.com/Chrlstopher-c/rixe. CI verte (63 tests headless + relais + partie en ligne à deux jeux).
 - Releases sur GitHub pour Linux (testée), Windows (testée sous Proton-GE, pas sur un vrai PC Windows) et macOS universel (compilée, jamais lancée sur un vrai Mac).
-- Modes : Arcade, Chrono, Objectif, Survie. Écran partagé à deux, manette, et partie à deux en ligne (code de 4 lettres).
+- Modes : Arcade, Mains nues, Chrono, Objectif, Survie, parties perso. Écran partagé à deux, manette, en ligne jusqu'à 4 (code de 4 lettres).
+- Intro cinématique au lancement (remplace le logo Godot).
 - En ligne : relais Cloudflare Worker déployé (wrangler connecté sur la tour, compte de Chris), aller-retour ~11 ms ; adresse dans `online/relay.cfg` (hors dépôt, embarquée dans les builds).
 - Perf 1080p sur la tour : 150 à 210 i/s en moyenne, 1 % bas entre 50 et 100 selon la carte et le nombre de combattants.
 - Textures générées par Pigment (`/mnt/projects/pigment`, dépôt privé, MCP `pigment`).
 
-## Ce qui a été fait — nuit du 07 au 08/10 (v3.3.0, demande de Chris)
+## Ce qui a été fait — nuit du 07 au 08/10 (v3.3.0, demande de Chris, Chris présent en fin de nuit)
 - Corps à corps poussé : combos (direct, crochet, coup de pied ; appuis mémorisés, fenêtre d'enchaînement 0,35 s,
   les poings étourdissent), coup de pied sauté en l'air, parade sur tous les coups (`fighters/melee.gd`) ; projection V / R3
   (`fighters/grapple.gd` : saisie, arc par-dessus la tête, jet derrière, étourdi ; distant = jet direct par le coup
   relayé) ; saltos au double saut et au saut mural (`moves.flip_t`, drapeau réseau F_FLIP, coup en cours synchronisé).
 - Mode MAINS NUES (`Modes.apply` : arcade + armes « mains nues ») : arme `fists` (tirer = frapper, garde poings levés,
   ni grenades ni armes au sol), bots au contact (sauts, projections), classement à part ; option d'armes en partie perso.
+- Tests : `tests/test_online_melee.gd` (exécution et projection en ligne, hérite des utilitaires de `test_online.gd`),
+  scénario `tools/online_test.sh throw` ajouté à la CI ; prise relâchée si le lanceur quitte l'arbre.
 
 ## Ce qui a été fait — nuit du 07 au 08/10 (v3.2.1)
 - Intro cinématique au lancement (demande de Chris) : logo Godot coupé (fond uni), combat chorégraphié de 4,5 s
@@ -39,26 +42,6 @@ Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lie
   néons, premier plan en parallaxe. Cartes Usine (tapis, presses, vitres) et Forêt de nuit ; verre et béton (Pigment).
 - Audio : une ambiance musicale par thème, écho selon la carte. Rediffusion 15 s, mode photo, éditeur de cartes.
 
-## Ce qui a été fait — session du 07/10 (suite, après compaction)
-- Marqueurs de touche (blanc, rouge à la tête, cerclé sur élimination), sons hit/headshot, kill cam sur la dernière élimination (ralenti, zoom, bandes noires).
-- Bug corrigé : le temps réel se calculait par delta/time_scale, faux l'image où l'échelle change → une image lente vidait tout un ralenti. Désormais mesuré à l'horloge une fois par image (`Juice.real_delta`), pas fixe en tests headless.
-- Exécutions : bot sous 25 PV vacillant (chevron), corps à corps = exécution en deux temps (membre puis décapitation / coupé en deux / tête en l'air).
-- Musique en trois couches synchrones (calme, combat selon l'action, tension en fin de manche), passe-bas au ralenti.
-- Annonceur vocal (Qwen3-TTS VoiceDesign en local), relais déployé, v3.1.0 publiée.
-- v3.1.1 : contrôle de version en ligne (présentation « hi », refus clair), empreinte du décor à chaque manche + recalage depuis l'hôte, délai max de connexion (sous Windows un refus ne remonte jamais). Testé Linux ↔ Windows (Proton-GE, `tools/win_run.sh`) dans les deux sens, en local et via le vrai relais ; ARM (Mac Apple Silicon) non testé, couvert par le recalage du décor.
-- v3.1.2 : écran VISEUR (5 modèles + viseur perso), entrées relâchées au retour du focus (bug « ne tire plus / souris morte » après un détour par Hyprland, cause probable), curseur visible sur tous les écrans par-dessus le jeu. Diagnostic du tir : `RIXE_DEBUG_FIRE=1`.
-- En ligne (E26.S1-S4) : relais Cloudflare Worker + Durable Object (`relay/`), lien et session Godot (`online/`), salon EN LIGNE, test à deux jeux en CI.
-- Règles de manche sorties de `main.gd` dans `game/round_rules.gd`.
-
-## Ce qui a été fait — session du 07/10
-- **v1.0.0** : arcade. Démembrement, gore, ralenti sur mort par la tête, sons et musique synthétisés, modes Chrono et Objectif, classements. Release validée par Chris.
-- **v1.1.0** : décor destructible en cellules de 8 px, ricochets, IA à 5 personnalités.
-- **v1.2.0** : munitions, visée précise, remontée du canon, 5 armes de plus, grenades, accessoires, armurerie.
-- **v1.3.0** : butin, inventaire (2 armes, sac, soins), 3 cartes (plateformes, toits, mine), météo, barils et lampes, effondrement du décor.
-- **v2.0.0** : mode Survie (carte de 6000 px, jour/nuit, récolte, construction, faim, fabrication, pillards).
-- **v3.0.0** : manette et écran partagé à deux. **v3.0.1** : export macOS universel.
-- `IDEES.md` : feuille de route et idées classées, demandé par Chris.
-
 ## Décisions prises
 | Décision | Raison | Date |
 |----------|--------|------|
@@ -73,6 +56,10 @@ Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lie
 | En ligne : hôte autoritaire, chacun maître de son combattant, « qui provoque l'effet calcule ses dégâts » | Pas de double dégât, pas de prédiction à écrire | 07/10 |
 | Ombres coupées par défaut | Les occulteurs coûtent ~20 % d'i/s même sans lumière à ombre ; 1 % bas < 50 sur mine/toits | 08/10 |
 | En ligne à 4 : diffusion à tous avec l'octet de l'expéditeur, messages adressés par « to » | Pas de serveur de jeu ; chaque invité voit les autres directement | 08/10 |
+| Projection sur V (et R3), pas C | C = « manger » en survie, les deux se déclencheraient | 08/10 |
+| Mains nues = arme `fists` (tirer = frapper) + mode variante de l'arcade (`Modes.apply`) | L'IA vise et « tire » à sa distance idéale : elle va au contact sans logique dédiée ; aucune règle d'arcade dupliquée | 08/10 |
+| Intro : combat chorégraphié par poses clés + musique synthétisée calée dessus, sans sous-titre | Retour de Chris : « bien fluide, gore, expressions, cinématique », le sous-titre « c'est trop » | 08/10 |
+| Tests longs (binaires, Proton, en ligne) en tâche de fond | Consigne de Chris : ne jamais bloquer dessus | 08/10 |
 | Adresse du relais hors dépôt (`online/relay.cfg`, embarquée à l'export) | Règle : aucun identifiant d'infrastructure dans un dépôt public | 07/10 |
 
 ## Contexte non-évident
@@ -92,13 +79,22 @@ Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lie
 - **Export macOS** : nécessite `textures/vram_compression/import_etc2_astc=true`.
 
 ## Prochaines étapes
-1. Retours de Chris sur la v3.2.1 (en ligne à 4, parties perso, progression, nouveaux décors) et test Mac/Windows réels.
-2. `IDEES.md` est épuisé : nouvelles idées à recueillir ; backlog dans `TODO.md`.
+1. Chris veut « ajouter des choses en plus » après la 3.3.0 : lui proposer la suite (clés et contres dédiés au corps à
+   corps, survie en ligne, clavier pour le J2, éditeur d'objets…) et recueillir ses retours de jeu sur 3.2.x / 3.3.0.
+2. Test Mac/Windows sur de vraies machines.
 
 ## Points en suspens
 - Le sous-domaine workers.dev du compte a été créé au premier déploiement (nom = celui du Worker) : il vaut pour tout le compte ; le changer change l'adresse du relais (à re-embarquer dans une release).
 - Builds Windows et macOS jamais lancées sur une vraie machine.
 
 ## Historique
+- 07→08/10 nuit (Chris réveillé en fin de nuit) : v3.2.0 (en ligne à 4, parties perso, progression, classement mondial),
+  v3.2.1 (intro, flaques, wagonnet, décors animés, normal maps), v3.3.0 (corps à corps, mains nues). Branche
+  nuit/2026-10-08 fusionnée dans main.
+- 07/10 suite : v3.1.0 (marqueurs de touche, kill cam, exécutions, musique en couches, annonceur Qwen3-TTS, en ligne par
+  relais Cloudflare), v3.1.1 (version en ligne, recalage du décor, tests Linux ↔ Windows Proton), v3.1.2 (viseur, focus).
+  Bug du temps réel corrigé (`Juice.real_delta` à l'horloge).
+- 07/10 : v1.0.0 arcade (validée par Chris) → v1.1 décor destructible → v1.2 armurerie → v1.3 butin et cartes → v2.0
+  survie → v3.0 manette et écran partagé → v3.0.1 macOS ; `IDEES.md` créé.
 - 07/10 nuit : V1 arcade (E1–E10), branche nuit/2026-10-07 fusionnée dans main.
 - 07/10 : prototype montré, retours appliqués (HD, persos plus grands, bots moins forts, sauts), brief validé.

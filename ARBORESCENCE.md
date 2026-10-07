@@ -117,6 +117,7 @@
 - relay/test/relay.test.mjs
 - relay/tsconfig.json
 - relay/wrangler.toml
+- relay/pnpm-lock.yaml
 - restart.sh
 - start.sh
 - STATE.md
@@ -139,6 +140,7 @@
 - tests/test_modes.gd
 - tests/test_movement.gd
 - tests/test_online.gd
+- tests/test_online_melee.gd
 - tests/test_pad.gd
 - tests/test_pickup.gd
 - tests/test_props.gd
