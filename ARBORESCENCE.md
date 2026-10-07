@@ -15,6 +15,7 @@
 - arena/terrain_chunk.gd
 - arena/terrain.gd
 - arena/themes.gd
+- audio/announcer.gd
 - audio/sfx.gd
 - BRIEF.md
 - core/controls.gd
@@ -60,6 +61,8 @@
 - game/unlocks.gd
 - .github/workflows/ci.yml
 - .gitignore
+- hud/crosshair.gd
+- hud/crosshair_screen.gd
 - hud/hud.gd
 - hud/inventory_screen.gd
 - hud/menu.gd
@@ -120,9 +123,11 @@
 - tools/gen_assets.py
 - tools/gen_music.py
 - tools/gen_sfx.py
+- tools/gen_voice.py
 - tools/online_test.sh
 - tools/perf.sh
 - tools/verify.sh
+- tools/win_run.sh
 - weapons/arsenal.gd
 - weapons/attachment_pickup.gd
 - weapons/grenade.gd

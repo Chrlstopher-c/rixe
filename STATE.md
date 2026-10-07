@@ -2,9 +2,9 @@
 *Dernière mise à jour : 2026-10-07*
 
 ## Résumé de l'état actuel
-Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lien `~/projects/rixe`). Dernière version publiée : **v3.1.0**.
-- Dépôt public : github.com/Chrlstopher-c/rixe. CI verte (40 tests headless).
-- Releases sur GitHub pour Linux (testée), Windows et macOS universel (compilées, jamais lancées sur une vraie machine).
+Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lien `~/projects/rixe`). Dernière version publiée : **v3.1.2** (en ligne testé par Chris avec un ami, deux PC Arch Linux, « fluide »).
+- Dépôt public : github.com/Chrlstopher-c/rixe. CI verte (47 tests headless + relais + partie en ligne à deux jeux).
+- Releases sur GitHub pour Linux (testée), Windows (testée sous Proton-GE, pas sur un vrai PC Windows) et macOS universel (compilée, jamais lancée sur un vrai Mac).
 - Modes : Arcade, Chrono, Objectif, Survie. Écran partagé à deux, manette, et partie à deux en ligne (code de 4 lettres).
 - En ligne : relais Cloudflare Worker déployé (wrangler connecté sur la tour, compte de Chris), aller-retour ~11 ms ; adresse dans `online/relay.cfg` (hors dépôt, embarquée dans les builds).
 - Perf 1080p sur la tour : 150 à 210 i/s en moyenne, 1 % bas entre 50 et 100 selon la carte et le nombre de combattants.
@@ -17,6 +17,7 @@ Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lie
 - Musique en trois couches synchrones (calme, combat selon l'action, tension en fin de manche), passe-bas au ralenti.
 - Annonceur vocal (Qwen3-TTS VoiceDesign en local), relais déployé, v3.1.0 publiée.
 - v3.1.1 : contrôle de version en ligne (présentation « hi », refus clair), empreinte du décor à chaque manche + recalage depuis l'hôte, délai max de connexion (sous Windows un refus ne remonte jamais). Testé Linux ↔ Windows (Proton-GE, `tools/win_run.sh`) dans les deux sens, en local et via le vrai relais ; ARM (Mac Apple Silicon) non testé, couvert par le recalage du décor.
+- v3.1.2 : écran VISEUR (5 modèles + viseur perso), entrées relâchées au retour du focus (bug « ne tire plus / souris morte » après un détour par Hyprland, cause probable), curseur visible sur tous les écrans par-dessus le jeu. Diagnostic du tir : `RIXE_DEBUG_FIRE=1`.
 - En ligne (E26.S1-S4) : relais Cloudflare Worker + Durable Object (`relay/`), lien et session Godot (`online/`), salon EN LIGNE, test à deux jeux en CI.
 - Règles de manche sorties de `main.gd` dans `game/round_rules.gd`.
 
@@ -58,7 +59,7 @@ Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lie
 - **Export macOS** : nécessite `textures/vram_compression/import_etc2_astc=true`.
 
 ## Prochaines étapes
-1. Retours de Chris (jeu en ligne entre deux machines, exécutions, musique) et test Mac/Windows réels.
+1. Retours sur la v3.1.2 ; de Chris (jeu en ligne entre deux machines, exécutions, musique) et test Mac/Windows réels.
 2. Suite de `IDEES.md` (tenues, éclairage, éditeur de cartes…).
 
 ## Points en suspens

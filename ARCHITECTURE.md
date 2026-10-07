@@ -11,11 +11,11 @@ Organisation par domaine de jeu. Chaque dossier a un sens unique :
 | `fighters/ai/` | intelligence des bots : personnalité (chiffres), navigation (où aller), visée (comment viser), cerveau (quoi faire) |
 | `weapons/` | catalogue d'armes et d'accessoires (`arsenal.gd`), tir/lame/projectile (`gun.gd`), grenades, objets au sol |
 | `fx/` | effets visuels : particules, recettes d'effets, taches, météo, post-traitement |
-| `audio/` | bruitages : lecteur 2D et banque de sons |
+| `audio/` | bruitages (lecteur 2D), musique en couches, annonceur vocal (`announcer.gd`) |
 | `survival/` | mode Survie : ressources/faim/jour-nuit (`survival.gd`), orchestration (`director.gd`), construction, recettes |
 | `online/` | partie en ligne côté jeu : lien au relais (`net_link.gd`), session (`net_session.gd` : manches, fin de partie), combattants (`net_fighters.gd` : instantanés, marionnettes, touches, morts), monde (`net_world.gd` : tirs, décor, barils, objets), salon (`lobby.gd`) |
 | `relay/` | relais en ligne (Cloudflare Worker + Durable Object, TypeScript) : salons à code de 4 lettres, ne lit jamais le jeu ; ignoré par Godot (`.gdignore`) |
-| `hud/` | interface : jeu, menus (titre, pause, armurerie, classement), fin de partie, inventaire |
+| `hud/` | interface : jeu, menus (titre, pause, armurerie, classement, viseur), viseur (`crosshair.gd`), fin de partie, inventaire |
 | `tests/` | banc de tests headless et scénarios |
 | `tools/` | scripts hors jeu (vérification, capture, génération d'assets) |
 | `assets/` | fichiers générés (textures Pigment, sons synthétisés) — jamais édités à la main |

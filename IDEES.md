@@ -13,7 +13,7 @@ Les idées de Chris (07/10) sont marquées (Chris).
 | ~~1.3~~ | Butin et cartes | drops, inventaire, nouvelles cartes, météo |
 | ~~2.0~~ | Survie | grande carte, construction, ressources, faim, vagues |
 | ~~3.0~~ | Ensemble | écran partagé, manette |
-| ~~3.1~~ | Ressenti + en ligne | marqueurs de touche, kill cam, exécutions, musique en couches, partie à deux par Internet |
+| ~~3.1~~ | Ressenti + en ligne | marqueurs de touche, kill cam, exécutions, musique en couches, annonceur, partie à deux par Internet, viseur au choix |
 
 ## 1.2 — Armurerie
 - Munitions et chargeurs, rechargement (touche R, animation, son), à court = coup de pied. (Chris)
