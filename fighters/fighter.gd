@@ -57,6 +57,9 @@ var mark_t := 0.0
 var net_id := ""
 var net_life := 0
 var remote := false
+## Diagnostic du tir (RIXE_DEBUG_FIRE=1) : une ligne par seconde dans la console.
+var _debug_fire := OS.get_environment("RIXE_DEBUG_FIRE") != ""
+var _debug_t := 0.0
 var last_zone := ""
 var death_cause := ""
 var _spurt := {}
@@ -135,7 +138,20 @@ func _physics_process(delta: float) -> void:
 	_inventory_input(delta)
 	var can_fire: bool = body.arms_left() > 0 and not melee.active() and inventory.switching <= 0.0
 	gun.tick(delta, intent.fire and can_fire, intent.get("reload", false))
+	if _debug_fire and is_player:
+		_trace_fire(delta, can_fire)
 	_bleed_stumps(delta)
+
+
+func _trace_fire(delta: float, can_fire: bool) -> void:
+	_debug_t -= delta
+	if _debug_t > 0.0:
+		return
+	_debug_t = 0.5
+	var pads := Input.get_connected_joypads().map(func(d: int) -> String: return Input.get_joy_name(d))
+	print("[tir] cerveau=%s detente=%s arme=%s chargeur=%d/%d cd=%.2f recharge=%.2f bras=%d pied=%s changement=%.2f manettes=%s" % [
+		brain.get_script().resource_path.get_file(), intent.fire, gun.id, gun.mag, gun.reserve, gun.cd, gun.reload_t,
+		body.arms_left(), melee.active(), inventory.switching, pads])
 
 
 ## Joueur : repère le bot vacillant à portée et l'achève au lieu du coup de pied.
