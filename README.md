@@ -13,12 +13,18 @@ souris : viser · clic gauche : tirer · clic droit maintenu : visée précise �
 ## Manette et deux joueurs
 Manette : stick gauche bouger, A sauter, stick droit viser, gâchette droite tirer, gâchette gauche visée précise, B coup de pied, X recharger, RB grenade, LB dash, Y changer d'arme, croix haut soin, Start pause. Au titre, « JOUEURS 2 » : écran partagé, J1 au clavier/souris, J2 à la manette.
 
+## En ligne (à deux par Internet, sans ouvrir de port)
+Au titre, « EN LIGNE » : l'un héberge (un code de 4 lettres s'affiche, il choisit le mode et lance), l'autre tape le code. Les messages passent par un petit relais Cloudflare (Worker) ; son adresse vient de `RIXE_RELAY` ou du fichier `online/relay.cfg` (hors dépôt, embarqué à l'export, voir `online/relay.cfg.example`), sinon `ws://127.0.0.1:8787`.
+- Relais en local : `cd relay && pnpm install && pnpm dev` ; tests : `pnpm test`
+- Déployer : `cd relay && pnpm run deploy` (compte Cloudflare connecté par `wrangler login`), puis écrire l'adresse `wss://…workers.dev` dans `online/relay.cfg`
+- `tools/online_test.sh link|match` : relais local + deux jeux headless qui jouent ensemble
+
 ## Outils
 - `tools/verify.sh [tests]` : import + tests headless (PASS/FAIL)
 - `tools/capture.sh <s> [args]` : partie démo filmée hors écran (Xvfb + GPU) → `~/Downloads/rixe-captures/demo.mp4`
 - `tools/perf.sh [s]` : mesure 1080p sur sway headless GPU (moyenne ≥ 60, 1 % bas ≥ 50)
 - `godot --path . -- --tests=showcase` : démo scriptée du gore (à filmer avec `tools/capture.sh 13 --tests=showcase`)
-- `tools/gen_music.py` : musique de combat synthétisée
+- `tools/gen_music.py` : musique en trois couches synthétisée (calme, combat, tension)
 - `tools/gen_assets.py` : textures via Pigment (dépôt voisin `../pigment` ou `PIGMENT_PATH`) ; `tools/gen_sfx.py` : bruitages synthétisés
 
-Aucun port réseau.
+Le jeu n'ouvre aucun port : en ligne, il se connecte en sortie au relais (WebSocket).

@@ -1,0 +1,3 @@
+; Copier en online/relay.cfg (hors dépôt) avec l'adresse du relais déployé.
+[relay]
+url="wss://rixe-relay.example.workers.dev"

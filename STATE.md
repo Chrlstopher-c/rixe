@@ -5,9 +5,18 @@
 Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lien `~/projects/rixe`). Dernière version publiée : **v3.0.1**.
 - Dépôt public : github.com/Chrlstopher-c/rixe. CI verte (40 tests headless).
 - Releases sur GitHub pour Linux (testée), Windows et macOS universel (compilées, jamais lancées sur une vraie machine).
-- Modes : Arcade, Chrono, Objectif, Survie. Écran partagé à deux et manette.
+- Modes : Arcade, Chrono, Objectif, Survie. Écran partagé à deux, manette, et partie à deux en ligne (code de 4 lettres).
+- `main` en avance sur v3.0.1 : ressenti des coups, exécutions, musique en couches, jeu en ligne (relais pas encore déployé).
 - Perf 1080p sur la tour : 150 à 210 i/s en moyenne, 1 % bas entre 50 et 100 selon la carte et le nombre de combattants.
 - Textures générées par Pigment (`/mnt/projects/pigment`, dépôt privé, MCP `pigment`).
+
+## Ce qui a été fait — session du 07/10 (suite, après compaction)
+- Marqueurs de touche (blanc, rouge à la tête, cerclé sur élimination), sons hit/headshot, kill cam sur la dernière élimination (ralenti, zoom, bandes noires).
+- Bug corrigé : le temps réel se calculait par delta/time_scale, faux l'image où l'échelle change → une image lente vidait tout un ralenti. Désormais mesuré à l'horloge une fois par image (`Juice.real_delta`), pas fixe en tests headless.
+- Exécutions : bot sous 25 PV vacillant (chevron), corps à corps = exécution en deux temps (membre puis décapitation / coupé en deux / tête en l'air).
+- Musique en trois couches synchrones (calme, combat selon l'action, tension en fin de manche), passe-bas au ralenti.
+- En ligne (E26.S1-S4) : relais Cloudflare Worker + Durable Object (`relay/`), lien et session Godot (`online/`), salon EN LIGNE, test à deux jeux en CI.
+- Règles de manche sorties de `main.gd` dans `game/round_rules.gd`.
 
 ## Ce qui a été fait — session du 07/10
 - **v1.0.0** : arcade. Démembrement, gore, ralenti sur mort par la tête, sons et musique synthétisés, modes Chrono et Objectif, classements. Release validée par Chris.
@@ -28,6 +37,9 @@ Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lie
 | Physique à 120 Hz conservée | À 60 Hz le gain était nul : le coût venait des dessins, pas de la physique | 07/10 |
 | Arènes sous `arena/`, survie sous `survival/` | Découpage par domaine | 07/10 |
 | Mac : signature ad hoc, sans notarisation | Pas de compte développeur Apple | 07/10 |
+| En ligne : relais WebSocket (Durable Object), pas WebRTC | Marche derrière toutes les box sans port ni binaire natif ; +10-30 ms | 07/10 |
+| En ligne : hôte autoritaire, chacun maître de son combattant, « qui provoque l'effet calcule ses dégâts » | Pas de double dégât, pas de prédiction à écrire | 07/10 |
+| Adresse du relais hors dépôt (`online/relay.cfg`, embarquée à l'export) | Règle : aucun identifiant d'infrastructure dans un dépôt public | 07/10 |
 
 ## Contexte non-évident
 - **Captures** : `tools/capture.sh` filme en temps réel (Xvfb + x11grab). Le movie maker de Godot enregistre la taille logique 640×360 en HD, donc inutilisable ici.
@@ -44,12 +56,12 @@ Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lie
 - **Export macOS** : nécessite `textures/vram_compression/import_etc2_astc=true`.
 
 ## Prochaines étapes
-1. Retour de Chris sur v1.1 → v3.0.1 : ressenti des IA, survie, écran partagé, et tester l'app Mac sur un vrai Mac.
-2. Multijoueur en ligne pair à pair (E26), dès que Chris a choisi l'hébergement du serveur de mise en relation.
-3. Idées suivantes : voir `IDEES.md` (exécutions façon Mortal Kombat, marqueurs de touche, musique en couches, tenues).
+1. E26.S5 : connecter wrangler au compte Cloudflare de Chris sur la tour, `pnpm run deploy` dans `relay/`, écrire l'adresse dans `online/relay.cfg`, `RIXE_RELAY=wss://… tools/online_test.sh match` contre le vrai relais, puis release v3.1.0.
+2. Retours de Chris (jeu en ligne entre deux machines, exécutions, musique) et test Mac/Windows réels.
+3. Suite de `IDEES.md` (tenues, éclairage, éditeur de cartes…).
 
 ## Points en suspens
-- **Hébergement du serveur de mise en relation** (décision de Chris) : Cloudflare Worker (recommandé) ou Pi. Pas de sous-domaine sur le tunnel du Pi sans demande explicite.
+- **Connexion Cloudflare sur la tour** : wrangler n'y est pas connecté (il l'est sur le portable). Il faut `wrangler login` par Chris, ou son accord pour reprendre la connexion du portable.
 - Builds Windows et macOS jamais lancées sur une vraie machine.
 
 ## Historique

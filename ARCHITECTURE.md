@@ -13,6 +13,8 @@ Organisation par domaine de jeu. Chaque dossier a un sens unique :
 | `fx/` | effets visuels : particules, recettes d'effets, taches, météo, post-traitement |
 | `audio/` | bruitages : lecteur 2D et banque de sons |
 | `survival/` | mode Survie : ressources/faim/jour-nuit (`survival.gd`), orchestration (`director.gd`), construction, recettes |
+| `online/` | partie en ligne côté jeu : lien au relais (`net_link.gd`), session (`net_session.gd` : manches, fin de partie), combattants (`net_fighters.gd` : instantanés, marionnettes, touches, morts), monde (`net_world.gd` : tirs, décor, barils, objets), salon (`lobby.gd`) |
+| `relay/` | relais en ligne (Cloudflare Worker + Durable Object, TypeScript) : salons à code de 4 lettres, ne lit jamais le jeu ; ignoré par Godot (`.gdignore`) |
 | `hud/` | interface : jeu, menus (titre, pause, armurerie, classement), fin de partie, inventaire |
 | `tests/` | banc de tests headless et scénarios |
 | `tools/` | scripts hors jeu (vérification, capture, génération d'assets) |
@@ -21,4 +23,6 @@ Organisation par domaine de jeu. Chaque dossier a un sens unique :
 Règles de frontière :
 - Les domaines se parlent par méthodes publiques (`take_hit`, `spawn_points`, `Effects.*`, `Sfx.play`) ; pas d'accès aux variables `_privées` d'un autre dossier.
 - `Juice` porte les références partagées (arène, fx, monde, caméra) : pas de chemins de nœuds codés en dur.
-- Tout ce qui est aléatoire et structurant (arène) passe par une graine (`--seed`).
+- Tout ce qui est aléatoire et structurant (arène) passe par une graine (`--seed`) : en ligne, l'invité regénère la carte de l'hôte avec la même graine.
+- En ligne, le reste du jeu ne connaît que `Juice.net` (null hors ligne) et ses méthodes publiques (`drive`, `puppet_hit`, `shot_fired`, `terrain_hit`, `item_born`…) ; l'hôte arbitre, chacun calcule les dégâts qu'il provoque.
+- `game/round_rules.gd` : fil des morts, fin de manche et de partie, kill cam (sorti de `main.gd`).

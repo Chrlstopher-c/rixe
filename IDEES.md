@@ -12,7 +12,8 @@ Les idées de Chris (07/10) sont marquées (Chris).
 | ~~1.2~~ | Armurerie | munitions et chargeurs, visée précise, nouvelles armes, grenades, personnalisation |
 | ~~1.3~~ | Butin et cartes | drops, inventaire, nouvelles cartes, météo |
 | ~~2.0~~ | Survie | grande carte, construction, ressources, faim, vagues |
-| ~~3.0~~ | Ensemble | écran partagé, manette (fait) ; multijoueur pair à pair (en attente : serveur de mise en relation à héberger) |
+| ~~3.0~~ | Ensemble | écran partagé, manette |
+| ~~3.1~~ | Ressenti + en ligne | marqueurs de touche, kill cam, exécutions, musique en couches, partie à deux par Internet |
 
 ## 1.2 — Armurerie
 - Munitions et chargeurs, rechargement (touche R, animation, son), à court = coup de pied. (Chris)
@@ -39,10 +40,10 @@ Les idées de Chris (07/10) sont marquées (Chris).
 ## 3.0 — Ensemble
 - ★ Écran partagé local à 2 (rapide à faire, le jeu est déjà pensé chacun pour soi).
 - Manette (vibrations sur les coups, gâchettes). (Chris)
-- Multijoueur pair à pair sans ouvrir de ports (WebRTC + petit relais de mise en relation). (Chris)
+- ~~Multijoueur pair à pair sans ouvrir de ports (WebRTC + petit relais de mise en relation). (Chris)~~ (fait, 3.1)
 
 ## Mécaniques à glisser dans n'importe quelle version
-- ★ Exécutions façon Mortal Kombat : un adversaire à terre et presque mort peut être achevé au corps à corps, avec un plan de caméra dédié.
+- ~~★ Exécutions façon Mortal Kombat : un adversaire à terre et presque mort peut être achevé au corps à corps, avec un plan de caméra dédié.~~ (fait, 3.1)
 - Glissade au sol, saut contre les murs, roulade d'esquive.
 - Parade au bon moment pendant un coup de pied adverse (contre-attaque).
 - Temps ralenti à la demande (jauge qui se remplit en éliminant).
@@ -50,8 +51,8 @@ Les idées de Chris (07/10) sont marquées (Chris).
 - Séries annoncées : doublé, triplé, « sans prendre de coup ».
 
 ## Ressenti et lisibilité
-- ★ Marqueur de touche (croix blanche, rouge pour la tête) + son de touche à la tête.
-- ★ Ralenti de fin de manche sur la dernière élimination (kill cam).
+- ~~★ Marqueur de touche (croix blanche, rouge pour la tête) + son de touche à la tête.~~ (fait, 3.1)
+- ~~★ Ralenti de fin de manche sur la dernière élimination (kill cam).~~ (fait, 3.1)
 - Chiffres de dégâts (désactivables).
 - Indicateur de direction quand on se fait toucher hors champ.
 
@@ -62,7 +63,7 @@ Les idées de Chris (07/10) sont marquées (Chris).
 - Néons et panneaux animés dans les ambiances urbaines.
 
 ## Audio
-- ★ Musique en couches qui suit l'action : calme, combat, ralenti, dernier survivant.
+- ~~★ Musique en couches qui suit l'action : calme, combat, ralenti, dernier survivant.~~ (fait, 3.1)
 - Une ambiance musicale par décor (crépuscule, acier, rouille, futures cartes).
 - Annonces vocales générées en local (Qwen3-TTS) : « Décapitation », « Doublé », « Dernier debout ».
 - Réverbération selon le lieu (mine = écho, extérieur = sec).
