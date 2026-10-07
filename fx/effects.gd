@@ -34,7 +34,8 @@ static func blood(pos: Vector2, dir: Vector2, amount: int) -> void:
 	var fx: Node2D = Juice.fx
 	for i in amount:
 		var d := dir.rotated(randf_range(-0.7, 0.7))
-		var b = fx.emit(1, pos, d * randf_range(60, 320) + Vector2(0, -40), randf_range(0.5, 1.4), randf_range(1.0, 2.0), BLOOD)
+		var v := d * randf_range(60, 320) + Vector2(0, -40)
+		var b = fx.emit(1, pos, v, randf_range(0.5, 1.4), randf_range(1.0, 2.0), BLOOD)
 		b.grav = 700.0
 		b.drag = 0.6
 	var mist = fx.emit(2, pos, dir * 20.0, 0.35, 2.5, Color(0.6, 0.0, 0.05, 0.5))

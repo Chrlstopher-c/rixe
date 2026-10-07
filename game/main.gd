@@ -198,7 +198,8 @@ func _on_killed(victim: Node2D, killer: Node2D) -> void:
 ## Mesure de perf : temps de frame réels après 2 s de chauffe ; imprime moyenne et 1 % bas puis quitte.
 func _measure(real: float) -> void:
 	if real > 0.03 and OS.has_environment("RIXE_SPIKES"):
-		print("SPIKE %.0fms t=%.1f parts=%d ts=%.2f" % [real * 1000.0, Time.get_ticks_msec() / 1000.0, Juice.fx.parts.size(), Engine.time_scale])
+		var t := Time.get_ticks_msec() / 1000.0
+		print("SPIKE %.0fms t=%.1f parts=%d ts=%.2f" % [real * 1000.0, t, Juice.fx.parts.size(), Engine.time_scale])
 	_perf_left -= real
 	if Time.get_ticks_msec() > 2000:
 		_frame_times.append(real)

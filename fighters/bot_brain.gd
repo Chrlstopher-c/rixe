@@ -18,7 +18,8 @@ func _init(level: float = 0.6) -> void:
 
 
 func think(f: Node2D, delta: float) -> Dictionary:
-	var it := {"move": 0.0, "jump": false, "jump_held": _hold > 0.0, "drop": false, "dash": false, "fire": false, "melee": false,
+	var it := {"move": 0.0, "jump": false, "jump_held": _hold > 0.0, "drop": false, "dash": false, "fire": false,
+		"melee": false,
 		"aim": f.global_position + Vector2(f.facing * 60, -20)}
 	_hold -= delta
 	_retarget -= delta

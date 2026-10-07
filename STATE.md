@@ -9,3 +9,15 @@
 - Saut : touche maintenue = rebond automatique à l'atterrissage (Chris veut « spammer »), buffer 0,2 s, 2 sauts en l'air.
 - Captures : x11grab sur Xvfb en temps réel (le movie maker de Godot enregistre la taille logique 640×360 en mode HD).
 - Tests : `--tests=…` dans le jeu lui-même, `--fixed-fps 120` pour tourner plus vite que le temps réel.
+
+## Nuit du 07/10 — livré (branche nuit/2026-10-07)
+- Saut : rebond auto touche maintenue, buffer 0,2 s, 2 sauts en l'air. Bug « collé au sol » non reproduit par les tests clavier ;
+  hypothèse retenue : touche maintenue (just_pressed ne se redéclenche pas) → corrigé par le rebond auto.
+- Dégâts localisés (`fighters/body_parts.gd`) : tête ×2,5, membres ×0,6 ; vie par membre ; bras perdu = visée dégradée,
+  jambe perdue = lent/rampe ; tête ou torse détruits = mort (décapitation / coupé en deux). Joueur et bots.
+- Ralenti uniquement sur mort par la tête (joueur impliqué ou à l'écran). Gore : gibs physiques, jets artériels pulsés, taches.
+- Sons synthétisés (`tools/gen_sfx.py`, 16 sons), autoload `Sfx`, hauteur suit le ralenti.
+- Mêlée : coup de pied visé (E/F/molette), bots au contact. Armes au sol + ramassage par échange. Bord rouge de dégâts, viseur dynamique, ligne de visée.
+- Perf (tools/perf.sh, sway headless GPU, 1080p, 7 combattants) : ~130-144 i/s moyen, 1 % bas 55-65, GPU ~2 ms.
+- Piège : Xvfb plafonne à ~8 i/s en 1080p (copie logicielle) → jamais mesurer la perf dessus.
+- Piège : en mode test, la logique de manche relançait une manche et libérait les combattants d'un autre test → désactivée sous --tests.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Mesure de perf hors écran sur un compositeur sway headless rendu par le GPU (Xvfb fausse la mesure : copie logicielle).
+# Mesure de perf hors écran sur un sway headless rendu par le GPU (Xvfb fausse la mesure : copie logicielle).
 # Manche à 6 bots + joueur en démo, 1920x1080, sans vsync. Critère du brief : moyenne ≥ 60 i/s et 1 % bas ≥ 50.
 # Usage : tools/perf.sh [secondes] [args jeu…]
 set -euo pipefail
@@ -16,7 +16,8 @@ trap 'kill $SPID 2>/dev/null; rm -rf "$RUN"' EXIT
 sleep 3
 SOCK=$(ls "$RUN" | grep -E '^wayland-[0-9]+$' | head -1)
 [ -n "$SOCK" ] || { echo "compositeur headless introuvable"; exit 1; }
-env -u DISPLAY XDG_RUNTIME_DIR="$RUN" WAYLAND_DISPLAY="$SOCK" timeout $((SECS + 40)) godot --path . --display-driver wayland \
+env -u DISPLAY XDG_RUNTIME_DIR="$RUN" WAYLAND_DISPLAY="$SOCK" timeout $((SECS + 40)) \
+  godot --path . --display-driver wayland \
   --audio-driver Dummy --resolution 1920x1080 --disable-vsync -- --demo --round=4 --seed=3 --perf="$SECS" "$@" \
   > "$RUN/godot.log" 2>&1 || true
 grep -E "SPIKE|ROUND" "$RUN/godot.log" | head -40 || true

@@ -13,6 +13,8 @@ souris : viser · clic gauche : tirer · Maj/clic droit : dash · E/clic molette
 ## Outils
 - `tools/verify.sh [tests]` : import + tests headless (PASS/FAIL)
 - `tools/capture.sh <s> [args]` : partie démo filmée hors écran (Xvfb + GPU) → `~/Downloads/rixe-captures/demo.mp4`
+- `tools/perf.sh [s]` : mesure 1080p sur sway headless GPU (moyenne ≥ 60, 1 % bas ≥ 50)
+- `godot --path . -- --tests=showcase` : démo scriptée du gore (à filmer avec `tools/capture.sh 13 --tests=showcase`)
 - `tools/gen_assets.py` : textures via Pigment (`/mnt/projects/pigment`) ; `tools/gen_sfx.py` : bruitages synthétisés
 
 Aucun port réseau.

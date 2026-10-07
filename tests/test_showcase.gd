@@ -1,5 +1,5 @@
 extends RefCounted
-## Démonstration scriptée (à filmer, hors « all ») : jambe arrachée, bras arraché, coup de pied, décapitation au ralenti.
+## Démonstration scriptée (à filmer, hors « all ») : membres arrachés, coup de pied, décapitation au ralenti.
 
 
 func names() -> Array[String]:
@@ -33,7 +33,9 @@ func test_showcase(t: Node) -> void:
 	await _fire_at(t, brain, foe, "elbow1", 240)
 	await t.frames(60)
 	brain.move = 1.0
-	await t.until(func() -> bool: return not is_instance_valid(foe) or me.global_position.distance_to(foe.global_position) < 22.0, 240)
+	var close := func() -> bool:
+		return not is_instance_valid(foe) or me.global_position.distance_to(foe.global_position) < 22.0
+	await t.until(close, 240)
 	brain.move = 0.0
 	if is_instance_valid(foe):
 		brain.aim = foe.rig.to_global(foe.rig.j.shoulder)
