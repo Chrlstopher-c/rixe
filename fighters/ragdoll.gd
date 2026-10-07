@@ -7,6 +7,7 @@ const LINKS := [["head", "shoulder"], ["shoulder", "hip"], ["shoulder", "elbow0"
 	["knee1", "foot1"]]
 const GRAVITY := 900.0
 const LIFE := 9.0
+const MAX_BODIES := 14
 
 var pos := {}
 var vel := {}
@@ -21,6 +22,10 @@ var _age := 0.0
 func setup(pts: Dictionary, base_vel: Vector2, impulse: Vector2, bleed: Array, team: Color, cut: Array = []) -> void:
 	z_index = 9
 	color = team
+	add_to_group("ragdolls")
+	var all := get_tree().get_nodes_in_group("ragdolls")
+	if all.size() > MAX_BODIES:
+		all[0].queue_free()
 	for k in pts:
 		if k == "neck":
 			continue
@@ -38,14 +43,14 @@ func setup(pts: Dictionary, base_vel: Vector2, impulse: Vector2, bleed: Array, t
 
 func _physics_process(delta: float) -> void:
 	_age += delta
-	if _age > LIFE:
+	if _age > LIFE or ("ragdolls" in Juice.off and _age > 0.5):
 		queue_free()
 		return
 	var prev := pos.duplicate()
 	for k in pos:
 		vel[k] = (vel[k] as Vector2 + Vector2(0, GRAVITY * delta)) * 0.998
 		pos[k] = pos[k] + vel[k] * delta
-	for it in 6:
+	for it in 4:
 		_solve_links()
 	for k in pos:
 		_collide(k, prev[k], delta)

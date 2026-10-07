@@ -60,6 +60,7 @@ func _parse_args() -> void:
 			_skip_title = true
 		elif a.begins_with("--off="):
 			_off = a.get_slice("=", 1).split(",")
+			Juice.off = _off
 		elif a.begins_with("--round="):
 			round_no = int(a.get_slice("=", 1))
 		elif a.begins_with("--perf="):

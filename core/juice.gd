@@ -13,6 +13,8 @@ var arena: Node2D
 var world: Node2D
 var camera: Camera2D
 var hd := true
+## Interrupteurs de profilage (--off=…), jamais utilisés en jeu normal.
+var off: PackedStringArray = []
 var trauma := 0.0
 var aberration := 0.0
 var zoom_punch := 0.0

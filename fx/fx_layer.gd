@@ -3,7 +3,7 @@ extends Node2D
 
 enum Kind { SPARK, BLOOD, SMOKE, FLASH, SHELL, RING }
 
-const MAX_PARTS := 1400
+const MAX_PARTS := 1000
 
 
 class P:

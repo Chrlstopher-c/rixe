@@ -9,6 +9,9 @@ const RIM := Color(1.6, 0.75, 0.5)
 var solids: Array[Rect2] = []
 var solid_kinds: Array[String] = []
 var platforms: Array[Rect2] = []
+## Grille grossière des cellules touchées par un décor : rejette en O(1) la plupart des tests de collision.
+const CELL := 16.0
+var _cells := {}
 var _tex := {}
 
 
@@ -23,6 +26,7 @@ func generate(seed_value: int) -> void:
 	solids.clear()
 	solid_kinds.clear()
 	platforms.clear()
+	_cells.clear()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
 	_add_solid(Rect2(-300, 0, W + 600, 400), "ground")
@@ -40,6 +44,7 @@ func generate_flat() -> void:
 	solids.clear()
 	solid_kinds.clear()
 	platforms.clear()
+	_cells.clear()
 	_add_solid(Rect2(-300, 0, W + 600, 400), "ground")
 	_add_solid(Rect2(-300, -700, 300, 700), "wall")
 	_add_solid(Rect2(W, -700, 300, 700), "wall")
@@ -62,13 +67,27 @@ func _gen_level(rng: RandomNumberGenerator, y: float) -> void:
 		x += w + rng.randf_range(60, 190)
 
 
+func _mark(r: Rect2) -> void:
+	var a := Vector2i((r.position / CELL).floor())
+	var b := Vector2i((r.end / CELL).floor())
+	for x in range(a.x, b.x + 1):
+		for y in range(maxi(a.y, -64), mini(b.y, 4) + 1):
+			_cells[Vector2i(x, y)] = true
+
+
+func _near_decor(p: Vector2) -> bool:
+	return p.y >= 0.0 or _cells.has(Vector2i((p / CELL).floor()))
+
+
 func _add_solid(r: Rect2, kind: String) -> void:
+	_mark(r)
 	solids.append(r)
 	solid_kinds.append(kind)
 	_body(r, Juice.MASK_WORLD, false)
 
 
 func _add_platform(r: Rect2) -> void:
+	_mark(r)
 	platforms.append(r)
 	_body(r, Juice.MASK_PLATFORMS, true).add_to_group("platform")
 
@@ -89,6 +108,8 @@ func _body(r: Rect2, layer_bits: int, one_way: bool) -> StaticBody2D:
 
 
 func solid_at(p: Vector2) -> bool:
+	if not _near_decor(p):
+		return false
 	for r in solids:
 		if r.has_point(p):
 			return true
@@ -99,6 +120,8 @@ func solid_at(p: Vector2) -> bool:
 
 
 func push_out(prev: Vector2, p: Vector2) -> Vector2:
+	if not _near_decor(p):
+		return p
 	for r in solids:
 		if r.has_point(p):
 			return _exit_rect(r, p)
