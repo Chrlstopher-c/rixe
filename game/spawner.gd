@@ -56,6 +56,15 @@ func join_team(f: Fighter, id: String, order: int) -> void:
 
 
 ## Bot d'un archétype (nom vide = au hasard) ; même nom et même caractère à chaque réapparition.
+## Boss d'arcade : brute plus douée, fusil à pompe ou lance-grenades, blindé.
+func spawn_boss(pos: Vector2, level: float) -> Fighter:
+	var brain := BotBrain.new(minf(level + 0.25, 0.95), "brute")
+	var w := config.pick_weapon("shotgun" if rng.randf() < 0.5 else "launcher", rng)
+	var f := spawn("BOSS", pos, Boss.COLOR, brain, w, false)
+	Boss.make(f)
+	return f
+
+
 func spawn_bot(pos: Vector2, name: String, level: float) -> Fighter:
 	var ids := Personality.ids()
 	var kind: String = _bot_kinds.get(name, ids[rng.randi_range(0, ids.size() - 1)])

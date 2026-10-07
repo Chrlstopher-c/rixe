@@ -21,6 +21,8 @@ var swing := 0.0
 var attachments := {}
 ## Segments du dernier tir [début, fin, 0 rien / 1 décor / 2 cible] : rejoués chez l'autre joueur en ligne.
 var segs: Array = []
+## Boss : avertissement avant de tirer (secondes restantes).
+var charge_t := 0.0
 
 
 func _init(holder: Node2D, weapon_id: String, mods: Dictionary = {}) -> void:
@@ -72,6 +74,8 @@ func tick(delta: float, trigger: bool, reload_pressed: bool = false) -> void:
 		return
 	if reload_pressed:
 		start_reload()
+	if owner.get("boss"):
+		trigger = Boss.charge(self, delta, trigger)
 	if not trigger or cd > 0.0:
 		return
 	if infinite():

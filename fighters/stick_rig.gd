@@ -339,6 +339,9 @@ func _seg(a: Vector2, b: Vector2, col: Color, w: float) -> void:
 
 func _draw_gun() -> void:
 	var d: Dictionary = fighter.gun.def
+	if fighter.gun.charge_t > 0.0:
+		var k: float = 1.0 - fighter.gun.charge_t / Boss.CHARGE
+		draw_circle(muzzle_local, 2.0 + 5.0 * k, Color(2.6, 0.3, 0.2, 0.35 + 0.5 * k))
 	var look: String = d.get("look", "")
 	draw_set_transform(j.pivot, gun_dir.angle(), Vector2(1, fighter.facing))
 	if look == "blade":

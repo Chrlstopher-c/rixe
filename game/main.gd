@@ -113,7 +113,7 @@ func _start_round() -> void:
 		Juice.net.round_started()
 	announcer.reset()
 	announcer.enabled = not attract and (_tests == "" or live_rules)
-	announcer.say("fight", 1.4)
+	announcer.say("boss" if boss_round() else "fight", 1.4)
 	var head := "MANCHE %d" % round_no if game_mode == "arcade" or attract else Modes.label(game_mode)
 	_hud.banner("%s  ·  %s" % [head, Maps.ALL[map_type].label])
 	Sfx.play_ui("round", -6.0)
@@ -155,11 +155,21 @@ func _populate() -> int:
 			player.team = "joueurs"
 	spawner.clear_names()
 	var b := 0
+	var boss := boss_round()
 	for i in spots.size():
-		if not i in used:
+		if i in used or (boss and b >= maxi(spots.size() / 2, 2)):
+			continue
+		if boss and b == 0:
+			spawner.spawn_boss(spots[i], clampf(0.25 + round_no * 0.08, 0.25, 0.8))
+		else:
 			_spawn_bot(spots[i], "")
-			b += 1
+		b += 1
 	return b
+
+
+## Arcade : un boss toutes les 5 manches.
+func boss_round() -> bool:
+	return game_mode == "arcade" and not attract and round_no % 5 == 0 and not _net_guest()
 
 
 ## Survie : le joueur seul, une pioche en seconde arme ; le directeur gère ressources, nuit et pillards.

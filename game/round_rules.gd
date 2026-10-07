@@ -59,6 +59,10 @@ func _rounds_after_kill(victim: Node2D) -> void:
 			end_after_kill(victim)
 		return
 	m._hud.bots_left = alive_bots()
+	if victim.boss:
+		_announce("boss_down")
+		if m._hud.bots_left > 0:
+			_kill_cam(victim)
 	if m._hud.bots_left == 1:
 		_announce("last")
 	if m._hud.bots_left <= 0:

@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["arcade_last_bot", "chrono", "objectif", "leaderboard"]
+	return ["arcade_last_bot", "chrono", "objectif", "leaderboard", "boss"]
 
 
 func _kill(victim: Fighter, killer: Fighter) -> void:
@@ -100,3 +100,31 @@ func test_leaderboard(t: Node) -> void:
 		Leaderboard.insert(times, s, true)
 	t.check(times[0].score == 25.0, "objectif : le temps le plus court en tête")
 	await t.frames(1)
+
+
+func test_boss(t: Node) -> void:
+	var main: Node = t.main
+	main.live_rules = true
+	main._on_start("arcade", 0, 5)
+	await t.frames(5)
+	var bosses: Array = _bots(main).filter(func(f: Fighter) -> bool: return f.boss)
+	t.check(bosses.size() == 1, "manche 5 : un boss")
+	if bosses.is_empty():
+		_cleanup(main)
+		return
+	var b: Fighter = bosses[0]
+	t.check(b.hp == Boss.HP and b.rig.scale.x > 1.9 and b.body.hp.head > 100.0, "grand, blindé, 600 PV")
+	var brain := ScriptBrain.new()
+	b.brain = brain
+	b.shield = 0.0
+	brain.aim = b.global_position + Vector2(-200, -20)
+	var mag0: int = b.gun.mag
+	brain.fire = true
+	await t.frames(20)
+	t.check(b.gun.charge_t > 0.0 and b.gun.mag == mag0, "le boss annonce son tir avant de tirer")
+	await t.frames(60)
+	t.check(b.gun.mag < mag0, "puis il tire")
+	brain.fire = false
+	b.take_hit(50.0, Vector2.RIGHT, b.global_position + Vector2(0, -30), main.player, 300.0)
+	t.check(absf(b.velocity.x) < 120.0, "peu sensible au recul")
+	_cleanup(main)

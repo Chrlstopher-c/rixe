@@ -12,6 +12,7 @@ const F_SHIELD := 4
 const F_ROLL := 8
 const F_SLIDE := 16
 const F_STUN := 32
+const F_BOSS := 64
 
 var s: Node
 ## Marionnettes par identifiant réseau.
@@ -59,7 +60,7 @@ func snapshot() -> Dictionary:
 	for f in _owned():
 		var flags := (F_AIMING if f.aiming else 0) | (F_PLAYER if f.is_player else 0) | (F_SHIELD if f.shield > 0.0 else 0)
 		flags |= (F_ROLL if f.moves.roll_t > 0.0 else 0) | (F_SLIDE if f.moves.slide_t > 0.0 else 0)
-		flags |= F_STUN if f.moves.stunned() else 0
+		flags |= (F_STUN if f.moves.stunned() else 0) | (F_BOSS if f.boss else 0)
 		rows.append([f.net_id, f.net_life, f.global_position, f.velocity, f.aim_dir, f.hp, f.gun.id,
 			f.gun.attachments, f.body.missing.duplicate(), f.team, f.team_color, flags, f.melee.t, f.dash_t])
 	return {"t": "s", "f": rows}
@@ -87,6 +88,8 @@ func _make_puppet(row: Array) -> Fighter:
 	f.net_id = id
 	f.net_life = row[1]
 	f.remote = true
+	if int(row[11]) & F_BOSS:
+		Boss.make(f)
 	f.team = row[9]
 	f.shield = 0.0
 	puppets[id] = f

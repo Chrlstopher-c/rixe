@@ -59,6 +59,8 @@ var mark_t := 0.0
 var net_id := ""
 var net_life := 0
 var remote := false
+## Boss d'arcade (voir Boss).
+var boss := false
 ## Diagnostic du tir (RIXE_DEBUG_FIRE=1) : une ligne par seconde dans la console.
 var _debug_fire := OS.get_environment("RIXE_DEBUG_FIRE") != ""
 var _debug_t := 0.0
@@ -358,7 +360,7 @@ func take_hit(dmg: float, dir: Vector2, at: Vector2, from: Variant, knock: float
 	var res := body.damage(last_zone, dmg)
 	_since_hit = 0.0
 	hp -= res.dmg
-	velocity += dir * knock
+	velocity += dir * knock * (Boss.KNOCK if boss else 1.0)
 	hit_flash = 0.045
 	recent_hit = 0.6
 	Effects.blood(at, dir, int(2 + res.dmg * 0.3))

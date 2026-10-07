@@ -65,6 +65,7 @@ func _draw_hud() -> void:
 	_draw_health()
 	_draw_focus()
 	_draw_threats()
+	_draw_boss()
 	var info := _info_line()
 	_canvas.draw_string(_font, Vector2(12, 30), info, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(1, 0.9, 0.95, 0.75))
 	for i in _feed.size():
@@ -91,6 +92,19 @@ func _draw_letterbox() -> void:
 	var h := _canvas.size.y * 0.11 * w
 	_canvas.draw_rect(Rect2(0, 0, _canvas.size.x, h), Color.BLACK)
 	_canvas.draw_rect(Rect2(0, _canvas.size.y - h, _canvas.size.x, h), Color.BLACK)
+
+
+## Barre de vie du boss, en haut au centre, tant qu'il est debout.
+func _draw_boss() -> void:
+	for f in get_tree().get_nodes_in_group("fighters"):
+		if f.boss and f.alive:
+			var w := 220.0
+			var r := Rect2(_canvas.size.x * 0.5 - w * 0.5, 44, w, 5)
+			_canvas.draw_rect(r.grow(1), Color(0, 0, 0, 0.6))
+			_canvas.draw_rect(Rect2(r.position, Vector2(w * clampf(f.hp / Boss.HP, 0.0, 1.0), r.size.y)), Color(2.2, 0.3, 0.25))
+			_canvas.draw_string(_font, Vector2(0, 40), "BOSS", HORIZONTAL_ALIGNMENT_CENTER, _canvas.size.x, 9,
+				Color(2.2, 0.5, 0.4))
+			return
 
 
 ## Jauge de ralenti (hors ligne) sous la vie ; clignote quand elle est pleine (X / L3).
