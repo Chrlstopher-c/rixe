@@ -2,6 +2,7 @@ extends CanvasLayer
 ## Écran titre (mode, réglage, jouer, classement, options) et menu de pause ; clavier (ZQSD/flèches, Entrée) ou souris.
 
 signal start_requested(mode: String, option: int)
+signal online_requested
 signal resume_requested
 signal title_requested
 signal restart_requested
@@ -16,6 +17,8 @@ var volume := 0.8
 var hd := true
 var best := 0
 var players := 1
+## Partie en ligne en cours : la pause ne propose pas de recommencer (c'est l'hôte qui mène).
+var online := false
 var game_mode := "arcade"
 var options := {"arcade": 0, "chrono": Modes.default_option("chrono"), "objectif": Modes.default_option("objectif")}
 var _sel := 0
@@ -68,13 +71,15 @@ func _ids() -> Array[String]:
 		ids.append("back")
 		return ids
 	if mode == "pause":
+		if online:
+			return ["resume", "volume", "display", "title", "quit"]
 		return ["resume", "restart", "volume", "display", "title", "quit"]
 	var ids: Array[String] = ["mode"]
 	if Modes.has_option(game_mode):
 		ids.append("option")
 	if game_mode != "survie":
 		ids.append("players")
-	ids.append_array(["play", "armory", "board", "volume", "display", "quit"])
+	ids.append_array(["play", "online", "armory", "board", "volume", "display", "quit"])
 	return ids
 
 
@@ -90,6 +95,8 @@ func _text(id: String) -> String:
 			return "JOUEURS  ‹ %d ›%s" % [players, "  (2e : manette, écran partagé)" if players == 2 else ""]
 		"board":
 			return "CLASSEMENT"
+		"online":
+			return "EN LIGNE"
 		"armory":
 			return "ARMURERIE"
 		"weapon":
@@ -101,7 +108,7 @@ func _text(id: String) -> String:
 		"resume":
 			return "REPRENDRE"
 		"title":
-			return "MENU PRINCIPAL"
+			return "QUITTER LA PARTIE" if online else "MENU PRINCIPAL"
 		"restart":
 			return "RECOMMENCER"
 		"back":
@@ -202,6 +209,9 @@ func activate(i: int) -> void:
 			start_requested.emit(game_mode, options[game_mode])
 		"board":
 			_open("board")
+		"online":
+			close()
+			online_requested.emit()
 		"armory":
 			loadout = Unlocks.loadout()
 			_open("armory")

@@ -9,6 +9,7 @@ var demo := false
 var attract := false
 var _skip_title := false
 var _menu: CanvasLayer
+var _lobby: CanvasLayer
 var _backdrop: CanvasLayer
 var _volume := 0.8
 var score := RunScore.new()
@@ -286,7 +287,9 @@ func _net_guest() -> bool:
 
 func _on_start(mode: String, option: int, first_round: int = 1) -> void:
 	_leave_survival()
-	var two: bool = _menu.players == 2 and mode != "survie"
+	if _lobby:
+		_lobby.close()
+	var two: bool = _menu.players == 2 and mode != "survie" and Juice.net == null
 	if two and duo == null:
 		duo = Duo.new(self)
 	elif not two and duo:
@@ -329,6 +332,8 @@ func _leave_survival() -> void:
 
 
 func _to_title() -> void:
+	if Juice.net:
+		Juice.net.leave()
 	_leave_survival()
 	if duo:
 		duo.leave()
@@ -360,8 +365,17 @@ func _toggle_inventory() -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
+## Rejouer depuis l'écran de fin ; en ligne, seul l'hôte relance (l'invité suit).
+func _replay() -> void:
+	if _net_guest():
+		Juice.notify("L'hôte relance la partie")
+		return
+	_on_start(game_mode, game_option)
+
+
 func _pause() -> void:
-	get_tree().paused = true
+	_menu.online = Juice.net != null
+	get_tree().paused = Juice.net == null
 	_menu.volume = _volume
 	_menu.hd = Juice.hd
 	_menu.show_pause()

@@ -74,6 +74,11 @@ static func _screens(m: Node) -> void:
 	m.add_child(m._menu)
 	m._menu.best = m.score.best
 	m._menu.start_requested.connect(m._on_start)
+	m._lobby = preload("res://online/lobby.gd").new()
+	m._lobby.main = m
+	m.add_child(m._lobby)
+	m._menu.online_requested.connect(m._lobby.open)
+	m._lobby.back_requested.connect(m._menu.show_title)
 	m._menu.resume_requested.connect(m._resume)
 	m._menu.title_requested.connect(m._to_title)
 	m._menu.restart_requested.connect(func() -> void: m._on_start(m.game_mode, m.game_option))
@@ -82,7 +87,7 @@ static func _screens(m: Node) -> void:
 	m._menu.volume_changed.connect(m._on_volume)
 	m._scoreboard = preload("res://hud/scoreboard.gd").new()
 	m.add_child(m._scoreboard)
-	m._scoreboard.replay_requested.connect(func() -> void: m._on_start(m.game_mode, m.game_option))
+	m._scoreboard.replay_requested.connect(m._replay)
 	m._scoreboard.menu_requested.connect(m._to_title)
 	m._inventory = preload("res://hud/inventory_screen.gd").new()
 	m.add_child(m._inventory)

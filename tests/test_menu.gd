@@ -1,9 +1,9 @@
 extends RefCounted
-## Test du menu : écran titre → Entrée lance la partie au clavier ; Échap met en pause ; Entrée reprend.
+## Tests du menu : écran titre → Entrée lance la partie ; Échap met en pause ; salon en ligne (héberger, code).
 
 
 func names() -> Array[String]:
-	return ["menu"]
+	return ["menu", "lobby"]
 
 
 func _key(code: Key) -> void:
@@ -33,3 +33,48 @@ func test_menu(t: Node) -> void:
 	_key(KEY_ENTER)
 	await t.frames(5)
 	t.check(not main.get_tree().paused, "Entrée sur REPRENDRE relance le jeu")
+
+
+func _type(text: String) -> void:
+	for ch in text:
+		for pressed in [true, false]:
+			var e := InputEventKey.new()
+			e.keycode = OS.find_keycode_from_string(ch)
+			e.unicode = ch.unicode_at(0)
+			e.pressed = pressed
+			Input.parse_input_event(e)
+
+
+func test_lobby(t: Node) -> void:
+	var main: Node = t.main
+	main.attract = true
+	main._menu.show_title()
+	await t.frames(3)
+	main._menu.activate(main._menu._ids().find("online"))
+	await t.frames(3)
+	var lobby: CanvasLayer = main._lobby
+	t.check(lobby.visible and not main._menu.visible, "EN LIGNE ouvre le salon")
+	lobby.activate(lobby._ids().find("host"))
+	await t.frames(3)
+	t.check(lobby.screen == "host" and lobby.code.length() == 4 and Juice.net != null, "héberger : code de 4 lettres")
+	t.check(lobby._text("launch").contains("attente"), "lancer attend un 2e joueur")
+	_key(KEY_ESCAPE)
+	await t.frames(3)
+	t.check(lobby.screen == "home" and Juice.net == null, "annuler ferme la partie en ligne")
+	lobby.activate(lobby._ids().find("join_screen"))
+	_type("abz")
+	await t.frames(3)
+	t.check(lobby.code == "ABZ", "le code se tape au clavier (%s)" % lobby.code)
+	_key(KEY_ENTER)
+	await t.frames(3)
+	t.check(lobby.screen == "join" and lobby.status.contains("4 lettres"), "code incomplet refusé")
+	_type("q")
+	_key(KEY_ENTER)
+	await t.frames(3)
+	t.check(lobby.screen == "joined" and Juice.net != null, "code complet : connexion lancée")
+	var failed: bool = await t.until(func() -> bool: return lobby.failed, 1200)
+	t.check(failed and lobby.screen == "join", "relais absent : retour à la saisie, erreur affichée (%s)" % lobby.status)
+	_key(KEY_ESCAPE)
+	_key(KEY_ESCAPE)
+	await t.frames(3)
+	t.check(not lobby.visible and main._menu.visible, "retour au menu principal")

@@ -4,7 +4,8 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["online_link_host", "online_link_guest", "online_match_host", "online_match_guest"]
+	return ["online_link_host", "online_link_guest", "online_match_host", "online_match_guest", "online_show_host",
+		"online_show_guest"]
 
 
 func _link(t: Node, role: String) -> NetLink:
@@ -220,4 +221,29 @@ func test_online_match_guest(t: Node) -> void:
 	await t.frames(60)
 	_say(s, "bye")
 	await t.frames(30)
+	s.leave()
+
+
+# Démo filmable : deux IA jouent en ligne l'une avec l'autre (tools/online_test.sh show, fenêtres réelles).
+
+func test_online_show_host(t: Node) -> void:
+	var main: Node = t.main
+	main.live_rules = true
+	var s := NetSession.begin(main, "host", OS.get_environment("RIXE_ROOM"))
+	await t.until(func() -> bool: return s.connected(), 6000)
+	main._on_start("arcade", 0)
+	main.player.brain = BotBrain.new(1.0, "acrobate")
+	await t.frames(120 * 40)
+	s.leave()
+
+
+func test_online_show_guest(t: Node) -> void:
+	var main: Node = t.main
+	main.live_rules = true
+	var s := await _join(t, main)
+	await t.until(func() -> bool: return is_instance_valid(main.player) and s.started, 1200)
+	for i in 120 * 40:
+		if is_instance_valid(main.player) and main.player.brain is PlayerBrain:
+			main.player.brain = BotBrain.new(1.0, "brute")
+		await t.frames(1)
 	s.leave()

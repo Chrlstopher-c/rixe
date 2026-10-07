@@ -219,7 +219,7 @@ func _on_round(msg: Dictionary) -> void:
 	guest_spot = msg.pos
 	main.seed_base = int(msg.seed)
 	main.forced_map = String(msg.map)
-	if not started or main.game_mode != msg.mode:
+	if not started or main.game_mode != msg.mode or int(msg.round) == 1:
 		main._on_start(String(msg.mode), int(msg.opt), int(msg.round))
 	else:
 		main.round_no = int(msg.round)
