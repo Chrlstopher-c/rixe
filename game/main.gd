@@ -12,6 +12,7 @@ var _skip_title := false
 var _menu: CanvasLayer
 var _backdrop: CanvasLayer
 var _volume := 0.8
+var score := RunScore.new()
 var player: Fighter
 var _fighters: Node2D
 var _hud: CanvasLayer
@@ -109,12 +110,14 @@ func _build() -> void:
 		add_child(preload("res://fx/post.gd").new())
 	_menu = preload("res://hud/menu.gd").new()
 	add_child(_menu)
+	_menu.best = score.best
 	_menu.start_requested.connect(_on_start)
 	_menu.resume_requested.connect(_resume)
 	_menu.quit_requested.connect(func() -> void: get_tree().quit())
 	_menu.hd_changed.connect(_set_hd)
 	_menu.volume_changed.connect(_on_volume)
 	_hud = preload("res://hud/hud.gd").new()
+	_hud.best = score.best
 	_hud.show_crosshair = not demo
 	add_child(_hud)
 
@@ -214,12 +217,12 @@ func _on_killed(victim: Node2D, killer: Node2D) -> void:
 	var kname: String = killer.display_name if is_instance_valid(killer) else "?"
 	_hud.feed("%s  élimine  %s" % [kname, victim.display_name], victim.team_color)
 	if is_instance_valid(killer) and killer == player:
-		_hud.kills += 1
+		score.add_kill()
+		_hud.kills = score.kills
 	if _restart_in >= 0.0:
 		return
 	if victim == player:
-		_hud.banner("ÉLIMINÉ")
-		_restart_in = 3.0
+		_game_over()
 		return
 	_hud.bots_left = _alive_bots() - 1
 	if _hud.bots_left <= 0:
@@ -250,6 +253,18 @@ func _measure(real: float) -> void:
 	print("PERF fps_moyen=%.1f fps_1pct_bas=%.1f rendu_gpu_ms=%.2f rendu_cpu_ms=%.2f combattants=%d frames=%d"
 		% [avg, low, gpu, cpu, _fighters.get_child_count(), sorted.size()])
 	get_tree().quit()
+
+
+## Mort du joueur = fin de partie : record éventuel, retour à la manche 1.
+func _game_over() -> void:
+	var human: bool = player.brain is PlayerBrain
+	var record := score.end_run(human) and human
+	var line := "ÉLIMINÉ  ·  %d élimination%s" % [score.kills, "s" if score.kills > 1 else ""]
+	_hud.banner(line + ("  ·  RECORD !" if record else ""))
+	score.reset()
+	_hud.best = score.best
+	round_no = 1
+	_restart_in = 3.5
 
 
 func _alive_bots() -> int:
@@ -291,6 +306,7 @@ func _on_start() -> void:
 	_restart_in = -1.0
 	_menu.close()
 	_hud.visible = true
+	score.reset()
 	_hud.kills = 0
 	_start_round()
 	_set_hd(Juice.hd)

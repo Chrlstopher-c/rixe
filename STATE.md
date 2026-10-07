@@ -24,3 +24,7 @@
 - Finitions (même nuit) : tir aux jambes au ras du sol, écran titre avec démo en fond + pause Échap (volume, HD/pixel,
   réglages persistants dans user://settings.cfg, jamais écrits pendant les tests), musique synthétisée en boucle
   (`tools/gen_music.py`), bots qui vont chercher une arme plus forte (railgun > pompe > fusil).
+- E10 (même nuit) : perf consolidée (taches gravées dans une texture SubViewport jamais effacée, grille d'occupation 16 px
+  pour les collisions de particules/cadavres, 14 cadavres max) → 1080p ~168 i/s, 1 % bas 77-98.
+  3 ambiances Pigment (`arena/themes.gd`, `assets/textures/<thème>/`), tirées par manche.
+  Mort du joueur = fin de partie (retour manche 1), record d'éliminations persistant (titre + HUD).

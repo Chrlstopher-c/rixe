@@ -4,6 +4,7 @@ extends CanvasLayer
 var player: Node2D
 var round_no := 1
 var kills := 0
+var best := 0
 var bots_left := 0
 var show_crosshair := true
 var _canvas := Control.new()
@@ -46,7 +47,7 @@ func _process(delta: float) -> void:
 
 func _draw_hud() -> void:
 	_draw_health()
-	var info := "MANCHE %d   ·   BOTS %d   ·   ÉLIMINATIONS %d" % [round_no, bots_left, kills]
+	var info := "MANCHE %d   ·   BOTS %d   ·   ÉLIMINATIONS %d   ·   RECORD %d" % [round_no, bots_left, kills, best]
 	_canvas.draw_string(_font, Vector2(12, 30), info, HORIZONTAL_ALIGNMENT_LEFT, -1, 8, Color(1, 0.9, 0.95, 0.75))
 	for i in _feed.size():
 		var f: Dictionary = _feed[i]

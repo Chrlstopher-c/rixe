@@ -12,6 +12,7 @@ const ACCENT := Color(0.3, 0.9, 1.0)
 var mode := ""
 var volume := 0.8
 var hd := true
+var best := 0
 var _sel := 0
 var _t := 0.0
 var _canvas := Control.new()
@@ -126,7 +127,7 @@ func _draw_menu() -> void:
 		var pulse := 1.6 + 0.4 * sin(_t * 2.0)
 		_canvas.draw_string(_font, Vector2(0, size.y * 0.3), "RIXE", HORIZONTAL_ALIGNMENT_CENTER, size.x, 64,
 			Color(ACCENT * pulse, 1.0))
-		var sub := "combat à mort · stickmen"
+		var sub := "combat à mort · stickmen" + ("   ·   record : %d éliminations" % best if best > 0 else "")
 		_canvas.draw_string(_font, Vector2(0, size.y * 0.3 + 22), sub, HORIZONTAL_ALIGNMENT_CENTER, size.x, 10,
 			Color(1, 0.85, 0.9, 0.7))
 	else:

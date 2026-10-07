@@ -19,11 +19,29 @@ static func save_all(volume: float, hd: bool) -> void:
 	if not persist:
 		return
 	var cfg := ConfigFile.new()
+	cfg.load(PATH)
 	cfg.set_value("audio", "volume", volume)
 	cfg.set_value("video", "hd", hd)
 	var err := cfg.save(PATH)
 	if err != OK:
 		push_warning("réglages non enregistrés (%d)" % err)
+
+
+static func load_best() -> int:
+	var cfg := ConfigFile.new()
+	cfg.load(PATH)
+	return int(cfg.get_value("score", "best", 0))
+
+
+static func save_best(best: int) -> void:
+	if not persist:
+		return
+	var cfg := ConfigFile.new()
+	cfg.load(PATH)
+	cfg.set_value("score", "best", best)
+	var err := cfg.save(PATH)
+	if err != OK:
+		push_warning("record non enregistré (%d)" % err)
 
 
 static func apply_volume(volume: float) -> void:

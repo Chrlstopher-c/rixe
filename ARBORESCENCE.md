@@ -14,14 +14,8 @@
 - arena/arena.gd.uid
 - arena/backdrop.gd
 - arena/backdrop.gd.uid
-- assets/textures/bricks.png
-- assets/textures/ground.png
-- assets/textures/metal.png
-- assets/textures/mtn0.png
-- assets/textures/mtn1.png
-- assets/textures/mtn2.png
-- assets/textures/mtn3.png
-- assets/textures/sky.png
+- arena/themes.gd
+- arena/themes.gd.uid
 - audio/sfx.gd
 - audio/sfx.gd.uid
 - core/controls.gd
@@ -85,6 +79,8 @@
 - tests/test_runner.gd.uid
 - tests/test_showcase.gd
 - tests/test_showcase.gd.uid
+- tests/test_themes.gd
+- tests/test_themes.gd.uid
 - tools/capture.sh
 - tools/gen_assets.py
 - tools/gen_music.py
@@ -99,3 +95,4 @@
 - weapons/pickup.gd.uid
 - assets/sfx/*.wav (16 sons générés)
 - assets/music/combat.wav (musique générée)
+- assets/textures/<crepuscule|acier|rouille>/ (sky, mtn0-3, bricks, metal, ground — générés par Pigment)
