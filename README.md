@@ -39,6 +39,6 @@ mondial servi par le même Worker (`/scores`). Les messages passent par un petit
 - `tools/check_voice.py` : transcription locale des prises vocales (garder celles qui disent bien le texte)
 - `tools/win_run.sh` : jeu Windows exporté sous Proton-GE (tests de la version Windows sur Linux)
 - `tools/gen_voice.py` : annonces vocales (Qwen3-TTS VoiceDesign en local, voix décrite par un texte, aucun clonage) ; prises vérifiées par transcription
-- `tools/gen_assets.py` : textures via Pigment (dépôt voisin `../pigment` ou `PIGMENT_PATH`) ; `tools/gen_sfx.py` : bruitages synthétisés
+- `tools/gen_assets.py` : textures via Pigment (dépôt voisin `../pigment` ou `PIGMENT_PATH`) ; `tools/gen_sprites.py` : planches des décors animés ; `tools/gen_sfx.py` : bruitages synthétisés
 
 Le jeu n'ouvre aucun port : en ligne, il se connecte en sortie au relais (WebSocket).

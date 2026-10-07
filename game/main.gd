@@ -66,6 +66,8 @@ func _ready() -> void:
 	if attract:
 		_hud.visible = false
 		_menu.show_title()
+		if Settings.persist:
+			add_child(Intro.new())
 	_start_round()
 
 

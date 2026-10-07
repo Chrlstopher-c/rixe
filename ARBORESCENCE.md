@@ -6,12 +6,14 @@
 - arena/backdrop.gd
 - arena/falling_chunk.gd
 - arena/maps.gd
+- arena/props/animated_decor.gd
 - arena/props/barrel.gd
 - arena/props/bush.gd
 - arena/props/conveyor.gd
 - arena/props/door.gd
 - arena/props/fireflies.gd
 - arena/props/lamp.gd
+- arena/props/minecart.gd
 - arena/props/neon.gd
 - arena/props/press.gd
 - arena/props/spikes.gd
@@ -56,6 +58,8 @@
 - fx/post.gdshader
 - fx/shadows.gd
 - fx/stains.gd
+- fx/puddle.gdshader
+- fx/puddles.gd
 - fx/weather.gd
 - game/bootstrap.gd
 - game/duo.gd
@@ -77,6 +81,7 @@
 - game/unlocks.gd
 - .github/workflows/ci.yml
 - .gitignore
+- hud/intro.gd
 - hud/crosshair.gd
 - hud/crosshair_screen.gd
 - hud/custom_game.gd
@@ -145,6 +150,7 @@
 - tools/capture.sh
 - tools/check_voice.py
 - tools/gen_assets.py
+- tools/gen_sprites.py
 - tools/gen_music.py
 - tools/gen_sfx.py
 - tools/gen_voice.py

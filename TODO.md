@@ -2,7 +2,7 @@
 *Dernière mise à jour : 2026-10-07*
 
 ## En cours
-- [ ] Retours de Chris sur la v3.2.0 (parties perso, en ligne à 4, progression, cartes, éditeur…)
+- [ ] Retours de Chris sur la v3.2.1 (parties perso, en ligne à 4, progression, cartes, éditeur, flaques, wagonnet…)
 
 ## À faire (priorité)
 - [ ] Lancer les builds Windows et macOS sur de vraies machines (Windows testé seulement sous Proton-GE, Mac jamais lancé)
@@ -22,4 +22,5 @@
 - [x] v3.1.1 : contrôle de version en ligne, recalage du décor, délai de connexion, tests Linux ↔ Windows (Proton-GE)
 - [x] v3.1.2 : viseur au choix, correctif du focus, curseur dans les menus
 - [x] v3.2.0 : toutes les idées de IDEES.md, parties perso, en ligne à 4, pseudo, classement mondial, exécution par l'invité
+- [x] v3.2.1 : intro animée au lancement (fini le logo Godot), normal maps, flaques, wagonnet, décors animés ; plantage SIGFPE en release corrigé
 - [x] Dépôt public, CI verte, `IDEES.md`

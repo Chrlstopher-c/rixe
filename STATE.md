@@ -2,13 +2,22 @@
 *Dernière mise à jour : 2026-10-07*
 
 ## Résumé de l'état actuel
-Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lien `~/projects/rixe`). Dernière version publiée : **v3.2.0** (v3.1.2 testée en ligne par Chris avec un ami, deux PC Arch Linux, « fluide »).
-- Dépôt public : github.com/Chrlstopher-c/rixe. CI verte (47 tests headless + relais + partie en ligne à deux jeux).
+Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lien `~/projects/rixe`). Dernière version publiée : **v3.2.1** (v3.1.2 testée en ligne par Chris avec un ami, deux PC Arch Linux, « fluide »).
+- Dépôt public : github.com/Chrlstopher-c/rixe. CI verte (59 tests headless + relais + partie en ligne à deux jeux).
 - Releases sur GitHub pour Linux (testée), Windows (testée sous Proton-GE, pas sur un vrai PC Windows) et macOS universel (compilée, jamais lancée sur un vrai Mac).
 - Modes : Arcade, Chrono, Objectif, Survie. Écran partagé à deux, manette, et partie à deux en ligne (code de 4 lettres).
 - En ligne : relais Cloudflare Worker déployé (wrangler connecté sur la tour, compte de Chris), aller-retour ~11 ms ; adresse dans `online/relay.cfg` (hors dépôt, embarquée dans les builds).
 - Perf 1080p sur la tour : 150 à 210 i/s en moyenne, 1 % bas entre 50 et 100 selon la carte et le nombre de combattants.
 - Textures générées par Pigment (`/mnt/projects/pigment`, dépôt privé, MCP `pigment`).
+
+## Ce qui a été fait — nuit du 07 au 08/10 (v3.2.1)
+- Intro animée au lancement (`hud/intro.gd`, demande de Chris) : logo Godot coupé (fond uni), tir à la tête, titre
+  qui s'abat et saigne, ~3,5 s, une touche la passe ; jamais en tests, démos ni captures.
+- Toutes les idées d'`IDEES.md` sont faites : normal maps sur les tuiles (relief sous les éclairs), flaques qui reflètent
+  sous la pluie (shader d'écran), voie et wagonnet dans la mine, décors animés en planches de sprites
+  (`tools/gen_sprites.py` : ventilateurs, torches, drapeaux).
+- Démos, captures et mesures (`--demo`, `--shot`, `--perf`) n'écrivent plus le profil ni les réglages.
+- Plantage en release corrigé : un modulo par zéro (SIGFPE) tue le binaire exporté là où l'éditeur ne fait qu'une erreur.
 
 ## Ce qui a été fait — nuit du 07 au 08/10 (v3.2.0, en autonomie)
 - En ligne : exécution par l'invité, jusqu'à 4 joueurs (relais à places, diffusion), pseudos, arrivée en cours de partie.
@@ -62,17 +71,19 @@ Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lie
 - **Profilage** : `core/prof.gd` avec RIXE_PROF=1 (Prof.begin/end). Les gros postes ont été le dessin des bonhommes et les particules.
   - Correctifs appliqués : tracés regroupés (draw_multiline), fantômes allégés, rien de dessiné hors écran.
 - **Tests** : `--tests=…` dans le jeu même, avec `--fixed-fps 120`. Les noms en `showcase*` sont des démos filmables, exclues de `all`.
-- **Réglages** : jamais écrits pendant les tests (`Settings.persist = false`).
+- **Réglages** : jamais écrits pendant les tests, démos, captures et mesures (`Settings.persist = false`).
 - **Pièges GDScript** :
   - `is_instance_valid` peut mentir sur une variable typée : utiliser `weakref`.
   - Un objet libéré passé à un paramètre typé provoque une erreur : passer par `Variant`.
   - `class_name Tree` est interdit (classe native), d'où `WildTree`.
+  - Modulo ou division entière par zéro : simple erreur dans l'éditeur, **plantage SIGFPE** du binaire exporté.
+    Tester les binaires plusieurs fois (`build/linux/rixe.x86_64 --headless --fixed-fps 120 -- --tests=all`).
 - **Écran partagé** : deux SubViewport partagent le World2D. La vue principale est éteinte (caméra désactivée, transformation hors champ). Les caméras actives sont dans `Juice.cameras`.
 - **Export macOS** : nécessite `textures/vram_compression/import_etc2_astc=true`.
 
 ## Prochaines étapes
-1. Retours sur la v3.1.2 ; de Chris (jeu en ligne entre deux machines, exécutions, musique) et test Mac/Windows réels.
-2. Suite de `IDEES.md` (tenues, éclairage, éditeur de cartes…).
+1. Retours de Chris sur la v3.2.1 (en ligne à 4, parties perso, progression, nouveaux décors) et test Mac/Windows réels.
+2. `IDEES.md` est épuisé : nouvelles idées à recueillir ; backlog dans `TODO.md`.
 
 ## Points en suspens
 - Le sous-domaine workers.dev du compte a été créé au premier déploiement (nom = celui du Worker) : il vaut pour tout le compte ; le changer change l'adresse du relais (à re-embarquer dans une release).

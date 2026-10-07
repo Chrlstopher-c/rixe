@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["menu", "lobby", "crosshair", "nick", "custom", "replay_photo", "editor"]
+	return ["menu", "lobby", "crosshair", "nick", "custom", "replay_photo", "editor", "intro"]
 
 
 func _key(code: Key) -> void:
@@ -241,3 +241,22 @@ func test_editor(t: Node) -> void:
 	DirAccess.remove_absolute("user://cartes/zz-test-editeur.json")
 	main._to_title()
 	main.attract = true
+
+
+func test_intro(t: Node) -> void:
+	var intro := Intro.new()
+	t.main.add_child(intro)
+	var ref: WeakRef = weakref(intro)
+	await t.frames(150)
+	t.check(intro._head.size() > 0 and intro._blood.size() > 0, "intro : le tir décapite la cible")
+	var done: bool = await t.until(func() -> bool: return ref.get_ref() == null, 600)
+	t.check(done, "intro : se termine seule et laisse la place au titre")
+	intro = Intro.new()
+	t.main.add_child(intro)
+	ref = weakref(intro)
+	var ev := InputEventKey.new()
+	ev.keycode = KEY_SPACE
+	ev.pressed = true
+	intro._input(ev)
+	var skipped: bool = await t.until(func() -> bool: return ref.get_ref() == null, 90)
+	t.check(skipped, "intro : une touche la passe")
