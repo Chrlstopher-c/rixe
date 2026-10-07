@@ -4,7 +4,8 @@ extends RefCounted
 
 func names() -> Array[String]:
 	return ["showcase", "showcase_end", "showcase_armory", "showcase_inventory", "showcase_survival", "showcase_duo",
-		"showcase_killcam", "showcase_execution"]
+		"showcase_killcam", "showcase_execution",
+		"showcase_crosshair"]
 
 
 func _fire_at(t: Node, brain: ScriptBrain, target: Variant, joint: String, frames: int) -> void:
@@ -162,4 +163,24 @@ func test_showcase_execution(t: Node) -> void:
 		await t.frames(50)
 		brain.press_melee()
 		await t.frames(420)
+	t.check(true, "vitrine")
+
+
+func test_showcase_crosshair(t: Node) -> void:
+	var main: Node = t.main
+	main.attract = true
+	main._menu.show_title()
+	await t.frames(30)
+	main._menu.activate(main._menu._ids().find("crosshair"))
+	var sight: CanvasLayer = null
+	for c in main.get_children():
+		if c is CanvasLayer and c.has_method("adjust") and c.visible:
+			sight = c
+	for i in 6:
+		await t.frames(70)
+		sight.adjust("preset", 1)
+	for id in ["length", "length", "gap", "color", "thick", "shape"]:
+		await t.frames(50)
+		sight.adjust(id, 1)
+	await t.frames(80)
 	t.check(true, "vitrine")

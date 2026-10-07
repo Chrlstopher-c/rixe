@@ -259,6 +259,24 @@ func _process(delta: float) -> void:
 		rules.end_match()
 
 
+## Un écran par-dessus le jeu (menu, salon, viseur, fin de partie, inventaire, pause) : le curseur reste visible.
+func _overlay_open() -> bool:
+	for layer in get_children():
+		if layer is CanvasLayer and layer.visible and layer.layer >= 25:
+			return true
+	return get_tree().paused or (_scoreboard != null and _scoreboard.visible)
+
+
+## Retour au premier plan (changement de fenêtre, plein écran) : un relâchement de touche ou de clic a pu être
+## manqué pendant l'absence ; on relâche tout et on remet la souris dans le bon mode.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_IN or what == NOTIFICATION_WM_WINDOW_FOCUS_IN:
+		for a in InputMap.get_actions():
+			Input.action_release(a)
+		if _menu:
+			_set_hd(Juice.hd)
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	var k := Controls.menu_key(event)
 	if event is InputEventJoypadButton and event.button_index == JOY_BUTTON_B:
@@ -403,8 +421,7 @@ func _set_hd(on: bool) -> void:
 	var w := get_window()
 	w.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS if on else Window.CONTENT_SCALE_MODE_VIEWPORT
 	get_viewport().msaa_2d = Viewport.MSAA_4X if on and not ("msaa" in _off) else Viewport.MSAA_DISABLED
-	var menu_open: bool = _menu != null and _menu.visible
-	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN if not (demo or menu_open) else Input.MOUSE_MODE_VISIBLE
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if demo or _overlay_open() else Input.MOUSE_MODE_HIDDEN
 	if _menu:
 		_menu.hd = on
 		Settings.save_all(_volume, on)

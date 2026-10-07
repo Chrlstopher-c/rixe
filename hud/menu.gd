@@ -3,6 +3,7 @@ extends CanvasLayer
 
 signal start_requested(mode: String, option: int)
 signal online_requested
+signal crosshair_requested
 signal resume_requested
 signal title_requested
 signal restart_requested
@@ -79,7 +80,7 @@ func _ids() -> Array[String]:
 		ids.append("option")
 	if game_mode != "survie":
 		ids.append("players")
-	ids.append_array(["play", "online", "armory", "board", "volume", "display", "quit"])
+	ids.append_array(["play", "online", "armory", "crosshair", "board", "volume", "display", "quit"])
 	return ids
 
 
@@ -97,6 +98,8 @@ func _text(id: String) -> String:
 			return "CLASSEMENT"
 		"online":
 			return "EN LIGNE"
+		"crosshair":
+			return "VISEUR"
 		"armory":
 			return "ARMURERIE"
 		"weapon":
@@ -212,6 +215,9 @@ func activate(i: int) -> void:
 		"online":
 			close()
 			online_requested.emit()
+		"crosshair":
+			close()
+			crosshair_requested.emit()
 		"armory":
 			loadout = Unlocks.loadout()
 			_open("armory")

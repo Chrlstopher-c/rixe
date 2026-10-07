@@ -10,6 +10,8 @@ var match_state: MatchState
 var respawn_t := -1.0
 var bots_left := 0
 var show_crosshair := true
+## Viseur choisi par le joueur (modèle ou réglages perso).
+var crosshair := Settings.load_crosshair()
 var _canvas := Control.new()
 var _banner := ""
 var _banner_t := 0.0
@@ -75,7 +77,7 @@ func _draw_hud() -> void:
 	_draw_toasts()
 	if Juice.survival:
 		_draw_survival(Juice.survival)
-	if show_crosshair:
+	if show_crosshair and Input.mouse_mode != Input.MOUSE_MODE_VISIBLE:
 		_draw_crosshair(_canvas.get_local_mouse_position())
 
 
@@ -125,15 +127,12 @@ func _draw_execution() -> void:
 
 
 func _draw_crosshair(m: Vector2) -> void:
-	var c := Color(2.0, 1.9, 1.9, 0.9)
-	var gap := 3.0
+	var spread := 0.0
 	if is_instance_valid(player):
-		var spread: float = player.gun.def.spread * (1.0 if player.body.arms_left() == 2 else 2.5)
-		gap += spread * player.global_position.distance_to(player.get_global_mouse_position()) * 0.6
-		gap += player.rig.recoil * 1.2
-	for d in [Vector2.RIGHT, Vector2.LEFT, Vector2.UP, Vector2.DOWN]:
-		_canvas.draw_line(m + d * gap, m + d * (gap + 4.0), c, 1.0)
-	_canvas.draw_circle(m, 0.7, c)
+		var s: float = player.gun.def.spread * (1.0 if player.body.arms_left() == 2 else 2.5)
+		spread = s * player.global_position.distance_to(player.get_global_mouse_position()) * 0.6
+		spread += player.rig.recoil * 1.2
+	Crosshair.draw(_canvas, m, Crosshair.resolve(crosshair), spread)
 
 
 func _info_line() -> String:

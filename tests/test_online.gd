@@ -3,6 +3,10 @@ extends RefCounted
 ## Lancés par tools/online_test.sh, qui fournit RIXE_RELAY et RIXE_ROOM.
 
 
+## Empreintes du décor relevées par l'invité à chaque manche reçue (écoute branchée dès la connexion).
+var _round_hashes := []
+
+
 func names() -> Array[String]:
 	return ["online_link_host", "online_link_guest", "online_match_host", "online_match_guest", "online_show_host",
 		"online_show_guest", "online_checks_host", "online_checks_guest", "online_version_host", "online_version_guest"]
@@ -163,6 +167,10 @@ func _bot_named(main: Node, id: String) -> Fighter:
 func _join(t: Node, main: Node) -> NetSession:
 	for i in 20:
 		var s := NetSession.begin(main, "guest", OS.get_environment("RIXE_ROOM"))
+		_round_hashes.clear()
+		s.link.received.connect(func(m: Dictionary) -> void:
+			if m.get("t") == "round":
+				_round_hashes.append(terrain_hash()))
 		var why := []
 		s.ended.connect(func(r: String) -> void: why.append(r))
 		await t.until(func() -> bool: return s.connected() or not why.is_empty(), 600)
@@ -178,10 +186,7 @@ func test_online_match_guest(t: Node) -> void:
 	main.live_rules = true
 	var s := await _join(t, main)
 	var box := _inbox(s)
-	var hashes := []
-	s.link.received.connect(func(m: Dictionary) -> void:
-		if m.get("t") == "round":
-			hashes.append(terrain_hash()))
+	var hashes := _round_hashes
 	var in_game: bool = await t.until(func() -> bool: return is_instance_valid(main.player) and s.started, 1200)
 	t.check(in_game, "l'invité entre dans la manche de l'hôte")
 	var me: Fighter = main.player

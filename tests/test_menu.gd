@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["menu", "lobby"]
+	return ["menu", "lobby", "crosshair"]
 
 
 func _key(code: Key) -> void:
@@ -84,3 +84,34 @@ func test_lobby(t: Node) -> void:
 	await t.frames(3)
 	t.check(not lobby.visible and main._menu.visible, "retour au menu principal")
 	OS.set_environment("RIXE_RELAY", relay)
+
+
+func test_crosshair(t: Node) -> void:
+	var main: Node = t.main
+	main.attract = true
+	main._menu.show_title()
+	await t.frames(3)
+	main._menu.activate(main._menu._ids().find("crosshair"))
+	await t.frames(3)
+	var sight: CanvasLayer = null
+	for c in main.get_children():
+		if c is CanvasLayer and c.has_method("adjust") and c.visible:
+			sight = c
+	t.check(sight != null and not main._menu.visible, "VISEUR ouvre l'écran du viseur")
+	if sight == null:
+		return
+	t.check(Input.mouse_mode == Input.MOUSE_MODE_VISIBLE or DisplayServer.get_name() == "headless", "curseur visible")
+	sight.adjust("preset", 1)
+	t.check(sight.cfg.preset == "précis" and main._hud.crosshair.preset == "précis", "modèle suivant appliqué au jeu")
+	sight.adjust("length", 1)
+	var c := Crosshair.resolve(sight.cfg)
+	t.check(sight.cfg.preset == "perso" and c.length == 4.0 and c.color == "vert", "réglage touché : viseur perso (%s)" % [c])
+	sight.adjust("shape", 1)
+	sight.adjust("color", 1)
+	sight.adjust("dot", 1)
+	await t.frames(5)
+	t.check(Crosshair.resolve(main._hud.crosshair).shape == "cercle", "forme changée, visible en jeu")
+	_key(KEY_ESCAPE)
+	await t.frames(3)
+	t.check(not sight.visible and main._menu.visible, "Échap : retour au menu")
+	main._hud.crosshair = {}

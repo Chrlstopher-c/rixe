@@ -1,5 +1,5 @@
 class_name Settings
-## Réglages persistants du joueur (user://settings.cfg) : volume et mode d'affichage.
+## Réglages persistants du joueur (user://settings.cfg) : volume, mode d'affichage, record, viseur.
 
 const PATH := "user://settings.cfg"
 
@@ -42,6 +42,25 @@ static func save_best(best: int) -> void:
 	var err := cfg.save(PATH)
 	if err != OK:
 		push_warning("record non enregistré (%d)" % err)
+
+
+## Viseur choisi : {"preset": nom, "custom": réglages du viseur personnalisé}.
+static func load_crosshair() -> Dictionary:
+	var cfg := ConfigFile.new()
+	cfg.load(PATH)
+	var v: Variant = cfg.get_value("hud", "crosshair", {})
+	return v if v is Dictionary else {}
+
+
+static func save_crosshair(c: Dictionary) -> void:
+	if not persist:
+		return
+	var cfg := ConfigFile.new()
+	cfg.load(PATH)
+	cfg.set_value("hud", "crosshair", c)
+	var err := cfg.save(PATH)
+	if err != OK:
+		push_warning("viseur non enregistré (%d)" % err)
 
 
 static func apply_volume(volume: float) -> void:
