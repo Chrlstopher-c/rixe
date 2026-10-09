@@ -94,6 +94,7 @@
 - hud/menu.gd
 - hud/profile_screen.gd
 - hud/scoreboard.gd
+- hud/scroll_list.gd
 - IDEES.md
 - online/lobby.gd
 - online/net_fighters.gd

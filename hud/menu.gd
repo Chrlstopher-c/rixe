@@ -32,6 +32,7 @@ var _t := 0.0
 var _canvas := Control.new()
 var _font: Font = ThemeDB.fallback_font
 var _rects: Array[Rect2] = []
+var _list := ScrollList.new()
 var loadout := {"weapon": "rifle", "attachments": {}}
 ## Saisie du pseudo en cours (lettres, chiffres, - et _ ; Entrée ou Échap pour valider).
 var editing_nick := false
@@ -312,11 +313,15 @@ func activate(i: int) -> void:
 func _on_mouse(event: InputEvent) -> void:
 	if not (event is InputEventMouse):
 		return
-	for i in _rects.size():
-		if _rects[i].has_point(event.position):
-			_sel = i
+	var step := ScrollList.wheel(event)
+	if step != 0:
+		_sel = clampi(_sel + step, 0, _ids().size() - 1)
+		return
+	for k in _rects.size():
+		if _rects[k].has_point(event.position):
+			_sel = _list.first + k
 			if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-				activate(i)
+				activate(_sel)
 
 
 func _draw_menu() -> void:
@@ -394,11 +399,13 @@ func _draw_world(key: String, y0: float) -> void:
 func _draw_items(cx: float, y0: float) -> void:
 	_rects.clear()
 	var ids := _ids()
-	var panel := Rect2(cx - 130, y0 - 22, 260, ids.size() * 20.0 + 14)
+	_list.layout(ids.size(), _sel, y0, _canvas.size.y - 30.0, 20.0)
+	var panel := Rect2(cx - 130, y0 - 22, 260, _list.rows * 20.0 + 14)
 	_canvas.draw_rect(panel, Color(0.02, 0.01, 0.05, 0.72))
 	_canvas.draw_rect(panel, Color(ACCENT, 0.25), false, 1.0)
-	for i in ids.size():
-		var y := y0 + i * 20.0
+	_list.draw_arrows(_canvas, cx, panel.position.y + 4, panel.end.y - 4, Color(ACCENT * 1.6, 0.9))
+	for i in range(_list.first, _list.last()):
+		var y := y0 + (i - _list.first) * 20.0
 		var r := Rect2(cx - 110, y - 13, 220, 18)
 		_rects.append(r)
 		var on := i == _sel

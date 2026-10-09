@@ -1,8 +1,8 @@
 # STATE — Rixe
-*Dernière mise à jour : 2026-10-08*
+*Dernière mise à jour : 2026-10-09*
 
 ## Résumé de l'état actuel
-Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lien `~/projects/rixe`). Dernière version publiée : **v3.3.0** (corps à corps, mode MAINS NUES). v3.1.2 testée en ligne par Chris avec un ami (deux Arch, « fluide ») ; 3.2.x et 3.3.0 pas encore jouées par Chris.
+Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lien `~/projects/rixe`). Dernière version publiée : **v3.3.1** (menus défilants ; 3.3.0 : corps à corps, mode MAINS NUES). v3.1.2 testée en ligne par Chris avec un ami (deux Arch, « fluide ») ; 3.2.x et 3.3.0 pas encore jouées par Chris.
 - Dépôt public : github.com/Chrlstopher-c/rixe. CI verte (63 tests headless + relais + partie en ligne à deux jeux).
 - Releases sur GitHub pour Linux (testée), Windows (testée sous Proton-GE, pas sur un vrai PC Windows) et macOS universel (compilée, jamais lancée sur un vrai Mac).
 - Modes : Arcade, Mains nues, Chrono, Objectif, Survie, parties perso. Écran partagé à deux, manette, en ligne jusqu'à 4 (code de 4 lettres).
@@ -10,6 +10,10 @@ Jeu de combat 2D stickman en Godot 4.7.2, sur la tour (`/mnt/projects/rixe`, lie
 - En ligne : relais Cloudflare Worker déployé (wrangler connecté sur la tour, compte de Chris), aller-retour ~11 ms ; adresse dans `online/relay.cfg` (hors dépôt, embarquée dans les builds).
 - Perf 1080p sur la tour : 150 à 210 i/s en moyenne, 1 % bas entre 50 et 100 selon la carte et le nombre de combattants.
 - Textures générées par Pigment (`/mnt/projects/pigment`, dépôt privé, MCP `pigment`).
+
+## Ce qui a été fait — 09/10 (v3.3.1)
+- Bug signalé par Chris : les menus débordaient sous l'écran sans défilement. `hud/scroll_list.gd` : fenêtre visible
+  qui suit la sélection (clavier, manette, molette) avec chevrons ; menu titre/pause, partie perso, salon en ligne, viseur.
 
 ## Ce qui a été fait — nuit du 07 au 08/10 (v3.3.0, demande de Chris, Chris présent en fin de nuit)
 - Corps à corps poussé : combos (direct, crochet, coup de pied ; appuis mémorisés, fenêtre d'enchaînement 0,35 s,

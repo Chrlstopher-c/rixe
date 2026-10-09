@@ -19,6 +19,7 @@ var _t := 0.0
 var _canvas := Control.new()
 var _font: Font = ThemeDB.fallback_font
 var _rects: Array[Rect2] = []
+var _list := ScrollList.new()
 
 
 func _ready() -> void:
@@ -209,8 +210,13 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_mouse(event: InputEvent) -> void:
 	if not (event is InputEventMouse):
 		return
-	for i in _rects.size():
-		if _rects[i].has_point(event.position):
+	var step := ScrollList.wheel(event)
+	if step != 0:
+		_sel = clampi(_sel + step, 0, _ids().size() - 1)
+		return
+	for k in _rects.size():
+		if _rects[k].has_point(event.position):
+			var i := _list.first + k
 			_sel = i
 			if event is InputEventMouseButton and event.pressed:
 				if event.button_index == MOUSE_BUTTON_LEFT:
@@ -242,11 +248,13 @@ func _draw_screen() -> void:
 func _draw_rows(cx: float, y0: float) -> void:
 	_rects.clear()
 	var ids := _ids()
-	var panel := Rect2(cx - 140, y0 - 20, 280, ids.size() * 18.0 + 10)
+	_list.layout(ids.size(), _sel, y0, _canvas.size.y - 30.0, 18.0)
+	var panel := Rect2(cx - 140, y0 - 20, 280, _list.rows * 18.0 + 10)
 	_canvas.draw_rect(panel, Color(0.02, 0.01, 0.05, 0.72))
 	_canvas.draw_rect(panel, Color(ACCENT, 0.25), false, 1.0)
-	for i in ids.size():
-		var y := y0 + i * 18.0
+	_list.draw_arrows(_canvas, cx, panel.position.y + 4, panel.end.y - 3, Color(ACCENT * 1.6, 0.9))
+	for i in range(_list.first, _list.last()):
+		var y := y0 + (i - _list.first) * 18.0
 		var r := Rect2(cx - 120, y - 12, 240, 16)
 		_rects.append(r)
 		var on := i == _sel

@@ -3,7 +3,7 @@ extends RefCounted
 
 
 func names() -> Array[String]:
-	return ["menu", "lobby", "crosshair", "nick", "custom", "replay_photo", "editor", "intro"]
+	return ["menu", "lobby", "crosshair", "nick", "custom", "replay_photo", "editor", "intro", "menu_scroll"]
 
 
 func _key(code: Key) -> void:
@@ -260,3 +260,24 @@ func test_intro(t: Node) -> void:
 	intro._input(ev)
 	var skipped: bool = await t.until(func() -> bool: return ref.get_ref() == null, 90)
 	t.check(skipped, "intro : une touche la passe")
+
+
+## Aucune ligne de menu sous le bas de l'écran : la liste défile pour suivre la sélection (clavier et molette).
+func test_menu_scroll(t: Node) -> void:
+	var menu: CanvasLayer = t.main._menu
+	menu.show_title()
+	var n: int = menu._ids().size()
+	menu._sel = n - 1
+	await t.frames(3)
+	var h: float = menu._canvas.size.y
+	var inside: bool = menu._rects.all(func(r: Rect2) -> bool: return r.end.y <= h - 20.0)
+	t.check(inside and not menu._rects.is_empty(), "titre : toutes les lignes visibles tiennent à l'écran")
+	t.check(menu._list.last() == n, "titre : la dernière entrée (%s) est affichée une fois choisie" % menu._ids()[n - 1])
+	var wheel := InputEventMouseButton.new()
+	wheel.button_index = MOUSE_BUTTON_WHEEL_UP
+	wheel.pressed = true
+	for i in n:
+		menu._on_mouse(wheel)
+	await t.frames(3)
+	t.check(menu._sel == 0 and menu._list.first == 0, "la molette remonte jusqu'en haut")
+	menu.close()

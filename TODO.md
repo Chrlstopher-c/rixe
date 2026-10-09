@@ -1,5 +1,5 @@
 # TODO — Rixe
-*Dernière mise à jour : 2026-10-08*
+*Dernière mise à jour : 2026-10-09*
 
 ## En cours
 - [ ] Retours de Chris sur la v3.3.0 (corps à corps, mains nues) et la v3.2.1 (parties perso, en ligne à 4, progression, cartes, éditeur, flaques, wagonnet…)
@@ -26,4 +26,5 @@
 - [x] v3.2.0 : toutes les idées de IDEES.md, parties perso, en ligne à 4, pseudo, classement mondial, exécution par l'invité
 - [x] v3.2.1 : intro cinématique au lancement (fini le logo Godot), normal maps, flaques, wagonnet, décors animés ; plantage SIGFPE en release corrigé
 - [x] v3.3.0 : corps à corps en combos, projection, saltos, mode MAINS NUES
+- [x] v3.3.1 : menus qui défilent (plus rien sous l'écran)
 - [x] Dépôt public, CI verte, `IDEES.md`
